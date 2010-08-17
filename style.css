@@ -1,0 +1,135 @@
+body {
+    margin: 0px;
+    background-color: #fff;
+}
+
+body, textarea {
+    font-family: Verdana;
+    font-size: 10px;
+}
+
+textarea, input, select {
+    border: 1px solid black;
+}
+
+.poster {
+    margin-right: 5px;
+}
+
+.poster, .poster a {
+    font-weight: bold;
+    color: #000;
+    text-decoration: none;
+}
+
+.tweet {
+    border-top: 1px solid #555;
+    clear: both;
+    min-height: 30px;
+    padding-left: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.tweet.by_fabianonline {
+    background-color: #afa !important;
+}
+
+.tweet.new {
+    background-color: #fdd;
+}
+
+.tweet.mentions_fabianonline {
+    background-color: #ddf;
+}
+
+.avatar{
+    display: block;
+    position: relative;
+    float: left;
+    width: 30px;
+    height: 30px;
+    padding-right: 3px;
+}
+
+.user_avatar {
+    width: 30px;
+    height: 30px;
+    border: none;
+}
+
+.retweeter_avatar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 15px;
+    height: 15px;
+    -moz-box-shadow: #aaa -2px -2px 7px;
+}
+
+.info {
+    color: #aaa;
+}
+
+.links, .links a {
+    color: #000;
+}
+
+.info a:hover, .links a:hover {
+    text-underline: none;
+}
+
+#chars {
+    font-size: 15px;
+    display: none;
+}
+
+#chars a {
+    text-decoration: none;
+    color: #000;
+}
+
+#form_area {
+    position: relative;
+}
+
+#success {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 99;
+}
+
+#text {
+    width: 200px;
+}
+
+#buttonbar img {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #eee #666 #666 #eee;
+    background-color: #ccc;
+    margin: 5px 0px 3px 3px;
+}
+
+#buttonbar img:hover {
+    border-color: #666 #eee #eee #666 !important;
+}
+
+#buttonbar {
+    background-color: #ccc;
+}
+
+#reply_warning {
+    background-color: yellow;
+    display: none;
+}
+
+.tweet .info, .tweet .links {
+    display: none;
+}
+
+.tweet:hover .info,
+.tweet:hover .links {
+    display: block !important;
+}

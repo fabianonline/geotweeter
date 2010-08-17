@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>Twitter.Stream</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script src="oauth.js"></script>
+<script src="sha1.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript">
+var url = "https://betastream.twitter.com/2b/user.json";
+//var url = "http://stream.twitter.com/1/statuses/sample.json";
+var accessor = {
+    token: "15006408-BtuU3rI0K0FGI8cnIpa5YYZHNpSNWDJScCD9x4Gdn",
+    tokenSecret: "9j5hKhm8J5ewdGOkQDyCgxj526mKZWnN0XY7hwDpDk",
+    consumerKey: "mjVYJfHrlqzKOXdLKEMXA",
+    consumerSecret: "kU0tDiwAZkehi03wHHHp9B7EZI7fnxV0eawLVSmw"
+}
+
+var message = {
+    action: url,
+    method: "GET",
+    parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
+}
+
+responseOffset = 0;
+buffer = "";
+isProcessing = false;
+
+$(document).ready(startRequest);
+
+function startRequest() {
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    url = 'https://amazonas.f00bian.de/twitter.stream/user_proxy?' + OAuth.formEncode(message.parameters);
+    //url = 'https://amazonas.f00bian.de/twitter.stream/sample_proxy?' + OAuth.formEncode(message.parameters);
+    $("#content").html($('#content').html() + url + '<hr />');
+    //return;
+
+    req = new XMLHttpRequest();
+    req.open('GET', url, true);
+    req.onreadystatechange = parseResponse;
+    req.send(null);
+}
+
+function parseResponse(event) {
+    buffer += event.target.responseText.substr(responseOffset);
+    responseOffset = event.target.responseText.length;
+    if (!isProcessing) processBuffer();
+}
+
+function processBuffer() {
+    isProcessing = true;
+    reg = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
+    while(res = buffer.match(reg)) {
+        len = parseInt(res[1]);
+        if (res[2].length >= len) {
+            parseableText = res[2].substr(0, len);
+            buffer = res[2].substr(len);
+            parseData(parseableText);
+        } else {
+            break;
+        }
+    }
+    isProcessing = false;
+}
+
+function parseData(data) {
+    try {
+        var message = eval('(' + data + ')');
+
+        if (message.text) {
+            addHTML(data);
+            addStatus(message);
+        else if (message.friends) {
+            twitter_friends = message.friends;
+        } else if (message.delete) {
+            // Deletion-Request. Do nothing ,-)
+        /*else if (message.direct_message) {
+            // DM. Do something!
+        } else if (message.event) {
+            // Social Event. Perhaps do something?*/
+        } else {
+            addHTML(data + "<hr />");
+        }
+    } catch (e) {
+        addHTML("Exception: " + e);
+    }
+}
+
+function addHTML(text) {
+    $('#content').html(text + $('#content').html());
+}
+
+function addStatus(status) {
+    var html = "";
+    var user = status.user.screen_name;
+    var date = new Date(status.created_at);
+    var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
+    html += '<div class="tweet by_' + user + ' new">';
+    html += '<span class="avatar">';
+    html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="' + status.user.profile_image_url + '" /></a>';
+    html += '</span>';
+    html += '<span class="poster">';
+    html += '<a href="http://twitter.com/' + user + '">' + user + '</a>';
+    html += '</span>';
+    html += '<span class="text">';
+    html += linkify(status.text);
+    html += '</span>';
+    html += datum;
+    html += '</div>';
+    addHTML(html);
+}
+
+function linkify(text) {
+    text = text.replace(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig, '<a href="$1">$1</a>');
+    text = text.replace(/(^|\s)@(\w+)/g, '$1@<a href="http://twitter.com/$2">$2</a>');
+    text = text.replace(/(^|\s)#([\wäöüÄÖÜß]+)/g, '$1<a href="http://twitter.com/search?q=#$2">#$2</a>');
+    return text;
+}
+</script>
+</head>
+
+<body>
+<a href="#" onClick="req.abort(); return false;">Abbrechen</a>
+<div id="content"></div>
+<a href="#" onClick="req.abort(); return false;">Abbrechen</a>
+</body>
+</html>
+
