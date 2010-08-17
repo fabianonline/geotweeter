@@ -1,5 +1,6 @@
 <html>
 <head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Twitter.Stream</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <script src="oauth.js"></script>
@@ -25,12 +26,18 @@ responseOffset = 0;
 buffer = "";
 isProcessing = false;
 
+regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
+regexp_user = /(^|\s)@(\w+)/g;
+regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
+
+
 $(document).ready(startRequest);
 
 function startRequest() {
+    OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    url = 'https://amazonas.f00bian.de/twitter.stream/user_proxy?' + OAuth.formEncode(message.parameters);
+    var url = 'https://amazonas.f00bian.de/twitter.stream/user_proxy?' + OAuth.formEncode(message.parameters);
     //url = 'https://amazonas.f00bian.de/twitter.stream/sample_proxy?' + OAuth.formEncode(message.parameters);
     $("#content").html($('#content').html() + url + '<hr />');
     //return;
@@ -42,6 +49,14 @@ function startRequest() {
 }
 
 function parseResponse(event) {
+    if (event.target.readyState == 4) {
+        $('#status #connected').hide();
+        $('#status #disconnected').show();
+        window.setTimeout('startRequest()', 5000);
+    } else if (event.target.readyState == 3) {
+        $('#status #connected').show();
+        $('#status #disconnected').hide();
+    }
     buffer += event.target.responseText.substr(responseOffset);
     responseOffset = event.target.responseText.length;
     if (!isProcessing) processBuffer();
@@ -70,7 +85,7 @@ function parseData(data) {
         if (message.text) {
             addHTML(data);
             addStatus(message);
-        else if (message.friends) {
+        } else if (message.friends) {
             twitter_friends = message.friends;
         } else if (message.delete) {
             // Deletion-Request. Do nothing ,-)
@@ -95,7 +110,12 @@ function addStatus(status) {
     var user = status.user.screen_name;
     var date = new Date(status.created_at);
     var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
-    html += '<div class="tweet by_' + user + ' new">';
+    html += '<div class="new tweet by_' + user;
+    var mentions = status.text.match(regexp_user);
+    if (mentions) for (var i=0; i<mentions.length; i++) {
+        html += ' mentions_' + mentions[i].trim().substr(1) + ' ';
+    }
+    html += '">';
     html += '<span class="avatar">';
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="' + status.user.profile_image_url + '" /></a>';
     html += '</span>';
@@ -111,18 +131,19 @@ function addStatus(status) {
 }
 
 function linkify(text) {
-    text = text.replace(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig, '<a href="$1">$1</a>');
-    text = text.replace(/(^|\s)@(\w+)/g, '$1@<a href="http://twitter.com/$2">$2</a>');
-    text = text.replace(/(^|\s)#([\wäöüÄÖÜß]+)/g, '$1<a href="http://twitter.com/search?q=#$2">#$2</a>');
+    text = text.replace(regexp_url, '<a href="$1" target="_blank">$1</a>');
+    text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
+    text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
     return text;
 }
 </script>
 </head>
 
 <body>
-<a href="#" onClick="req.abort(); return false;">Abbrechen</a>
+<!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
+<div id="status"><div id="connected">Connected</div><div id="disconnected">Disconnected</div></div>
 <div id="content"></div>
-<a href="#" onClick="req.abort(); return false;">Abbrechen</a>
+<!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 </body>
 </html>
 

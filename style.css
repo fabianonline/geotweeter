@@ -133,3 +133,12 @@ textarea, input, select {
 .tweet:hover .links {
     display: block !important;
 }
+
+#status #connected {
+    background-color: #0f0;
+    display: none;
+}
+
+#status #disconnected {
+    background-color: #f00;
+}
