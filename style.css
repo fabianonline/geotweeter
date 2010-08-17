@@ -93,11 +93,12 @@ textarea, input, select {
     position: relative;
 }
 
-#success {
+#success, #failure {
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 99;
+    display: none;
 }
 
 #text {
@@ -136,6 +137,11 @@ textarea, input, select {
 
 #status #connected {
     background-color: #0f0;
+    display: none;
+}
+
+#status #connecting {
+    background-color: #ff0;
     display: none;
 }
 

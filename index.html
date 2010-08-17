@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -16,6 +17,11 @@ var accessor = {
     consumerSecret: "kU0tDiwAZkehi03wHHHp9B7EZI7fnxV0eawLVSmw"
 }
 
+var places = [
+    {name:"--leer--", lat:0.0, lon:0.0},
+    {name:"Zu Hause", lat:51.446646, lon:7.646494}
+];
+
 var message = {
     action: url,
     method: "GET",
@@ -31,7 +37,16 @@ regexp_user = /(^|\s)@(\w+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 
 
-$(document).ready(startRequest);
+$(document).ready(start);
+
+function start() {
+    startRequest();
+
+    // Fill Form
+    for(var i=0; i<places.length; i++) {
+        document.tweet_form.place.options[document.tweet_form.place.length] = new Option(places[i].name, i);
+    }
+}
 
 function startRequest() {
     OAuth.setTimestampAndNonce(message);
@@ -39,8 +54,12 @@ function startRequest() {
     OAuth.SignatureMethod.sign(message, accessor);
     var url = 'https://amazonas.f00bian.de/twitter.stream/user_proxy?' + OAuth.formEncode(message.parameters);
     //url = 'https://amazonas.f00bian.de/twitter.stream/sample_proxy?' + OAuth.formEncode(message.parameters);
-    $("#content").html($('#content').html() + url + '<hr />');
+    //$("#content").html($('#content').html() + url + '<hr />');
     //return;
+
+    $('#status #connected').hide();
+    $('#status #disconnected').hide();
+    $('#status #connecting').show();
 
     req = new XMLHttpRequest();
     req.open('GET', url, true);
@@ -51,10 +70,12 @@ function startRequest() {
 function parseResponse(event) {
     if (event.target.readyState == 4) {
         $('#status #connected').hide();
+        $('#status #connecting').hide();
         $('#status #disconnected').show();
         window.setTimeout('startRequest()', 5000);
     } else if (event.target.readyState == 3) {
         $('#status #connected').show();
+        $('#status #connecting').hide();
         $('#status #disconnected').hide();
     }
     buffer += event.target.responseText.substr(responseOffset);
@@ -83,7 +104,6 @@ function parseData(data) {
         var message = eval('(' + data + ')');
 
         if (message.text) {
-            addHTML(data);
             addStatus(message);
         } else if (message.friends) {
             twitter_friends = message.friends;
@@ -107,17 +127,27 @@ function addHTML(text) {
 
 function addStatus(status) {
     var html = "";
-    var user = status.user.screen_name;
+    var user;
+    if (status.retweeted_status)
+        user = status.retweeted_status.user.screen_name;
+    else
+        user = status.user.screen_name;
+
     var date = new Date(status.created_at);
     var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
-    html += '<div class="new tweet by_' + user;
+    html += '<div class="tweet new  by_' + user;
     var mentions = status.text.match(regexp_user);
     if (mentions) for (var i=0; i<mentions.length; i++) {
         html += ' mentions_' + mentions[i].trim().substr(1) + ' ';
     }
     html += '">';
     html += '<span class="avatar">';
-    html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="' + status.user.profile_image_url + '" /></a>';
+    html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
+    if (status.retweeted_status)
+        html += status.retweeted_status.user.profile_image_url;
+    else
+        html += status.user.profile_image_url;
+    html += '" /></a>';
     html += '</span>';
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + user + '">' + user + '</a>';
@@ -125,7 +155,18 @@ function addStatus(status) {
     html += '<span class="text">';
     html += linkify(status.text);
     html += '</span>';
-    html += datum;
+    html += '<div class="info">';
+    html += datum + ' ';
+    if(status.retweeted_status)
+        html += 'Retweeted by ' + status.user.screen_name + ' ';
+    if(status.in_reply_to_status_id)
+        html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + ' target="_blank">in reply to...</a> ';
+    html += 'from ' + status.source + ' ';
+    if (status.coordinates) {
+        html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank">geo</a> ';
+        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250">all geo</a> ';
+    }
+    html += '</div>';
     html += '</div>';
     addHTML(html);
 }
@@ -136,12 +177,87 @@ function linkify(text) {
     text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
     return text;
 }
+
+function sendTweet() {
+    var parameters = {status: $('#text').val()};
+    if(document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
+        return;
+    placeIndex = document.tweet_form.place.value;
+    if(placeIndex > 0) {
+        parameters.lat = places[placeIndex].lat;
+        parameters.lon = places[placeIndex].lon;
+    }
+
+    var message = {
+        action: "https://api.twitter.com/1/statuses/update.json",
+        method: "POST",
+        parameters: parameters
+    }
+
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'https://amazonas.f00bian.de/twitter.stream/statuses_update_proxy';
+    var data = OAuth.formEncode(message.parameters);
+
+    $.ajax({
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (data.text) {
+                //$('#counter').html(data + textStatus);
+                var html = 'Tweet-ID: ' + data.id + '<br />';
+                html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
+                html += 'Follower: ' + data.user.followers_count + '<br />';
+                html += 'Friends:' + data.user.friends_count + '<br />';
+
+                $('#success_info').html(html);
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            } else {
+                $('#form').fadeIn();
+            }
+        },
+        error: function() {
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+        }
+   });
+
+}
 </script>
 </head>
 
 <body>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
-<div id="status"><div id="connected">Connected</div><div id="disconnected">Disconnected</div></div>
+<div id="form_area">
+<form name="tweet_form" id="form">
+    <select name="place" id="place"></select>
+    <span id="counter"></span>
+    <input type="submit" onClick="sendTweet(); return false;" value="Tweet" /><br />
+
+    <textarea name="text" rows="5" cols="80" id="text"></textarea>
+</form>
+<div id="success">
+    <h1>OK</h1>
+    <div id="success_info"></div>
+</div>
+<div id="failure">
+    <h1>FEHLER</h1>
+</div>
+</div>
+
+<div id="status">
+    <div id="connected">Connected</div>
+    <div id="connecting">Connecting...</div>
+    <div id="disconnected">Disconnected</div>
+</div>
 <div id="content"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 </body>
