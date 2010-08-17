@@ -31,6 +31,8 @@ var message = {
 responseOffset = 0;
 buffer = "";
 isProcessing = false;
+reply_to_user = null;
+reply_to_id = null;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
 regexp_user = /(^|\s)@(\w+)/g;
@@ -40,14 +42,36 @@ regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 $(document).ready(start);
 
 function start() {
+    fillList();
     startRequest();
 
     // Fill Form
     for(var i=0; i<places.length; i++) {
         document.tweet_form.place.options[document.tweet_form.place.length] = new Option(places[i].name, i);
     }
+
+    updateCounter();
 }
 
+function fillList() {
+    var message = {
+        action: "https://api.twitter.com/1/statuses/home_timeline.json",
+        method: "GET",
+        parameters: {include_rts: "1", count: "250"}
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'https://amazonas.f00bian.de/twitter.stream/home_timeline_proxy?' + OAuth.formEncode(message.parameters);
+    var returned = $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType: "text"
+    }).responseText;
+    parseData(returned);
+}
+    
 function startRequest() {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
@@ -102,22 +126,30 @@ function processBuffer() {
 function parseData(data) {
     try {
         var message = eval('(' + data + ')');
-
-        if (message.text) {
-            addStatus(message);
-        } else if (message.friends) {
-            twitter_friends = message.friends;
-        } else if (message.delete) {
-            // Deletion-Request. Do nothing ,-)
-        /*else if (message.direct_message) {
-            // DM. Do something!
-        } else if (message.event) {
-            // Social Event. Perhaps do something?*/
-        } else {
-            addHTML(data + "<hr />");
-        }
     } catch (e) {
         addHTML("Exception: " + e);
+    }
+    if (message.constructor.toString().indexOf('Array')!=-1) {
+        var html = '';
+        for(var i=0; i<message.length; i++) {
+            html += addStatus(message[i], false);
+        }
+        addHTML(html);
+        return;
+    }
+
+    if (message.text) {
+        addStatus(message);
+    } else if (message.friends) {
+        twitter_friends = message.friends;
+    } else if (message.delete) {
+        // Deletion-Request. Do nothing ,-)
+    /*else if (message.direct_message) {
+        // DM. Do something!
+    } else if (message.event) {
+        // Social Event. Perhaps do something?*/
+    } else {
+        addHTML(data + "<hr />");
     }
 }
 
@@ -125,7 +157,9 @@ function addHTML(text) {
     $('#content').html(text + $('#content').html());
 }
 
-function addStatus(status) {
+function addStatus(status, addHTMLToPage) {
+    if (addHTMLToPage !== false)
+        addHTMLToPage = true;
     var html = "";
     var user;
     if (status.retweeted_status)
@@ -153,21 +187,30 @@ function addStatus(status) {
     html += '<a href="http://twitter.com/' + user + '">' + user + '</a>';
     html += '</span>';
     html += '<span class="text">';
-    html += linkify(status.text);
+    if (status.retweeted_status)
+        html += linkify(status.retweeted_status.text);
+    else
+        html += linkify(status.text);
     html += '</span>';
     html += '<div class="info">';
     html += datum + ' ';
     if(status.retweeted_status)
         html += 'Retweeted by ' + status.user.screen_name + ' ';
     if(status.in_reply_to_status_id)
-        html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + ' target="_blank">in reply to...</a> ';
+        html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
     html += 'from ' + status.source + ' ';
     if (status.coordinates) {
         html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank">geo</a> ';
         html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250">all geo</a> ';
     }
     html += '</div>';
+
+    html += '<div class="links">';
+    html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a>';
     html += '</div>';
+    html += '</div>';
+    if (!addHTMLToPage)
+        return html;
     addHTML(html);
 }
 
@@ -187,6 +230,8 @@ function sendTweet() {
         parameters.lat = places[placeIndex].lat;
         parameters.lon = places[placeIndex].lon;
     }
+    if (document.tweet_form.reply_to_id.value != "")
+        parameters.reply_to_id = document.tweet_form.in_reply_to_status_id.value;
 
     var message = {
         action: "https://api.twitter.com/1/statuses/update.json",
@@ -222,6 +267,8 @@ function sendTweet() {
             } else {
                 $('#form').fadeIn();
             }
+            $('#text').val('');
+            updateCounter();
         },
         error: function() {
             $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
@@ -229,20 +276,53 @@ function sendTweet() {
             });
         }
    });
+}
 
+function replyToTweet(tweet_id, user) {
+    reply_to_user = user;
+    reply_to_id = tweet_id;
+    $('#text').val('@' + user + ' ').focus();
+    $('#reply_to_id').val(tweet_id);
+    updateCounter();
+}
+
+function updateCounter() {
+    var text = $('#text').val();
+    $('#counter').html( 140-text.length );
+
+    if (reply_to_id != null) {
+        var re = new RegExp("(^| )@" + reply_to_user + "([\. ]|$)");
+        if (re.test(text)) {
+            $('#reply_warning').fadeOut();
+        } else {
+            $('#reply_warning').fadeIn();
+        }
+    } else {
+        $('#reply_to_id').val('');
+        $('#reply_warning').fadeOut();
+    }
+}
+
+function removeReplyWarning() {
+    $('#reply_to_id').val('');
+    $('#reply_warning').fadeOut();
+    reply_to_user = null;
+    reply_to_id = null;
 }
 </script>
 </head>
 
 <body>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
+<div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
 <form name="tweet_form" id="form">
     <select name="place" id="place"></select>
     <span id="counter"></span>
     <input type="submit" onClick="sendTweet(); return false;" value="Tweet" /><br />
 
-    <textarea name="text" rows="5" cols="80" id="text"></textarea>
+    <textarea name="text" rows="5" cols="80" id="text" onKeyUp="updateCounter();"></textarea>
+    <input type="hidden" name="reply_to_id" id="reply_to_id" value="" />
 </form>
 <div id="success">
     <h1>OK</h1>
