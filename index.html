@@ -33,6 +33,8 @@ buffer = "";
 isProcessing = false;
 reply_to_user = null;
 reply_to_id = null;
+maxreadid = 0;
+maxknownid = 0;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
 regexp_user = /(^|\s)@(\w+)/g;
@@ -42,6 +44,7 @@ regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 $(document).ready(start);
 
 function start() {
+    maxreadid = parseInt(getMaxReadID());
     fillList();
     startRequest();
 
@@ -167,9 +170,14 @@ function addStatus(status, addHTMLToPage) {
     else
         user = status.user.screen_name;
 
+    if (status.id > maxknownid)
+        maxknownid = status.id;
+
     var date = new Date(status.created_at);
     var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
-    html += '<div class="tweet new  by_' + user;
+    html += '<div class="tweet by_' + user;
+    if (status.id > maxreadid)
+        html += ' new';
     var mentions = status.text.match(regexp_user);
     if (mentions) for (var i=0; i<mentions.length; i++) {
         html += ' mentions_' + mentions[i].trim().substr(1) + ' ';
@@ -227,11 +235,11 @@ function sendTweet() {
         return;
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
-        parameters.lat = places[placeIndex].lat;
-        parameters.lon = places[placeIndex].lon;
+        parameters.lat = places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
+        parameters.lon = places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
     }
     if (document.tweet_form.reply_to_id.value != "")
-        parameters.reply_to_id = document.tweet_form.in_reply_to_status_id.value;
+        parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
 
     var message = {
         action: "https://api.twitter.com/1/statuses/update.json",
@@ -268,6 +276,8 @@ function sendTweet() {
                 $('#form').fadeIn();
             }
             $('#text').val('');
+            reply_to_user = null;
+            reply_to_id = null;
             updateCounter();
         },
         error: function() {
@@ -309,10 +319,45 @@ function removeReplyWarning() {
     reply_to_user = null;
     reply_to_id = null;
 }
+
+function getMaxReadID() {
+    return $.ajax({
+        method: 'GET',
+        url: 'https://amazonas.f00bian.de/twitter.stream/getmaxreadid.php',
+        async: false,
+        dataType: 'text'
+    }).responseText;
+}
+
+function setMaxReadID(id) {
+    $.ajax({
+        method: 'GET',
+        url: 'https://amazonas.f00bian.de/twitter.stream/setmaxreadid.php',
+        async: false,
+        dataType: 'text',
+        data: {id: id}
+    });
+}
+
+function markAllRead() {
+    if (maxknownid > 0)
+        setMaxReadID(maxknownid);
+    maxreadid = maxknownid;
+    $('.new').removeClass('new');
+}
 </script>
 </head>
 
 <body>
+<div id="status">
+    <div id="connected">Connected</div>
+    <div id="connecting">Connecting...</div>
+    <div id="disconnected">Disconnected</div>
+</div>
+<div id="buttonbar">
+    <a href="#" onClick="req.abort();"><img src="icons/action_refresh.gif" title="Verbindung neu aufbauen." /></a>
+    <a href="#" onClick="markAllRead();"><img src="icons/icon_accept.gif" title="Alle als gelesen markieren." /></a>
+</div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 <div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
@@ -333,11 +378,6 @@ function removeReplyWarning() {
 </div>
 </div>
 
-<div id="status">
-    <div id="connected">Connected</div>
-    <div id="connecting">Connecting...</div>
-    <div id="disconnected">Disconnected</div>
-</div>
 <div id="content"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 </body>
