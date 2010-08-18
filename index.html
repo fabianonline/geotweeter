@@ -28,6 +28,8 @@ var message = {
     parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
 }
 
+var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫";
+
 responseOffset = 0;
 buffer = "";
 isProcessing = false;
@@ -35,6 +37,9 @@ reply_to_user = null;
 reply_to_id = null;
 maxreadid = 0;
 maxknownid = 0;
+var delay = 2;
+var mindelay = 2;
+var maxdelay = 160;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
 regexp_user = /(^|\s)@(\w+)/g;
@@ -44,14 +49,18 @@ regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 $(document).ready(start);
 
 function start() {
-    maxreadid = parseInt(getMaxReadID());
-    fillList();
-    startRequest();
-
     // Fill Form
     for(var i=0; i<places.length; i++) {
         document.tweet_form.place.options[document.tweet_form.place.length] = new Option(places[i].name, i);
     }
+    for(var i=0; i<chars.length; i++) {
+        $('#chars').append('<a href="#" onClick="$(\'#text\').append(\'' + chars[i] + '\');">' + chars[i] + '</a>');
+    }
+
+    maxreadid = parseInt(getMaxReadID());
+    fillList();
+    startRequest();
+
 
     updateCounter();
 }
@@ -99,8 +108,11 @@ function parseResponse(event) {
         $('#status #connected').hide();
         $('#status #connecting').hide();
         $('#status #disconnected').show();
-        window.setTimeout('startRequest()', 5000);
+        window.setTimeout('startRequest()', delay*1000);
+        if (delay*2 <= maxdelay)
+            delay = delay * 2;
     } else if (event.target.readyState == 3) {
+        delay = mindelay;
         $('#status #connected').show();
         $('#status #connecting').hide();
         $('#status #disconnected').hide();
@@ -181,7 +193,7 @@ function addStatus(status, addHTMLToPage) {
         maxknownid = status.id;
 
     var date = new Date(status.created_at);
-    var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
+    var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
     html += '<div class="';
     if (!isDM)
         html += 'tweet ';
@@ -235,6 +247,12 @@ function addStatus(status, addHTMLToPage) {
     if (!addHTMLToPage)
         return html;
     addHTML(html);
+}
+
+function addnull(number) {
+    if (number<10)
+        return "0" + number;
+    return number;
 }
 
 function linkify(text) {
@@ -375,7 +393,10 @@ function markAllRead() {
 <div id="buttonbar">
     <a href="#" onClick="req.abort();"><img src="icons/action_refresh.gif" title="Verbindung neu aufbauen." /></a>
     <a href="#" onClick="markAllRead();"><img src="icons/icon_accept.gif" title="Alle als gelesen markieren." /></a>
+    <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/file_font_truetype.gif" title="Sonderzeichen einfügen" /></a>
+    <a href="#" onClick="location.reload();"><img src="icons/action_refresh_blue.gif" title="App neu starten." /></a>
 </div>
+<div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 <div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
