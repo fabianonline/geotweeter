@@ -147,9 +147,9 @@ function parseData(data) {
         twitter_friends = message.friends;
     } else if (message.delete) {
         // Deletion-Request. Do nothing ,-)
-    /*else if (message.direct_message) {
-        // DM. Do something!
-    } else if (message.event) {
+    } else if (message.direct_message) {
+        addStatus(message);
+    /*} else if (message.event) {
         // Social Event. Perhaps do something?*/
     } else {
         addHTML(data + "<hr />");
@@ -161,22 +161,34 @@ function addHTML(text) {
 }
 
 function addStatus(status, addHTMLToPage) {
+    isDM = false;
+    if (status.direct_message) {
+        isDM = true;
+        status = status.direct_message;
+    }
     if (addHTMLToPage !== false)
         addHTMLToPage = true;
     var html = "";
     var user;
     if (status.retweeted_status)
         user = status.retweeted_status.user.screen_name;
+    else if (isDM)
+        user = status.sender.screen_name;
     else
         user = status.user.screen_name;
 
-    if (status.id > maxknownid)
+    if (!isDM && status.id > maxknownid)
         maxknownid = status.id;
 
     var date = new Date(status.created_at);
     var datum = date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getYear() + ' ' + date.getHours() + ':' + date.getMinutes();
-    html += '<div class="tweet by_' + user;
-    if (status.id > maxreadid)
+    html += '<div class="';
+    if (!isDM)
+        html += 'tweet ';
+    else
+        html += 'dm ';
+    html += 'by_' + user;
+    if (!isDM && status.id > maxreadid)
         html += ' new';
     var mentions = status.text.match(regexp_user);
     if (mentions) for (var i=0; i<mentions.length; i++) {
@@ -187,6 +199,8 @@ function addStatus(status, addHTMLToPage) {
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
     if (status.retweeted_status)
         html += status.retweeted_status.user.profile_image_url;
+    else if (isDM)
+        html += status.sender.profile_image_url;
     else
         html += status.user.profile_image_url;
     html += '" /></a>';
@@ -206,7 +220,8 @@ function addStatus(status, addHTMLToPage) {
         html += 'Retweeted by ' + status.user.screen_name + ' ';
     if(status.in_reply_to_status_id)
         html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
-    html += 'from ' + status.source + ' ';
+    if (status.source)
+        html += 'from ' + status.source + ' ';
     if (status.coordinates) {
         html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank">geo</a> ';
         html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250">all geo</a> ';
@@ -214,7 +229,7 @@ function addStatus(status, addHTMLToPage) {
     html += '</div>';
 
     html += '<div class="links">';
-    html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a>';
+    html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a>';
     html += '</div>';
     html += '</div>';
     if (!addHTMLToPage)
@@ -288,10 +303,13 @@ function sendTweet() {
    });
 }
 
-function replyToTweet(tweet_id, user) {
+function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = user;
     reply_to_id = tweet_id;
-    $('#text').val('@' + user + ' ').focus();
+    if (isDM)
+        $('#text').val('d @' + user + ' ').focus();
+    else
+        $('#text').val('@' + user + ' ').focus();
     $('#reply_to_id').val(tweet_id);
     updateCounter();
 }

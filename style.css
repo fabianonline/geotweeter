@@ -22,13 +22,17 @@ textarea, input, select {
     text-decoration: none;
 }
 
-.tweet {
+.tweet, .dm {
     border-top: 1px solid #555;
     clear: both;
     min-height: 30px;
     padding-left: 5px;
     padding-top: 5px;
     padding-bottom: 5px;
+}
+
+.dm {
+    background-color: #fc0;
 }
 
 .tweet.by_fabianonline {
@@ -126,12 +130,13 @@ textarea, input, select {
     display: none;
 }
 
-.tweet .info, .tweet .links {
+.tweet .info, .tweet .links,
+.dm .info, .dm .links {
     display: none;
 }
 
-.tweet:hover .info,
-.tweet:hover .links {
+.tweet:hover .info, .tweet:hover .links,
+.dm:hover .info, .dm:hover .links {
     display: block !important;
 }
 
