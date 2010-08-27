@@ -22,7 +22,7 @@ textarea, input, select {
     text-decoration: none;
 }
 
-.tweet, .dm {
+.tweet, .dm, .status {
     border-top: 1px solid #555;
     clear: both;
     min-height: 30px;
@@ -33,6 +33,10 @@ textarea, input, select {
 
 .dm {
     background-color: #fc0;
+}
+
+.status {
+    background-color: #f6f;
 }
 
 .tweet.by_fabianonline {
@@ -146,6 +150,11 @@ textarea, input, select {
 }
 
 #status #connecting {
+    background-color: #fc0;
+    display: none;
+}
+
+#status #filling {
     background-color: #ff0;
     display: none;
 }

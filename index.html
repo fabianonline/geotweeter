@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Twitter.Stream</title>
+<title>Fabians Geotweeter</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <script src="oauth.js"></script>
 <script src="sha1.js"></script>
@@ -18,8 +18,13 @@ var accessor = {
 }
 
 var places = [
-    {name:"--leer--", lat:0.0, lon:0.0},
-    {name:"Zu Hause", lat:51.446646, lon:7.646494}
+    {name:"--leer--",  lat:0.0000000, lon:0.000000},
+    {name:"Zu Hause",  lat:51.446646, lon:7.646494},
+    {name:"Papi",      lat:51.520870, lon:8.532433},
+    {name:"Arbeit",    lat:51.483685, lon:7.411289},
+    {name:"GB5 R.334", lat:51.483721, lon:7.410863},
+    {name:"OH 14",     lat:51.489777, lon:7.406346},
+    {name:"UFC",       lat:51.494550, lon:7.411935}
 ];
 
 var message = {
@@ -30,16 +35,17 @@ var message = {
 
 var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫";
 
-responseOffset = 0;
-buffer = "";
-isProcessing = false;
-reply_to_user = null;
-reply_to_id = null;
-maxreadid = 0;
-maxknownid = 0;
+var responseOffset = 0;
+var buffer = "";
+var isProcessing = false;
+var reply_to_user = null;
+var reply_to_id = null;
+var maxreadid = 0;
+var maxknownid = 0;
 var delay = 2;
 var mindelay = 2;
 var maxdelay = 160;
+var connectionStartedAt = new Date();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
 regexp_user = /(^|\s)@(\w+)/g;
@@ -58,7 +64,6 @@ function start() {
     }
 
     maxreadid = parseInt(getMaxReadID());
-    fillList();
     startRequest();
 
 
@@ -66,15 +71,20 @@ function start() {
 }
 
 function fillList() {
+    $('#status').find("*").hide();
+    $('#status #filling').show();
+    var parameters = {include_rts: "1", count: "250"};
+    if (maxknownid > 0)
+        parameters.since_id = maxknownid;
     var message = {
         action: "https://api.twitter.com/1/statuses/home_timeline.json",
         method: "GET",
-        parameters: {include_rts: "1", count: "250"}
+        parameters: parameters
     }
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'https://amazonas.f00bian.de/twitter.stream/home_timeline_proxy?' + OAuth.formEncode(message.parameters);
+    var url = 'home_timeline_proxy?' + OAuth.formEncode(message.parameters);
     var returned = $.ajax({
         url: url,
         type: "GET",
@@ -85,16 +95,17 @@ function fillList() {
 }
     
 function startRequest() {
+    fillList();
+
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'https://amazonas.f00bian.de/twitter.stream/user_proxy?' + OAuth.formEncode(message.parameters);
+    var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
     //url = 'https://amazonas.f00bian.de/twitter.stream/sample_proxy?' + OAuth.formEncode(message.parameters);
     //$("#content").html($('#content').html() + url + '<hr />');
     //return;
-
-    $('#status #connected').hide();
-    $('#status #disconnected').hide();
+    
+    $('#status').find('*').hide();
     $('#status #connecting').show();
 
     req = new XMLHttpRequest();
@@ -104,18 +115,26 @@ function startRequest() {
 }
 
 function parseResponse(event) {
-    if (event.target.readyState == 4) {
-        $('#status #connected').hide();
-        $('#status #connecting').hide();
+    if (event.target.readyState == 1) {
+        connectionStartedAt = new Date();
+    } else if (event.target.readyState == 4) {
+        $('#status').find('*').hide();
         $('#status #disconnected').show();
+        var jetzt = new Date();
+        if (jetzt.getTime() - connectionStartedAt.getTime() > 10000)
+            delay = mindelay;
+        var html = '<div class="status">Disconnect. ';
+        if (event.target.status != 200) {
+            html += 'Status: ' + event.target.status + ' (' + event.target.statusText + '). ';
+            delay = maxdelay;
+        }
+        addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
         window.setTimeout('startRequest()', delay*1000);
         if (delay*2 <= maxdelay)
             delay = delay * 2;
     } else if (event.target.readyState == 3) {
-        delay = mindelay;
+        $('#status').find('*').hide();
         $('#status #connected').show();
-        $('#status #connecting').hide();
-        $('#status #disconnected').hide();
     }
     buffer += event.target.responseText.substr(responseOffset);
     responseOffset = event.target.responseText.length;
@@ -147,11 +166,14 @@ function parseData(data) {
     if (message.constructor.toString().indexOf('Array')!=-1) {
         var html = '';
         for(var i=0; i<message.length; i++) {
-            html += addStatus(message[i], false);
+            if (message[i]) html += addStatus(message[i], false);
         }
         addHTML(html);
         return;
     }
+
+    if (message==null)
+        return; // Fix for NULLs in stream
 
     if (message.text) {
         addStatus(message);
@@ -241,7 +263,10 @@ function addStatus(status, addHTMLToPage) {
     html += '</div>';
 
     html += '<div class="links">';
-    html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a>';
+    if (isDM)
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a>';
+    else
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a>';
     html += '</div>';
     html += '</div>';
     if (!addHTMLToPage)
@@ -285,7 +310,7 @@ function sendTweet() {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'https://amazonas.f00bian.de/twitter.stream/statuses_update_proxy';
+    var url = 'statuses_update_proxy';
     var data = OAuth.formEncode(message.parameters);
 
     $.ajax({
@@ -324,8 +349,8 @@ function sendTweet() {
 function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = user;
     reply_to_id = tweet_id;
-    if (isDM)
-        $('#text').val('d @' + user + ' ').focus();
+    if (isDM===true)
+        $('#text').val('d ' + user + ' ').focus();
     else
         $('#text').val('@' + user + ' ').focus();
     $('#reply_to_id').val(tweet_id);
@@ -359,7 +384,7 @@ function removeReplyWarning() {
 function getMaxReadID() {
     return $.ajax({
         method: 'GET',
-        url: 'https://amazonas.f00bian.de/twitter.stream/getmaxreadid.php',
+        url: 'getmaxreadid.php',
         async: false,
         dataType: 'text'
     }).responseText;
@@ -368,7 +393,7 @@ function getMaxReadID() {
 function setMaxReadID(id) {
     $.ajax({
         method: 'GET',
-        url: 'https://amazonas.f00bian.de/twitter.stream/setmaxreadid.php',
+        url: 'setmaxreadid.php',
         async: false,
         dataType: 'text',
         data: {id: id}
@@ -388,6 +413,7 @@ function markAllRead() {
 <div id="status">
     <div id="connected">Connected</div>
     <div id="connecting">Connecting...</div>
+    <div id="filling">Filling list...</div>
     <div id="disconnected">Disconnected</div>
 </div>
 <div id="buttonbar">
