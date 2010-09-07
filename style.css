@@ -75,6 +75,11 @@ textarea, input, select {
     -moz-box-shadow: #aaa -2px -2px 7px;
 }
 
+.place {
+    color: #888;
+    font-size: 8px;
+}
+
 .info {
     color: #aaa;
 }
