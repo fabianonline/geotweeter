@@ -200,15 +200,31 @@ function parseData(data) {
         // Deletion-Request. Do nothing ,-)
     } else if (message.direct_message) {
         addStatus(message);
-    /*} else if (message.event) {
-        // Social Event. Perhaps do something?*/
+    } else if (message.event && message.event=="follow") {
+        // Social Event.
+        addFollowEvent(message);
     } else {
-        addHTML('Unbekannte Daten:<br />' + data + "<hr />");
+        addHTML('<hr />Unbekannte Daten:<br />' + data);
     }
 }
 
 function addHTML(text) {
     $('#content').html(text + $('#content').html());
+}
+
+function addFollowEvent(event) {
+    if (event.source.screen_name=="fabianonline") return;
+    var html = "";
+    html += '<div class="status">';
+    html += '<span class="avatar">';
+    html += '<a href="http://twitter.com/account/profile_image/' + event.source.screen_name + '"><img class="user_avatar" src="' + event.source.profile_image_url + '" /></a>';
+    html += '</span>';
+    html += 'Neuer Follower: ';
+    html += '<span class="poster">';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a> (' + event.source.name + ')';
+    html += '</span>';
+    html += '</div>';
+    addHTML(html);
 }
 
 function addStatus(status, addHTMLToPage) {
