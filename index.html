@@ -52,6 +52,7 @@ var lastDataReceivedAt = null;
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
 regexp_user = /(^|\s)@(\w+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
+regexp_cache = /(^|\s)(GC[A-Z1-9]+)/g;
 
 
 $(document).ready(start);
@@ -281,12 +282,12 @@ function addStatus(status, addHTMLToPage) {
     else
         html += linkify(status.text);
     html += '</span>';
+    if (status.retweeted_status)
+        html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '">' + status.user.screen_name + '</a></div>';
     if (status.place)
         html += '<div class="place">from ' + status.place.full_name + '</div>';
     html += '<div class="info">';
     html += datum + ' ';
-    if(status.retweeted_status)
-        html += 'Retweeted by ' + status.user.screen_name + ' ';
     if(status.in_reply_to_status_id)
         html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
     if (status.source)
@@ -299,9 +300,15 @@ function addStatus(status, addHTMLToPage) {
 
     html += '<div class="links">';
     if (isDM)
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a>';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a> ';
     else
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a>';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a> ';
+    if (!isDM)
+        html += '<a href="#" onClick="retweet(' + status.id + '); return true;">Retweet</a> ';
+    if (!isDM)
+        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text) + '\'); return true;">Quote</a> ';
+    html += '<a href="http://translate.google.de/#auto|de|' + status.text + '" target="_blank">Translate</a> ';
+
     html += '</div>';
     html += '</div>';
     if (!addHTMLToPage)
@@ -319,6 +326,7 @@ function linkify(text) {
     text = text.replace(regexp_url, '<a href="$1" target="_blank">$1</a>');
     text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
     text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
+    text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
     return text;
 }
 
@@ -385,6 +393,63 @@ function sendTweet() {
    });
 }
 
+function retweet(id) {
+    if (!confirm('Wirklich direkt retweeten?'))
+        return false;
+
+    var parameters = {id: id};
+
+    var message = {
+        action: "https://api.twitter.com/1/statuses/retweet.json",
+        method: "POST",
+        parameters: parameters
+    }
+
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'statuses_retweet_proxy';
+    var data = OAuth.formEncode(message.parameters);
+
+    $.ajax({
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (data.status) {
+                $('#success_info').html("Retweet successful");
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            } else {
+                $('#failure_info').html(data.error);
+                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            }
+            updateCounter();
+        },
+        error: function(req, testStatus, exc) {
+            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+        }
+   });
+}
+
+function quote(tweet_id, user, text) {
+    text = 'RT @' + user + ': ' + unescape(text);
+    reply_to_user = user;
+    reply_to_id = tweet_id;
+    $('#text').val(text).focus();
+    $('#reply_to_id').val(tweet_id);
+    updateCounter();
+}
+
 function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = user;
     reply_to_id = tweet_id;
@@ -401,7 +466,7 @@ function updateCounter() {
     $('#counter').html( 140-text.length );
 
     if (reply_to_id != null) {
-        var re = new RegExp("(^| )@" + reply_to_user + "([\. ]|$)");
+        var re = new RegExp("(^| )@" + reply_to_user + "([\.:, ]|$)");
         if (re.test(text)) {
             $('#reply_warning').fadeOut();
         } else {

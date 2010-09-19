@@ -75,9 +75,14 @@ textarea, input, select {
     -moz-box-shadow: #aaa -2px -2px 7px;
 }
 
-.place {
-    color: #888;
+.place, .retweet_info {
+    color: #333;
     font-size: 8px;
+}
+
+.retweet_info a {
+    color: #333 !important;
+    text-decoration: none !important;
 }
 
 .info {
