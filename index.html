@@ -8,7 +8,7 @@
 <script src="sha1.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script type="text/javascript">
-var url = "https://betastream.twitter.com/2b/user.json";
+var url = "https://userstream.twitter.com/2/user.json";
 //var url = "http://stream.twitter.com/1/statuses/sample.json";
 var accessor = {
     token: "15006408-BtuU3rI0K0FGI8cnIpa5YYZHNpSNWDJScCD9x4Gdn",
@@ -19,12 +19,12 @@ var accessor = {
 
 var places = [
     {name:"--leer--",  lat:0.0000000, lon:0.000000},
-    {name:"Zu Hause",  lat:51.446646, lon:7.646494},
-    {name:"Papi",      lat:51.520870, lon:8.532433},
-    {name:"Arbeit",    lat:51.483685, lon:7.411289},
-    {name:"GB5 R.334", lat:51.483721, lon:7.410863},
-    {name:"OH 14",     lat:51.489777, lon:7.406346},
-    {name:"UFC",       lat:51.494550, lon:7.411935}
+    {name:"Zu Hause",  lat:51.446646, lon:7.646494, place_id:"c2a82d0b6fbcde87"}, // "Letteweg"
+    {name:"Papi",      lat:51.520870, lon:8.532433, place_id:"12b809c9f5071d62"}, // "Siddinghausen, Büren, Paderborn"
+    {name:"Arbeit",    lat:51.483685, lon:7.411289, place_id:"d423ae4220494dff"}, // "GB5, Uni..."
+    {name:"GB5 R.334", lat:51.483721, lon:7.410863, place_id:"d423ae4220494dff"}, // "GB5, Uni..."
+    {name:"OH 14",     lat:51.489777, lon:7.406346, place_id:"ad78499b8383b454"}, // "OH14"
+    {name:"UFC",       lat:51.484404, lon:7.416725, place_id:"564a7c397c5583ff"}, // "Pav. 4"
 ];
 
 var message = {
@@ -49,8 +49,8 @@ var connectionStartedAt = new Date();
 var disconnectBecauseOfTimeout = false;
 var lastDataReceivedAt = null;
 
-regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ ]*[^" \.,;\)])?))/ig;
-regexp_user = /(^|\s)@(\w+)/g;
+regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
+regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 regexp_cache = /(^|\s)(GC[A-Z1-9]+)/g;
 
@@ -306,8 +306,8 @@ function addStatus(status, addHTMLToPage) {
     if (!isDM)
         html += '<a href="#" onClick="retweet(' + status.id + '); return true;">Retweet</a> ';
     if (!isDM)
-        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text) + '\'); return true;">Quote</a> ';
-    html += '<a href="http://translate.google.de/#auto|de|' + status.text + '" target="_blank">Translate</a> ';
+        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return true;">Quote</a> ';
+    html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank">Translate</a> ';
 
     html += '</div>';
     html += '</div>';
@@ -338,6 +338,9 @@ function sendTweet() {
     if(placeIndex > 0) {
         parameters.lat = places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
         parameters.lon = places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
+        if (places[placeIndex].place_id)
+            parameters.place_id = places[placeIndex].place_id;
+        parameters.display_coordinates = "true";
     }
     if (document.tweet_form.reply_to_id.value != "")
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
