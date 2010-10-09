@@ -349,21 +349,11 @@ function sendTweet() {
         return;
 
     var text = $('#text').val();
-    var parts = text.split(tweetSeperator);
-
-    var mention = text.match(/^(@[a-z0-9_]+) /i);
+    
+    var parts = splitTweet(text);
 
     for (var i=0; i<parts.length; i++) {
-        part = "";
-        if (i>0 && mention!=null)
-            part = mention[1] + ' ';
-        if (i>0)
-            part += tweetSeperatorPrefix;
-        part += parts[i];
-        if (i<(parts.length-1))
-            part += tweetSeperatorSuffix;
-
-        if (_sendTweet(part)) {
+        if (_sendTweet(parts[i])) {
             /* Tweet wurde erfolgreich gesendet */
             if (i == (parts.length-1)) {
                 /* Es war der letzte oder einzige Teil des Tweets */
@@ -377,11 +367,8 @@ function sendTweet() {
             /* Neuen String bauen... */
             text = "";
             for (var j=i; j<parts.length; j++) {
-                if (j>0 && j==i && mention)
-                    text += mention[1]+' ';
-                text += parts[j]+tweetSeperator;
+                text += parts[j] + ' ';
             }
-            text = text.substr(0, text.length-tweetSeperator.length);
             $('#text').val(text);
             break;
         }
@@ -451,7 +438,31 @@ function _sendTweet(text) {
 }
 
 function splitTweet(text) {
+    var mention = text.match(/^(@[a-z0-9_]+) /i);
+    var words = text.split(' ');
+    var word;
+    var text = "";
 
+    var parts = new Array();
+    while ((word = words.shift())!=null) {
+        text = text.trim();
+        if (text.length + word.length + 1 <= 140-tweetSeperatorSuffix.length && word!=tweetSeperator)
+            text += " " + word;
+        else if (words.length==0 && text.length+word.length+1<=140 && word!=tweetSeperator)
+            text += " " + word;
+        else {
+            parts.push((text + tweetSeperatorSuffix).trim());
+            if (mention)
+                text = mention[1] + ' ';
+            else
+                text = '';
+            if (word!=tweetSeperator)
+                text += tweetSeperatorPrefix + word;
+        }
+    }
+    if (text.trim().length>0)
+        parts.push(text.trim());
+    return parts;
 }
 
 function retweet(id) {
@@ -525,19 +536,13 @@ function replyToTweet(tweet_id, user, isDM) {
 
 function updateCounter() {
     var text = $('#text').val();
-    parts = text.split(tweetSeperator);
+    var parts = splitTweet(text);
 
-    var mention = text.match(/^(@[a-z0-9_]+) /i);
     var lengths = "";
-
+    if (parts.length==0)
+        lengths = "140+";
     for (var i=0; i<parts.length; i++) {
         var len = 140 - parts[i].length;
-        if (i>0 && mention!=null)
-            len -= (mention[1].length + 1);
-        if (i>0)
-            len -= tweetSeperatorPrefix.length;
-        if (i<(parts.length-1))
-            len -= tweetSeperatorSuffix.length;
         lengths += len+'+';
     }
     lengths = lengths.substr(0, lengths.length-1);
