@@ -34,6 +34,9 @@ var message = {
 }
 
 var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫";
+var tweetSeperator = "<|>";
+var tweetSeperatorPrefix = "<< ";
+var tweetSeperatorSuffix = " >>";
 
 var responseOffset = 0;
 var buffer = "";
@@ -342,9 +345,51 @@ function linkify(text) {
 }
 
 function sendTweet() {
-    var parameters = {status: $('#text').val()};
     if(document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
         return;
+
+    var text = $('#text').val();
+    var parts = text.split(tweetSeperator);
+
+    var mention = text.match(/^(@[a-z0-9_]+) /i);
+
+    for (var i=0; i<parts.length; i++) {
+        part = "";
+        if (i>0 && mention!=null)
+            part = mention[1] + ' ';
+        if (i>0)
+            part += tweetSeperatorPrefix;
+        part += parts[i];
+        if (i<(parts.length-1))
+            part += tweetSeperatorSuffix;
+
+        if (_sendTweet(part)) {
+            /* Tweet wurde erfolgreich gesendet */
+            if (i == (parts.length-1)) {
+                /* Es war der letzte oder einzige Teil des Tweets */
+                $('#text').val('');
+                reply_to_user = null;
+                reply_to_id = null;
+                updateCounter();
+            }
+        } else {
+            /* Tweet konnte nicht abgesendet werden */
+            /* Neuen String bauen... */
+            text = "";
+            for (var j=i; j<parts.length; j++) {
+                if (j>0 && j==i && mention)
+                    text += mention[1]+' ';
+                text += parts[j]+tweetSeperator;
+            }
+            text = text.substr(0, text.length-tweetSeperator.length);
+            $('#text').val(text);
+            break;
+        }
+    }
+}
+
+function _sendTweet(text) {
+    var parameters = {status: text};
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
         parameters.lat = places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
@@ -370,9 +415,10 @@ function sendTweet() {
     var url = 'statuses_update_proxy';
     var data = OAuth.formEncode(message.parameters);
 
-    $.ajax({
+    var req = $.ajax({
         url: url,
         data: data,
+        async: false,
         dataType: "json",
         type: "POST",
         success: function(data, textStatus, req) {
@@ -393,10 +439,6 @@ function sendTweet() {
                     $('#form').fadeTo(500, 1);
                 });
             }
-            $('#text').val('');
-            reply_to_user = null;
-            reply_to_id = null;
-            updateCounter();
         },
         error: function(req, testStatus, exc) {
             $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
@@ -405,6 +447,11 @@ function sendTweet() {
             });
         }
    });
+   return req.status==200;
+}
+
+function splitTweet(text) {
+
 }
 
 function retweet(id) {
@@ -478,7 +525,24 @@ function replyToTweet(tweet_id, user, isDM) {
 
 function updateCounter() {
     var text = $('#text').val();
-    $('#counter').html( 140-text.length );
+    parts = text.split(tweetSeperator);
+
+    var mention = text.match(/^(@[a-z0-9_]+) /i);
+    var lengths = "";
+
+    for (var i=0; i<parts.length; i++) {
+        var len = 140 - parts[i].length;
+        if (i>0 && mention!=null)
+            len -= (mention[1].length + 1);
+        if (i>0)
+            len -= tweetSeperatorPrefix.length;
+        if (i<(parts.length-1))
+            len -= tweetSeperatorSuffix.length;
+        lengths += len+'+';
+    }
+    lengths = lengths.substr(0, lengths.length-1);
+        
+    $('#counter').html(lengths);
 
     if (reply_to_id != null) {
         var re = new RegExp("(^| )@" + reply_to_user + "([\.:, ]|$)");
