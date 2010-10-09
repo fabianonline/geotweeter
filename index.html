@@ -30,7 +30,7 @@ var places = [
 var message = {
     action: url,
     method: "GET",
-    parameters: {delimited: "length", include_entities: "1", include_rts: "1", with: "followings"}
+    parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
 }
 
 var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫";
@@ -42,12 +42,15 @@ var reply_to_user = null;
 var reply_to_id = null;
 var maxreadid = 0;
 var maxknownid = 0;
+var minknownid = 0;
 var delay = 2;
 var mindelay = 2;
+var maxPages = 2;
 var maxdelay = 160;
 var connectionStartedAt = new Date();
 var disconnectBecauseOfTimeout = false;
 var lastDataReceivedAt = null;
+var goDownTo = null;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -85,25 +88,29 @@ function checkForTimeout() {
 function fillList() {
     $('#status').find("*").hide();
     $('#status #filling').show();
-    var parameters = {include_rts: "1", count: "250"};
-    if (maxknownid > 0)
-        parameters.since_id = maxknownid;
-    var message = {
-        action: "https://api.twitter.com/1/statuses/home_timeline.json",
-        method: "GET",
-        parameters: parameters
+    var page = 1;
+    while ((minknownid==0 || maxreadid < minknownid) && page <= maxPages) {
+        var parameters = {include_rts: "1", count: "500", page: page};
+        if (maxknownid > 0)
+            parameters.since_id = maxknownid;
+        var message = {
+            action: "https://api.twitter.com/1/statuses/home_timeline.json",
+            method: "GET",
+            parameters: parameters
+        }
+        OAuth.setTimestampAndNonce(message);
+        OAuth.completeRequest(message, accessor);
+        OAuth.SignatureMethod.sign(message, accessor);
+        var url = 'home_timeline_proxy?' + OAuth.formEncode(message.parameters);
+        var returned = $.ajax({
+            url: url,
+            type: "GET",
+            async: false,
+            dataType: "text"
+        }).responseText;
+        parseData(returned);
+        page += 1;
     }
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'home_timeline_proxy?' + OAuth.formEncode(message.parameters);
-    var returned = $.ajax({
-        url: url,
-        type: "GET",
-        async: false,
-        dataType: "text"
-    }).responseText;
-    parseData(returned);
 }
     
 function startRequest() {
@@ -247,6 +254,8 @@ function addStatus(status, addHTMLToPage) {
 
     if (!isDM && status.id > maxknownid)
         maxknownid = status.id;
+    if (!isDM && (minknownid==0 || status.id < minknownid))
+        minknownid = status.id;
 
     var date = new Date(status.created_at);
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
@@ -263,6 +272,7 @@ function addStatus(status, addHTMLToPage) {
         html += ' mentions_' + mentions[i].trim().substr(1) + ' ';
     }
     html += '">';
+    html += '<a name="status_' + status.id + '" />';
     html += '<span class="avatar">';
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
     if (status.retweeted_status)
@@ -373,7 +383,7 @@ function sendTweet() {
                 html += 'Friends:' + data.user.friends_count + '<br />';
 
                 $('#success_info').html(html);
-                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
             } else {
@@ -461,6 +471,7 @@ function replyToTweet(tweet_id, user, isDM) {
     else
         $('#text').val('@' + user + ' ').focus();
     $('#reply_to_id').val(tweet_id);
+    setGoDownTo('status_' + tweet_id);
     updateCounter();
 }
 
@@ -513,6 +524,17 @@ function markAllRead() {
     maxreadid = maxknownid;
     $('.new').removeClass('new');
 }
+
+function setGoDownTo(hash) {
+    goDownTo = hash;
+    $('#godown').display();
+}
+
+function goDown() {
+    self.location = '#' + goDownTo;
+    goDownTo = null;
+    $('#godown').hide();
+}
 </script>
 </head>
 
@@ -528,6 +550,7 @@ function markAllRead() {
     <a href="#" onClick="markAllRead();"><img src="icons/icon_accept.gif" title="Alle als gelesen markieren." /></a>
     <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/file_font_truetype.gif" title="Sonderzeichen einfügen" /></a>
     <a href="#" onClick="location.reload();"><img src="icons/action_refresh_blue.gif" title="App neu starten." /></a>
+    <a href="#" onClick="goDown(); return false;">Go down</a>
 </div>
 <div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
