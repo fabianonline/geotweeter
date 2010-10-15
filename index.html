@@ -304,10 +304,10 @@ function addStatus(status, addHTMLToPage) {
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '">' + status.user.screen_name + '</a></div>';
     if (status.place)
-        html += '<div class="place">from ' + status.place.full_name + '</div>';
+        html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '">' + status.place.full_name + '</a></div>';
     html += '<div class="overlay">';
     html += '<div class="info">';
-    html += datum + ' ';
+    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '">' + datum + '</a> ';
     if(status.in_reply_to_status_id)
         html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
     if (status.source)
