@@ -305,6 +305,7 @@ function addStatus(status, addHTMLToPage) {
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '">' + status.user.screen_name + '</a></div>';
     if (status.place)
         html += '<div class="place">from ' + status.place.full_name + '</div>';
+    html += '<div class="overlay">';
     html += '<div class="info">';
     html += datum + ' ';
     if(status.in_reply_to_status_id)
@@ -328,8 +329,9 @@ function addStatus(status, addHTMLToPage) {
         html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return true;">Quote</a> ';
     html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank">Translate</a> ';
 
-    html += '</div>';
-    html += '</div>';
+    html += '</div>'; // Links
+    html += '</div>'; // overlay
+    html += '</div>'; // tweet
     if (!addHTMLToPage)
         return html;
     addHTML(html);

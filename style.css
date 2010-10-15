@@ -23,6 +23,7 @@ textarea, input, select {
 }
 
 .tweet, .dm, .status {
+    position: relative;
     border-top: 1px solid #555;
     clear: both;
     min-height: 30px;
@@ -85,10 +86,6 @@ textarea, input, select {
     text-decoration: none !important;
 }
 
-.info {
-    color: #aaa;
-}
-
 .links, .links a {
     color: #000;
 }
@@ -144,14 +141,10 @@ textarea, input, select {
     display: none;
 }
 
-.tweet .info, .tweet .links,
-.dm .info, .dm .links {
-    display: none;
-}
-
-.tweet:hover .info, .tweet:hover .links,
-.dm:hover .info, .dm:hover .links {
-    display: block !important;
+.tweet .overlay,
+.dm .overlay {
+    font-size: 8px;
+    width: 100%;
 }
 
 #status #connected {
