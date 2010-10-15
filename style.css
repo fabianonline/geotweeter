@@ -145,19 +145,19 @@ textarea, input, select {
 .dm .overlay {
     font-size: 8px;
     width: 100%;
-    visibility: hidden;
+    display: none;
     text-decoration: none !important;
     color: #333 !important;
+}
+
+.tweet:hover .overlay,
+.dm:hover .overlay {
+    display: block;
 }
 
 .overlay a {
     text-decoration: none;
     color: #333;
-}
-
-.tweet:hover .overlay,
-.dm:hover .overlay {
-    visibility: visible;
 }
 
 #status #connected {
