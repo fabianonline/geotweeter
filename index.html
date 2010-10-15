@@ -312,22 +312,22 @@ function addStatus(status, addHTMLToPage) {
         html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
     if (status.source)
         html += 'from ' + status.source + ' ';
-    if (status.coordinates) {
-        html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank">geo</a> ';
-        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250">all geo</a> ';
-    }
     html += '</div>';
 
     html += '<div class="links">';
     if (isDM)
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;">Reply</a> ';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;"><img src="icons/comments.png" title="Reply" /></a> ';
     else
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;">Reply</a> ';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;"><img src="icons/comments.png" title="Reply" /></a> ';
     if (!isDM)
-        html += '<a href="#" onClick="retweet(' + status.id + '); return true;">Retweet</a> ';
+        html += '<a href="#" onClick="retweet(' + status.id + '); return true;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a> ';
     if (!isDM)
-        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return true;">Quote</a> ';
-    html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank">Translate</a> ';
+        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return true;"><img src="icons/tag.png" title="Quote" /></a> ';
+    html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank"><img src="icons/transmit.png" title="Translate" /></a> ';
+    if (status.coordinates) {
+        html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a> ';
+        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250"><img src="icons/world_add.png" title="All Geotags" /></a> ';
+    }
 
     html += '</div>'; // Links
     html += '</div>'; // overlay
@@ -631,12 +631,11 @@ function goToMyLastTweet() {
     <div id="disconnected">Disconnected</div>
 </div>
 <div id="buttonbar">
-    <a href="#" onClick="req.abort();"><img src="icons/action_refresh.gif" title="Verbindung neu aufbauen." /></a>
-    <a href="#" onClick="markAllRead();"><img src="icons/icon_accept.gif" title="Alle als gelesen markieren." /></a>
-    <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/file_font_truetype.gif" title="Sonderzeichen einfügen" /></a>
-    <a href="#" onClick="location.reload();"><img src="icons/action_refresh_blue.gif" title="App neu starten." /></a>
-    <a href="#" onClick="goDown(); return false;"><img src="icons/arrow_down.gif" title="Zurück nach unten." /></a>
-    <a href="#" onClick="goToMyLastTweet(); return false;">My last tweet</a>
+    <a href="#" onClick="location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
+    <a href="#" onClick="markAllRead();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
+    <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
+    <a href="#" onClick="goDown(); return false;"><img src="icons/arrow_down.png" title="Zurück nach unten." /></a>
+    <a href="#" onClick="goToMyLastTweet(); return false;"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
 </div>
 <div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->

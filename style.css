@@ -8,6 +8,10 @@ body, textarea {
     font-size: 10px;
 }
 
+img {
+    border: none;
+}
+
 textarea, input, select {
     border: 1px solid black;
 }
