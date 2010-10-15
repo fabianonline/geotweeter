@@ -46,6 +46,7 @@ var reply_to_id = null;
 var maxreadid = 0;
 var maxknownid = 0;
 var minknownid = 0;
+var mylasttweetid = 0;
 var delay = 2;
 var mindelay = 2;
 var maxPages = 2;
@@ -259,6 +260,9 @@ function addStatus(status, addHTMLToPage) {
         maxknownid = status.id;
     if (!isDM && (minknownid==0 || status.id < minknownid))
         minknownid = status.id;
+
+    if (!isDM && user=="fabianonline" && status.id>mylasttweetid)
+        mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
@@ -609,6 +613,11 @@ function goDown() {
     goDownTo = null;
     $('#godown').hide();
 }
+
+function goToMyLastTweet() {
+    if (mylasttweetid > 0)
+        self.location = '#status_' + mylasttweetid;
+}
 </script>
 </head>
 
@@ -624,7 +633,8 @@ function goDown() {
     <a href="#" onClick="markAllRead();"><img src="icons/icon_accept.gif" title="Alle als gelesen markieren." /></a>
     <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/file_font_truetype.gif" title="Sonderzeichen einfügen" /></a>
     <a href="#" onClick="location.reload();"><img src="icons/action_refresh_blue.gif" title="App neu starten." /></a>
-    <a href="#" onClick="goDown(); return false;">Go down</a>
+    <a href="#" onClick="goDown(); return false;"><img src="icons/arrow_down.gif" title="Zurück nach unten." /></a>
+    <a href="#" onClick="goToMyLastTweet(); return false;">My last tweet</a>
 </div>
 <div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
