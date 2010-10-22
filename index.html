@@ -33,7 +33,7 @@ var message = {
     parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
 }
 
-var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫";
+var chars = "™☹☺☠☐☑☒♻⚠⏳⏰⏱♫⋘⋙⍨⍥";
 var tweetSeperator = "<|>";
 var tweetSeperatorPrefix = "<< ";
 var tweetSeperatorSuffix = " >>";
@@ -70,7 +70,7 @@ function start() {
         document.tweet_form.place.options[document.tweet_form.place.length] = new Option(places[i].name, i);
     }
     for(var i=0; i<chars.length; i++) {
-        $('#chars').append('<a href="#" onClick="$(\'#text\').append(\'' + chars[i] + '\');">' + chars[i] + '</a>');
+        $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + chars[i] + '\');">' + chars[i] + '</a>');
     }
 
     maxreadid = parseInt(getMaxReadID());
