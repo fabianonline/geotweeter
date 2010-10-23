@@ -7,6 +7,7 @@
 <script src="oauth.js"></script>
 <script src="sha1.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="jquery.fullhtml.js"></script>
 <script type="text/javascript">
 var url = "https://userstream.twitter.com/2/user.json";
 //var url = "http://stream.twitter.com/1/statuses/sample.json";
@@ -55,6 +56,7 @@ var connectionStartedAt = new Date();
 var disconnectBecauseOfTimeout = false;
 var lastDataReceivedAt = null;
 var goDownTo = null;
+var repliesData = new Array();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -195,7 +197,7 @@ function parseData(data) {
     if (message.constructor.toString().indexOf('Array')!=-1) {
         var html = '';
         for(var i=0; i<message.length; i++) {
-            if (message[i]) html += addStatus(message[i], false);
+            if (message[i]) html += getStatusHTML(message[i]);
         }
         addHTML(html);
         return;
@@ -205,13 +207,13 @@ function parseData(data) {
         return; // Fix for NULLs in stream
 
     if (message.text) {
-        addStatus(message);
+        addHTML(getStatusHTML(message));
     } else if (message.friends) {
         twitter_friends = message.friends;
     } else if (message.delete) {
         // Deletion-Request. Do nothing ,-)
     } else if (message.direct_message) {
-        addStatus(message);
+        addHTML(getStatusHTML(message));
     } else if (message.event && message.event=="follow") {
         // Social Event.
         addFollowEvent(message);
@@ -239,7 +241,7 @@ function addFollowEvent(event) {
     addHTML(html);
 }
 
-function addStatus(status, addHTMLToPage) {
+function getStatusHTML(status) {
     if (status.id_str)
         status.id = status.id_str;
     if (status.in_reply_to_status_id_str)
@@ -249,8 +251,9 @@ function addStatus(status, addHTMLToPage) {
         isDM = true;
         status = status.direct_message;
     }
-    if (addHTMLToPage !== false)
-        addHTMLToPage = true;
+    if (!isDM && status.in_reply_to_status_id) {
+        repliesData[status.id] = status.in_reply_to_status_id;
+    }
     var html = "";
     var user;
     if (status.retweeted_status)
@@ -284,7 +287,7 @@ function addStatus(status, addHTMLToPage) {
             html += ' mentions_' + String(mentions[i]).trim().substr(1) + ' ';
         }
     }
-    html += '">';
+    html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '" />';
     html += '<span class="avatar">';
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
@@ -312,8 +315,10 @@ function addStatus(status, addHTMLToPage) {
     html += '<div class="overlay">';
     html += '<div class="info">';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '">' + datum + '</a> ';
-    if(status.in_reply_to_status_id)
+    if(status.in_reply_to_status_id) {
         html += '<a href="http://twitter.com/' + status.in_reply_to_screen_name + '/status/' + status.in_reply_to_status_id + '" target="_blank">in reply to...</a> ';
+        html += '<a href="#" onClick="replies_show(\'' + status.id + '\'); return true;">replies2</a> ';
+    }
     if (status.source)
         html += 'from ' + status.source + ' ';
     html += '</div>';
@@ -336,9 +341,8 @@ function addStatus(status, addHTMLToPage) {
     html += '</div>'; // Links
     html += '</div>'; // overlay
     html += '</div>'; // tweet
-    if (!addHTMLToPage)
-        return html;
-    addHTML(html);
+    
+    return html;
 }
 
 function addnull(number) {
@@ -354,6 +358,28 @@ function linkify(text) {
     text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
     text = text.replace(/\n/g, '<br />\n');
     return text;
+}
+
+function replies_show(id) {
+    $('#replies').show();
+    $('#form_area, #content, #status, #buttonbar').hide();
+
+    // Quelle als erstes anzeigen
+    $('#replies_content').html(
+        $('#id_' + id).fullhtml()
+    );
+    while (repliesData[id]) {
+        id = repliesData[id];
+        if($('#id_' + id).length>0)
+            $('#replies_content').append($('#id_' + id).fullhtml());
+        else
+            $('#replies_content').append('<a href="http://twitter.com/#!/user/status/' + id + '" target="_blank">Show next status</a>');
+    }
+}
+
+function replies_close() {
+    $('#replies').hide();
+    $('#form_area, #content, #status, #buttonbar').show();
 }
 
 function sendTweet() {
@@ -633,6 +659,12 @@ function goToMyLastTweet() {
     <div id="connecting">Connecting...</div>
     <div id="filling">Filling list...</div>
     <div id="disconnected">Disconnected</div>
+</div>
+<div id="replies">
+    <h3>Replies</h3>
+    <div><a href="#" onClick="replies_close();">Close</a></div>
+    <div id="replies_content"></div>
+    <div><a href="#" onClick="replies_close();">Close</a></div>
 </div>
 <div id="buttonbar">
     <a href="#" onClick="location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>

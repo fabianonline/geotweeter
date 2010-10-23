@@ -178,3 +178,8 @@ textarea, input, select {
 #status #disconnected {
     background-color: #f00;
 }
+
+#replies {
+    display: none;
+}
+
