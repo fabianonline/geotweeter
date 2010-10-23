@@ -73,7 +73,7 @@ function start() {
         $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + chars[i] + '\');">' + chars[i] + '</a>');
     }
 
-    maxreadid = parseInt(getMaxReadID());
+    maxreadid = getMaxReadID();
     startRequest();
 
     updateCounter();
@@ -240,6 +240,10 @@ function addFollowEvent(event) {
 }
 
 function addStatus(status, addHTMLToPage) {
+    if (status.id_str)
+        status.id = status.id_str;
+    if (status.in_reply_to_status_id_str)
+        status.in_reply_to_status_id = status.in_reply_to_status_id_str;
     isDM = false;
     if (status.direct_message) {
         isDM = true;
@@ -419,7 +423,7 @@ function _sendTweet(text) {
         success: function(data, textStatus, req) {
             if (data.text) {
                 //$('#counter').html(data + textStatus);
-                var html = 'Tweet-ID: ' + data.id + '<br />';
+                var html = 'Tweet-ID: ' + data.id_str + '<br />';
                 html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
                 html += 'Follower: ' + data.user.followers_count + '<br />';
                 html += 'Friends:' + data.user.friends_count + '<br />';
