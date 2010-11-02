@@ -187,7 +187,9 @@ function parseData(data) {
 }
 
 function addHTML(text) {
-    $('#content').html(text + $('#content').html());
+    var elm = document.createElement("div");
+    elm.innerHTML = text;
+    document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
 }
 
 function addFollowEvent(event) {
@@ -252,7 +254,7 @@ function getStatusHTML(status) {
         }
     }
     html += '" id="id_' + status.id + '">';
-    html += '<a name="status_' + status.id + '" />';
+    html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar">';
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
     if (status.retweeted_status)
@@ -601,7 +603,7 @@ function markAllRead() {
 
 function setGoDownTo(hash) {
     goDownTo = hash;
-    $('#godown').display();
+    $('#godown').show();
 }
 
 function goDown() {
