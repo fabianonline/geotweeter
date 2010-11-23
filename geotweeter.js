@@ -44,6 +44,8 @@ function start() {
 
     updateCounter();
 
+    $(document).bind('keydown', 'Alt+s', sendTweet);
+
     window.setInterval("checkForTimeout()", 30000);
 }
 
