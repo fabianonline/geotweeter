@@ -22,10 +22,10 @@ var lastDataReceivedAt = null;
 var goDownTo = null;
 var repliesData = new Array();
 
-regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-z0-9]([a-z0-9i\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
+regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
-regexp_cache = /(^|\s)(GC[A-Z1-9]+)/g;
+regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
 
 
 $(document).ready(start);
@@ -229,12 +229,12 @@ function getStatusHTML(status) {
     else
         user = status.user.screen_name;
 
-    if (!isDM && status.id > maxknownid)
+    if (!isDM && biggerThan(status.id, maxknownid))
         maxknownid = status.id;
     if (!isDM && (minknownid==0 || status.id < minknownid))
         minknownid = status.id;
 
-    if (!isDM && user=="fabianonline" && status.id>mylasttweetid)
+    if (!isDM && user=="fabianonline" && biggerThan(status.id, mylasttweetid))
         mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
@@ -245,7 +245,7 @@ function getStatusHTML(status) {
     else
         html += 'dm ';
     html += 'by_' + user;
-    if (!isDM && status.id > maxreadid)
+    if (!isDM && biggerThan(status.id, maxreadid))
         html += ' new';
     var mentions = status.text.match(regexp_user);
     if (mentions) {
@@ -617,3 +617,10 @@ function goToMyLastTweet() {
         self.location = '#status_' + mylasttweetid;
 }
 
+function biggerThan(a, b) {
+    var l1 = a.length;
+    var l2 = b.length;
+    if (l1>l2) return true;
+    if (l1<l2) return false;
+    return a>b;
+}
