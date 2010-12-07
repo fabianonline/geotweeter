@@ -284,7 +284,7 @@ function getStatusHTML(status) {
     html += '<div class="info">';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '">' + datum + '</a> ';
     if(status.in_reply_to_status_id) {
-        html += '<a href="#" onClick="replies_show(\'' + status.id + '\'); return true;">in reply to...</a> ';
+        html += '<a href="#" onClick="replies_show(\'' + status.id + '\'); return false;">in reply to...</a> ';
     }
     if (status.source)
         html += 'from ' + status.source + ' ';
@@ -292,13 +292,13 @@ function getStatusHTML(status) {
 
     html += '<div class="links">';
     if (isDM)
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return true;"><img src="icons/comments.png" title="Reply" /></a>';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     else
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return true;"><img src="icons/comments.png" title="Reply" /></a>';
+        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     if (!isDM)
-        html += '<a href="#" onClick="retweet(' + status.id + '); return true;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
+        html += '<a href="#" onClick="retweet(' + status.id + '); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
     if (!isDM)
-        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return true;"><img src="icons/tag.png" title="Quote" /></a>';
+        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return false;"><img src="icons/tag.png" title="Quote" /></a>';
     html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank"><img src="icons/transmit.png" title="Translate" /></a>';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '"><img src="icons/link.png" title="Permalink" /></a>';
     if (status.coordinates) {

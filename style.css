@@ -16,6 +16,17 @@ textarea, input, select {
     border: 1px solid black;
 }
 
+#top {
+    position: fixed;
+    z-index: 100;
+    background-color: #fff;
+    width: 100%;
+}
+
+#content {
+    padding-top: 160px;
+}
+
 .poster {
     margin-right: 5px;
 }

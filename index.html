@@ -14,6 +14,7 @@
 </head>
 
 <body>
+<div id="top"
 <div id="status">
     <div id="connected">Connected</div>
     <div id="connecting">Connecting...</div>
@@ -22,15 +23,14 @@
 </div>
 <div id="replies">
     <h3>Replies</h3>
-    <div><a href="#" onClick="replies_close();">Close</a></div>
+    <div><a href="#" onClick="replies_close(); return false;">Close</a></div>
     <div id="replies_content"></div>
-    <div><a href="#" onClick="replies_close();">Close</a></div>
+    <div><a href="#" onClick="replies_close(); return false;">Close</a></div>
 </div>
 <div id="buttonbar">
     <a href="#" onClick="location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
-    <a href="#" onClick="markAllRead();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
-    <a href="#" onClick="$('#chars').toggle(500);"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
-    <a href="#" onClick="goDown(); return false;"><img src="icons/arrow_down.png" title="Zurück nach unten." /></a>
+    <a href="#" onClick="markAllRead(); return false;"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
+    <a href="#" onClick="$('#chars').toggle(500); return false;"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
     <a href="#" onClick="goToMyLastTweet(); return false;"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
     <a href="#" onClick="$('#text').val($('#text').val() + '<Nelson>Ha, ha!</Nelson>'); return false;"><img src="icons/bug.png" title="Nelson" /></a>
 </div>
@@ -55,6 +55,7 @@
     <div id="failure_info"></div>
 </div>
 </div>
+</div> <!-- #top -->
 
 <div id="content"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
