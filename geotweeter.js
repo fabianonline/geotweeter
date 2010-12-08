@@ -330,7 +330,7 @@ function linkify(text) {
 
 function replies_show(id) {
     $('#replies').show();
-    $('#form_area, #content, #status, #buttonbar').hide();
+    //$('#form_area, #content, #status, #buttonbar').hide();
 
     // Quelle als erstes anzeigen
     $('#replies_content').html(
@@ -347,7 +347,7 @@ function replies_show(id) {
 
 function replies_close() {
     $('#replies').hide();
-    $('#form_area, #content, #status, #buttonbar').show();
+    //$('#form_area, #content, #status, #buttonbar').show();
 }
 
 function sendTweet() {
