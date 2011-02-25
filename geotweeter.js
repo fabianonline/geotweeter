@@ -183,6 +183,12 @@ function parseData(data) {
     } else if (message.event && message.event=="follow") {
         // Social Event.
         addFollowEvent(message);
+    } else if (message.event && message.event=="favorite") {
+        addFavoriteEvent(message);
+    } else if (message.event && message.event=="list_member_added") {
+        addListMemberAddedEvent(message);
+    } else if (message.event && message.event=="list_member_removed") {
+        addListMemberRemovedEvent(message);
     } else {
         addHTML('<hr />Unbekannte Daten:<br />' + data);
     }
@@ -194,20 +200,61 @@ function addHTML(text) {
     document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
 }
 
-function addFollowEvent(event) {
-    if (event.source.screen_name=="fabianonline") return;
+function addEvent(event, text) {
     var html = "";
     html += '<div class="status">';
     html += '<span class="avatar">';
     html += '<a href="http://twitter.com/account/profile_image/' + event.source.screen_name + '"><img class="user_avatar" src="' + event.source.profile_image_url + '" /></a>';
     html += '</span>';
+    html += text;
+    html += '</div>';
+    addHTML(html);
+}
+
+function addFollowEvent(event) {
+    if (event.source.screen_name=="fabianonline") return;
+    var html = "";
     html += 'Neuer Follower: ';
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
-    html += '</div>';
-    addHTML(html);
+    addEvent(event, html);
 }
+
+function addFavoriteEvent(event) {
+    if (event.source.screen_name=="fabianonline") return;
+    var html = "";
+    html += '<span class="poster">';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '</span>';
+    html += ' favorisierte:<br />';
+    html += linkify(event.text);
+    addEvent(event, html);
+}
+
+function addListMemberAddedEvent(event) {
+    if (event.source.screen_name=="fabianonline") return;
+    var html = "";
+    html += '<span class="poster">';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '</span>';
+    html += ' fügte dich zu einer Liste hinzu:<br />';
+    html += '<a href="http://twitter.com' + event.target_object.uri + '">' + event.target_object.full_name + '</a> ';
+    html += '(' + event.target_object.members_count + 'Members, ' + event.target_object.subscriber_count + ' Subscribers)';
+    addEvent(event, html);
+}
+
+function addListMemberRemovedEvent(event) {
+    if (event.source.screen_name=="fabianonline") return;
+    var html = "";
+    html += '<span class="poster">';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '</span>';
+    html += ' löschte dich von einer Liste:<br />';
+    html += '<a href="http://twitter.com' + event.target_object.uri + '">' + event.target_object.full_name + '</a> ';
+    addEvent(event, html);
+}
+
 
 function getStatusHTML(status) {
     if (status.id_str)
@@ -292,13 +339,13 @@ function getStatusHTML(status) {
 
     html += '<div class="links">';
     if (isDM)
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
+        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     else
-        html += '<a href="#" onClick="replyToTweet(' + status.id + ', \'' + user + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
+        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     if (!isDM)
-        html += '<a href="#" onClick="retweet(' + status.id + '); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
+        html += '<a href="#" onClick="retweet(\'' + status.id + '\'); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
     if (!isDM)
-        html += '<a href="#" onClick="quote(' + status.id + ', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return false;"><img src="icons/tag.png" title="Quote" /></a>';
+        html += '<a href="#" onClick="quote(\'' + status.id + '\', \'' + user + '\', \'' + escape(status.text.split('"').join('').split('@').join('')) + '\'); return false;"><img src="icons/tag.png" title="Quote" /></a>';
     html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank"><img src="icons/transmit.png" title="Translate" /></a>';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '"><img src="icons/link.png" title="Permalink" /></a>';
     if (status.coordinates) {
@@ -350,7 +397,8 @@ function replies_close() {
     //$('#form_area, #content, #status, #buttonbar').show();
 }
 
-function sendTweet() {
+function sendTweet(event) {
+    if (event) event.preventDefault();
     if(document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
         return;
 
