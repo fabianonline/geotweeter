@@ -17,8 +17,8 @@ var places = [
 
 var chars = new Array("™", "☹", "☺", "☠", "☐", "☑", "♻", "⚠", "♫", "⋘", "⋙", "⍨", "⊙▂⊙", "⨀_⨀", "┌∩┐");
 var tweetSeperator = "<|>";
-var tweetSeperatorPrefix = "<< ";
-var tweetSeperatorSuffix = " >>";
+var tweetSeperatorPrefix = "« ";
+var tweetSeperatorSuffix = " »";
 
 var delay = 2;
 var mindelay = 2;
