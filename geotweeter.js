@@ -315,8 +315,8 @@ function getStatusHTML(status) {
     html += '" /></a>';
     html += '</span>';
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + user + '">' + user + '</a>';
-    html += '</span>';
+    html += '<a href="http://twitter.com/' + user + '" target="_blank">' + user + '</a>';
+    html += '</span> ';
     html += '<span class="text">';
     if (status.retweeted_status)
         html += linkify(status.retweeted_status.text);
