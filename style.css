@@ -4,8 +4,8 @@ body {
 }
 
 body, textarea {
-    font-family: Verdana;
-    font-size: 10px;
+    font-family: sans-serif;
+    font-size: 12px;
 }
 
 img {
@@ -25,10 +25,6 @@ textarea, input, select {
 
 #content {
     padding-top: 160px;
-}
-
-.poster {
-    margin-right: 5px;
 }
 
 .poster, .poster a {
