@@ -581,6 +581,8 @@ function quote(tweet_id, user, text) {
 function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = user;
     reply_to_id = tweet_id;
+    $('#text').focus();
+    $('#text').val('');
     if (isDM===true)
         $('#text').val('d ' + user + ' ').focus();
     else
