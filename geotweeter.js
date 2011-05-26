@@ -1,11 +1,3 @@
-var url = "https://userstream.twitter.com/2/user.json";
-//var url = "http://stream.twitter.com/1/statuses/sample.json";
-
-var message = {
-    action: url,
-    method: "GET",
-    parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
-}
 
 var responseOffset = 0;
 var buffer = "";
@@ -88,13 +80,16 @@ function fillList() {
 function startRequest() {
     fillList();
 
+    var message = {
+        action: "https://userstream.twitter.com/2/user.json",
+        method: "GET",
+        parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
+    }
+
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
-    //url = 'https://amazonas.f00bian.de/twitter.stream/sample_proxy?' + OAuth.formEncode(message.parameters);
-    //$("#content").html($('#content').html() + url + '<hr />');
-    //return;
     
     $('#status').find('*').hide();
     $('#status #connecting').show();
