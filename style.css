@@ -195,3 +195,20 @@ textarea, input, select {
     background-color: #fff;
 }
 
+.tooltip_info {
+    display: none;
+}
+
+#tooltip {
+    position: absolute;
+    z-index: 3000;
+    border: 1px solid #111;
+    background-color: #eee;
+    padding: 5px;
+    opacity: 0.85;
+}
+
+#tooltip h3, #tooltip div {
+    margin: 0;
+}
+

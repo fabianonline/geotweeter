@@ -197,6 +197,14 @@ function parseData(data) {
 function addHTML(text) {
     var elm = document.createElement("div");
     elm.innerHTML = text;
+    $(elm).find('.user_avatar').tooltip({
+        bodyHandler: function() {
+            return $(this).parent().parent().find('.tooltip_info').html();
+        },
+        track: true,
+        showURL: false,
+        left: 5
+    });
     document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
 }
 
@@ -271,12 +279,15 @@ function getStatusHTML(status) {
     }
     var html = "";
     var user;
+    var user_object;
     if (status.retweeted_status)
-        user = status.retweeted_status.user.screen_name;
+        user_object = status.retweeted_status.user;
     else if (isDM)
-        user = status.sender.screen_name;
+        user_object = status.sender;
     else
-        user = status.user.screen_name;
+        user_object = status.user;
+
+    user = user_object.screen_name;
 
     if (!isDM && biggerThan(status.id, maxknownid))
         maxknownid = status.id;
@@ -305,6 +316,21 @@ function getStatusHTML(status) {
     html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar">';
+
+    // Start Tooltip-Info
+    html += '<span class="tooltip_info">';
+    html += '<strong>' + user_object.name + '</strong><br /><br />';
+    if (user_object.following)
+        html += '@' + user + ' folgt dir.<br />';
+    else
+        html += '@' + user + ' folgt dir nicht.<br />';
+    html += '<br />';
+    html += user_object.followers_count + ' Follower<br />';
+    html += user_object.friends_count + ' Friends<br />';
+    html += user_object.statuses_count + ' Tweets';
+    html += '</span>';
+    // Ende Tooltip-Info
+
     html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
     if (status.retweeted_status)
         html += status.retweeted_status.user.profile_image_url;
