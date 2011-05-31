@@ -102,10 +102,11 @@ function startRequest() {
     req.send(null);
 }
 
-function parseResponse(event) {
-    if (event.target.readyState == 1) {
+function parseResponse() {
+    // <this> is the XMLHTTPRequest object, which called this function
+    if (this.readyState == 1) {
         connectionStartedAt = new Date();
-    } else if (event.target.readyState == 4) {
+    } else if (this.readyState == 4) {
         $('#status').find('*').hide();
         $('#status #disconnected').show();
         var jetzt = new Date();
@@ -115,21 +116,21 @@ function parseResponse(event) {
         if (disconnectBecauseOfTimeout) {
             html += 'Grund: Timeout. ';
         }
-        if (event.target.status != 200) {
-            html += 'Status: ' + event.target.status + ' (' + event.target.statusText + '). ';
+        if (this.status != 200) {
+            html += 'Status: ' + this.status + ' (' + this.statusText + '). ';
             delay = maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
         window.setTimeout('startRequest()', delay*1000);
         if (delay*2 <= maxdelay)
             delay = delay * 2;
-    } else if (event.target.readyState == 3) {
+    } else if (this.readyState == 3) {
         $('#status').find('*').hide();
         $('#status #connected').show();
         lastDataReceivedAt = new Date();
     }
-    buffer += event.target.responseText.substr(responseOffset);
-    responseOffset = event.target.responseText.length;
+    buffer += this.responseText.substr(responseOffset);
+    responseOffset = this.responseText.length;
     if (!isProcessing) processBuffer();
 }
 
@@ -171,7 +172,7 @@ function parseData(data) {
         addHTML(getStatusHTML(message));
     } else if (message.friends) {
         twitter_friends = message.friends;
-    } else if (message.delete) {
+    } else if ("delete" in message) {
         // Deletion-Request. Do nothing ,-)
     } else if (message.direct_message) {
         addHTML(getStatusHTML(message));
