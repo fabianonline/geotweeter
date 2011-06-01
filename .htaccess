@@ -1,9 +1,8 @@
 AddDefaultCharset UTF-8
 
 RewriteEngine On
+
+RewriteRule proxy/api/(.+)$ https://api.twitter.com/1/$1 [proxy]
 RewriteRule user_proxy$ https://userstream.twitter.com/2/user.json [proxy]
 RewriteRule sample_proxy$ http://stream.twitter.com/1/statuses/sample.json [proxy]
-RewriteRule statuses_update_proxy$ https://api.twitter.com/1/statuses/update.json [proxy]
-RewriteRule statuses_retweet_proxy$ https://api.twitter.com/1/statuses/retweet.json [proxy]
-RewriteRule home_timeline_proxy$ https://api.twitter.com/1/statuses/home_timeline.json [proxy]
 

@@ -65,7 +65,7 @@ function fillList() {
         OAuth.setTimestampAndNonce(message);
         OAuth.completeRequest(message, accessor);
         OAuth.SignatureMethod.sign(message, accessor);
-        var url = 'home_timeline_proxy?' + OAuth.formEncode(message.parameters);
+        var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
         var returned = $.ajax({
             url: url,
             type: "GET",
@@ -475,7 +475,7 @@ function _sendTweet(text) {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'statuses_update_proxy';
+    var url = 'proxy/api/statuses/update.json';
     var data = OAuth.formEncode(message.parameters);
 
     var req = $.ajax({
@@ -547,12 +547,9 @@ function retweet(id) {
     if (!confirm('Wirklich direkt retweeten?'))
         return false;
 
-    var parameters = {id: id};
-
     var message = {
-        action: "https://api.twitter.com/1/statuses/retweet.json",
-        method: "POST",
-        parameters: parameters
+        action: "https://api.twitter.com/1/statuses/retweet/" + id + ".json",
+        method: "POST"
     }
 
     $('#form').fadeTo(500, 0).delay(500);
@@ -560,7 +557,7 @@ function retweet(id) {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
     OAuth.SignatureMethod.sign(message, accessor);
-    var url = 'statuses_retweet_proxy';
+    var url = 'proxy/api/statuses/retweet/' + id + '.json';
     var data = OAuth.formEncode(message.parameters);
 
     $.ajax({
@@ -569,7 +566,7 @@ function retweet(id) {
         dataType: "json",
         type: "POST",
         success: function(data, textStatus, req) {
-            if (data.status) {
+            if (req.status==200) {
                 $('#success_info').html("Retweet successful");
                 $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
