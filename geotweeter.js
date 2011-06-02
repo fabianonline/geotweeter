@@ -108,29 +108,24 @@ function checkForTimeout() {
 function fillList() {
     $('#status').find("*").hide();
     $('#status #filling').show();
-    var page = 1;
-    while ((minknownid==0 || maxreadid < minknownid) && page <= maxPages) {
-        var parameters = {include_rts: "1", count: "500", page: page};
-        if (maxknownid > 0)
-            parameters.since_id = maxknownid;
-        var message = {
-            action: "https://api.twitter.com/1/statuses/home_timeline.json",
-            method: "GET",
-            parameters: parameters
-        }
-        OAuth.setTimestampAndNonce(message);
-        OAuth.completeRequest(message, accessor);
-        OAuth.SignatureMethod.sign(message, accessor);
-        var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
-        var returned = $.ajax({
-            url: url,
-            type: "GET",
-            async: false,
-            dataType: "text"
-        }).responseText;
-        parseData(returned);
-        page += 1;
+
+    var parameters = {include_rts: "1", count: "800", include_entities: true};
+    var message = {
+        action: "https://api.twitter.com/1/statuses/home_timeline.json",
+        method: "GET",
+        parameters: parameters
     }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
+    var returned = $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType: "text"
+    }).responseText;
+    parseData(returned);
 }
     
 function startRequest() {
