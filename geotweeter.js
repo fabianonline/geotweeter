@@ -299,7 +299,28 @@ function addHTML(text) {
         showURL: false,
         left: 5
     });
+    $(elm).find("a.external").tooltip({
+        bodyHandler: function() {
+            return unshortenLink(this.href).replace(/\//g, "<wbr>/");
+        },
+        track: true,
+        showURL: false,
+        delay: 750
+    });
     document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
+}
+
+function unshortenLink(url) {
+    var result = null;
+    $.ajax({
+        url: "proxy/unshort.me/?r=" + encodeURIComponent(url) + "&t=json",
+        type: "GET",
+        async: false,
+        dataType: "json",
+        success: function(data) { result = data; }
+    });
+    if(result && result.success=="true") return result.resolvedURL;
+    return url;
 }
 
 function addEvent(event, text) {
@@ -487,7 +508,7 @@ function addnull(number) {
 }
 
 function linkify(text) {
-    text = text.replace(regexp_url, '<a href="$1" target="_blank">$1</a>');
+    text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
     text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
     text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
     text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
