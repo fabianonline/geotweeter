@@ -13,6 +13,7 @@ var disconnectBecauseOfTimeout = false;
 var lastDataReceivedAt = null;
 var goDownTo = null;
 var repliesData = new Array();
+var this_users_name = null;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -31,6 +32,13 @@ function start() {
         $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + chars[i] + '\');">' + chars[i] + '</a>');
     }
 
+    // check the credentials and exit if not okay.
+    validateCredentials();
+    if (!this_users_name) return;
+
+
+    getFollowers();
+
     maxreadid = getMaxReadID();
     startRequest();
 
@@ -39,6 +47,38 @@ function start() {
     $(document).bind('keydown', 'Alt+s', sendTweet);
 
     window.setInterval("checkForTimeout()", 30000);
+}
+
+function validateCredentials() {
+    $('#status').find("*").hide();
+    $('#status #validating').show();
+    var message = {
+        action: "https://api.twitter.com/1/account/verify_credentials.json",
+        method: "GET"
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'proxy/api/account/verify_credentials.json?' + OAuth.formEncode(message.parameters);
+    return $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        success: function(data, result, request) {
+            if (data.screen_name) {
+                this_users_name = data.screen_name;
+            } else {
+                addHTML("Unknown error in validateCredentials. Exiting. " + data);
+            }
+        },
+        error: function(data, result, request) {
+            addHTML("Unknown error in validateCredentials. Exiting. " + data.responseText);
+        }
+    });
+}
+
+function getFollowers() {
+
 }
 
 function checkForTimeout() {
@@ -300,13 +340,16 @@ function getStatusHTML(status) {
         html += 'tweet ';
     else
         html += 'dm ';
-    html += 'by_' + user;
+    html += 'by_' + user + ' ';
+    if (user == this_users_name) html += "by_this_user ";
     if (!isDM && biggerThan(status.id, maxreadid))
-        html += ' new';
+        html += 'new ';
     var mentions = status.text.match(regexp_user);
     if (mentions) {
         for (var i=0; i<mentions.length; i++) {
-            html += ' mentions_' + String(mentions[i]).trim().substr(1) + ' ';
+            mention = String(mentions[i]).trim().substr(1);
+            html += 'mentions_' + mention + ' ';
+            if (mention == this_users_name) html += "mentions_this_user ";
         }
     }
     html += '" id="id_' + status.id + '">';

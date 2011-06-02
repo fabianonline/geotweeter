@@ -51,7 +51,7 @@ textarea, input, select {
     background-color: #f6f;
 }
 
-.tweet.by_fabianonline {
+.tweet.by_this_user {
     background-color: #afa !important;
 }
 
@@ -59,7 +59,7 @@ textarea, input, select {
     background-color: #fdd;
 }
 
-.tweet.mentions_fabianonline {
+.tweet.mentions_this_user {
     background-color: #ddf;
 }
 
@@ -177,7 +177,8 @@ textarea, input, select {
     display: none;
 }
 
-#status #filling {
+#status #filling,
+#status #validating {
     background-color: #ff0;
     display: none;
 }
