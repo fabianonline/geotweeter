@@ -109,7 +109,7 @@ function fillList() {
     $('#status').find("*").hide();
     $('#status #filling').show();
 
-    var parameters = {include_rts: "1", count: "800", include_entities: true};
+    var parameters = {include_rts: "1", count: 200, include_entities: true};
     var message = {
         action: "https://api.twitter.com/1/statuses/home_timeline.json",
         method: "GET",
@@ -125,7 +125,21 @@ function fillList() {
         async: false,
         dataType: "text"
     }).responseText;
-    parseData(returned);
+
+
+    message.action = "https://api.twitter.com/1/statuses/mentions.json";
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = 'proxy/api/statuses/mentions.json?' + OAuth.formEncode(message.parameters);
+    var returned_mentions = $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType: "text"
+    }).responseText;
+
+    parseData(returned, returned_mentions);
 }
     
 function startRequest() {
@@ -201,16 +215,40 @@ function processBuffer() {
     isProcessing = false;
 }
 
-function parseData(data) {
+function parseData(data, data2) {
     try {
         var message = eval('(' + data + ')');
     } catch (e) {
         addHTML("Exception: " + e + '<br />' + data + '<hr />');
     }
+
+    var message2 = null;
+    if (data2 != undefined) try {
+        message2 = eval('(' + data2 + ')');
+    } catch(e) {}
+
     if (message.constructor.toString().indexOf('Array')!=-1) {
+
         var html = '';
-        for(var i=0; i<message.length; i++) {
-            if (message[i]) html += getStatusHTML(message[i]);
+        if (message2 == null) {
+            for(var i=0; i<message.length; i++) {
+                if (message[i]) html += getStatusHTML(message[i]);
+            }
+        } else {
+            var i=0;
+            var j=0;
+            var last_id = null;
+            while (i<message.length || j<message2.length) {
+                if(!message2[j] || (message[i] && biggerThan(message[i].id, message2[j].id))) {
+                    if (last_id!=message[i].id) html += getStatusHTML(message[i]);
+                    last_id = message[i].id;
+                    i++;
+                } else {
+                    if (last_id!=message2[j].id) html += getStatusHTML(message2[j]);
+                    last_id = message2[j].id;
+                    j++;
+                }
+            }
         }
         addHTML(html);
         return;
