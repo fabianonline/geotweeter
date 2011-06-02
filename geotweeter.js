@@ -14,6 +14,7 @@ var lastDataReceivedAt = null;
 var goDownTo = null;
 var repliesData = new Array();
 var this_users_name = null;
+var friends_ids = new Array();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -78,7 +79,22 @@ function validateCredentials() {
 }
 
 function getFollowers() {
-
+    var message = {
+        action: "https://api.twitter.com/1/followers/ids.json",
+        method: "GET"
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, accessor);
+    OAuth.SignatureMethod.sign(message, accessor);
+    var url = "proxy/api/followers/ids.json?" + OAuth.formEncode(message.parameters);
+    $.ajax({
+        url: url,
+        type: "GET",
+        async: true,
+        success: function(data) {
+            followers_ids = data;
+        }
+    });
 }
 
 function checkForTimeout() {
@@ -235,7 +251,16 @@ function addHTML(text) {
     elm.innerHTML = text;
     $(elm).find('.user_avatar').tooltip({
         bodyHandler: function() {
-            return $(this).parent().parent().find('.tooltip_info').html();
+            var par = $(this).parent().parent();
+            var obj = par.find('.tooltip_info');
+            var html = obj.html();
+            var id = parseInt(par.attr("data-user-id"));
+            if (followers_ids.indexOf(id)>=0) {
+                html = html.replace(/%s/, 'folgt dir.');
+            } else {
+                html = html.replace(/%s/, 'folgt dir nicht.');
+            }
+            return html;
         },
         track: true,
         showURL: false,
@@ -262,6 +287,7 @@ function addFollowEvent(event) {
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
+    friends_ids.push(event.source.id);
     addEvent(event, html);
 }
 
@@ -354,19 +380,15 @@ function getStatusHTML(status) {
     }
     html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '"></a>';
-    html += '<span class="avatar">';
+    html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 
     // Start Tooltip-Info
     html += '<span class="tooltip_info">';
     html += '<strong>' + user_object.name + '</strong><br /><br />';
-    if (user_object.following)
-        html += '@' + user + ' folgt dir.<br />';
-    else
-        html += '@' + user + ' folgt dir nicht.<br />';
-    html += '<br />';
     html += user_object.followers_count + ' Follower<br />';
     html += user_object.friends_count + ' Friends<br />';
-    html += user_object.statuses_count + ' Tweets';
+    html += user_object.statuses_count + ' Tweets<br /><br />';
+    html += "@" + user + " %s";
     html += '</span>';
     // Ende Tooltip-Info
 
