@@ -578,30 +578,35 @@ function sendTweet(event) {
     
     var parts = splitTweet(text);
 
-    for (var i=0; i<parts.length; i++) {
-        if (_sendTweet(parts[i])) {
-            /* Tweet wurde erfolgreich gesendet */
-            if (i == (parts.length-1)) {
-                /* Es war der letzte oder einzige Teil des Tweets */
-                $('#text').val('');
-                reply_to_user = null;
-                reply_to_id = null;
-                updateCounter();
+    if (parts.length==1) {
+        _sendTweet(parts[0], true);
+    } else {
+        for (var i=0; i<parts.length; i++) {
+            if (_sendTweet(parts[i])) {
+                /* Tweet wurde erfolgreich gesendet */
+                if (i == (parts.length-1)) {
+                    /* Es war der letzte oder einzige Teil des Tweets */
+                    $('#text').val('');
+                    reply_to_user = null;
+                    reply_to_id = null;
+                    updateCounter();
+                }
+            } else {
+                /* Tweet konnte nicht abgesendet werden */
+                /* Neuen String bauen... */
+                text = "";
+                for (var j=i; j<parts.length; j++) {
+                    text += parts[j] + ' ';
+                }
+                $('#text').val(text);
+                break;
             }
-        } else {
-            /* Tweet konnte nicht abgesendet werden */
-            /* Neuen String bauen... */
-            text = "";
-            for (var j=i; j<parts.length; j++) {
-                text += parts[j] + ' ';
-            }
-            $('#text').val(text);
-            break;
         }
     }
 }
 
-function _sendTweet(text) {
+function _sendTweet(text, async) {
+    if (async==undefined) async=false;
     var parameters = {status: text};
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
@@ -631,7 +636,7 @@ function _sendTweet(text) {
     var req = $.ajax({
         url: url,
         data: data,
-        async: false,
+        async: async,
         dataType: "json",
         type: "POST",
         success: function(data, textStatus, req) {
@@ -641,6 +646,13 @@ function _sendTweet(text) {
                 html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
                 html += 'Follower: ' + data.user.followers_count + '<br />';
                 html += 'Friends:' + data.user.friends_count + '<br />';
+
+                if (async) {
+                    $('#text').val('');
+                    reply_to_user = null;
+                    reply_to_id = null;
+                    updateCounter();
+                }
 
                 $('#success_info').html(html);
                 $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
