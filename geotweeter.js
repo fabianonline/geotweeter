@@ -824,7 +824,7 @@ function goToMyLastTweet() {
         self.location = '#status_' + mylasttweetid;
 }
 
-function goToLastRead(){
+function goToLastRead(){ //springt zum zuletzt gelesenen Tweet
 	self.location = '#status_' + maxreadid;
 }
 
