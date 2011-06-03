@@ -822,8 +822,7 @@ function markAllRead() {
 }
 
 function goToMyLastTweet() {
-    if (mylasttweetid > 0)
-        self.location = '#status_' + mylasttweetid;
+        self.location = '#status_' + maxreadid;
 }
 
 function biggerThan(a, b) {
