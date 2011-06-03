@@ -5,7 +5,7 @@ var isProcessing = false;
 var reply_to_user = null;
 var reply_to_id = null;
 var maxreadid = 0;
-var maxknownid = 0;
+var maxknownid = "0";
 var minknownid = 0;
 var mylasttweetid = 0;
 var connectionStartedAt = new Date();
@@ -110,6 +110,7 @@ function fillList() {
     $('#status #filling').show();
 
     var parameters = {include_rts: "1", count: 200, include_entities: true};
+    if (maxknownid!="0") parameters.since_id = maxknownid;
     var message = {
         action: "https://api.twitter.com/1/statuses/home_timeline.json",
         method: "GET",
