@@ -79,8 +79,7 @@ function start() {
 }
 
 function validateCredentials() {
-    $('#status').find("*").hide();
-    $('#status #validating').show();
+    setStatus("Validating credentials...", "yellow");
     var message = {
         action: "https://api.twitter.com/1/account/verify_credentials.json",
         method: "GET"
@@ -134,8 +133,7 @@ function checkForTimeout() {
 }
 
 function fillList() {
-    $('#status').find("*").hide();
-    $('#status #filling').show();
+    setStatus("Filling List. Request 1/2...", "yellow");
 
     var parameters = {include_rts: "1", count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
@@ -156,6 +154,7 @@ function fillList() {
     }).responseText;
 
 
+    setStatus("Filling List. Request 2/2...", "yellow");
     message.action = "https://api.twitter.com/1/statuses/mentions.json";
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
@@ -185,8 +184,7 @@ function startRequest() {
     OAuth.SignatureMethod.sign(message, accessor);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
     
-    $('#status').find('*').hide();
-    $('#status #connecting').show();
+    setStatus("Connecting to stream...", "orange");
 
     disconnectBecauseOfTimeout = false;
 
@@ -202,8 +200,7 @@ function parseResponse() {
     if (req.readyState == 1) {
         connectionStartedAt = new Date();
     } else if (req.readyState == 4) {
-        $('#status').find('*').hide();
-        $('#status #disconnected').show();
+        setStatus("Disconnected.", "red");
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt.getTime() > 10000)
             delay = mindelay;
@@ -221,8 +218,7 @@ function parseResponse() {
         if (delay*2 <= maxdelay)
             delay = delay * 2;
     } else if (req.readyState == 3) {
-        $('#status').find('*').hide();
-        $('#status #connected').show();
+        setStatus("Connected to stream.", "green");
         lastDataReceivedAt = new Date();
     }
     buffer += req.responseText.substr(responseOffset);
@@ -576,30 +572,35 @@ function sendTweet(event) {
     
     var parts = splitTweet(text);
 
-    for (var i=0; i<parts.length; i++) {
-        if (_sendTweet(parts[i])) {
-            /* Tweet wurde erfolgreich gesendet */
-            if (i == (parts.length-1)) {
-                /* Es war der letzte oder einzige Teil des Tweets */
-                $('#text').val('');
-                reply_to_user = null;
-                reply_to_id = null;
-                updateCounter();
+    if (parts.length==1) {
+        _sendTweet(parts[0], true);
+    } else {
+        for (var i=0; i<parts.length; i++) {
+            if (_sendTweet(parts[i])) {
+                /* Tweet wurde erfolgreich gesendet */
+                if (i == (parts.length-1)) {
+                    /* Es war der letzte oder einzige Teil des Tweets */
+                    $('#text').val('');
+                    reply_to_user = null;
+                    reply_to_id = null;
+                    updateCounter();
+                }
+            } else {
+                /* Tweet konnte nicht abgesendet werden */
+                /* Neuen String bauen... */
+                text = "";
+                for (var j=i; j<parts.length; j++) {
+                    text += parts[j] + ' ';
+                }
+                $('#text').val(text);
+                break;
             }
-        } else {
-            /* Tweet konnte nicht abgesendet werden */
-            /* Neuen String bauen... */
-            text = "";
-            for (var j=i; j<parts.length; j++) {
-                text += parts[j] + ' ';
-            }
-            $('#text').val(text);
-            break;
         }
     }
 }
 
-function _sendTweet(text) {
+function _sendTweet(text, async) {
+    if (async==undefined) async=false;
     var parameters = {status: text};
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
@@ -629,7 +630,7 @@ function _sendTweet(text) {
     var req = $.ajax({
         url: url,
         data: data,
-        async: false,
+        async: async,
         dataType: "json",
         type: "POST",
         success: function(data, textStatus, req) {
@@ -639,6 +640,13 @@ function _sendTweet(text) {
                 html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
                 html += 'Follower: ' + data.user.followers_count + '<br />';
                 html += 'Friends:' + data.user.friends_count + '<br />';
+
+                if (async) {
+                    $('#text').val('');
+                    reply_to_user = null;
+                    reply_to_id = null;
+                    updateCounter();
+                }
 
                 $('#success_info').html(html);
                 $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
@@ -662,32 +670,15 @@ function _sendTweet(text) {
 }
 
 function splitTweet(text) {
-    var mention = text.match(/^(@[a-z0-9_]+) /i);
+    var mention = text.match(/^(((@[a-z0-9_]+) +)+)/i);
     var words = text.split(' ');
     var word;
-    var text = "";
 
-    var parts = new Array();
-    while ((word = words.shift())!=null) {
-        text = text.trim();
-        if (text.length + word.length + 1 <= 140-tweetSeperatorSuffix.length && word!=tweetSeperator)
-            text += " " + word;
-        else if (words.length==0 && text.length+word.length+1<=140 && word!=tweetSeperator)
-            text += " " + word;
-        else {
-            parts.push((text + tweetSeperatorSuffix).trim());
-            if (mention)
-                text = mention[1] + ' ';
-            else
-                text = '';
-            if (word==tweetSeperator)
-                text += tweetSeperatorPrefix;
-            else
-                text += tweetSeperatorPrefix + word;
-        }
+    var parts = text.split(tweetSeperator);
+    for (var i=0; i<parts.length; i++) {
+        parts[i] = parts[i].trim();
+        if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
     }
-    if (text.trim().length>0)
-        parts.push(text.trim());
     return parts;
 }
 
@@ -820,8 +811,25 @@ function markAllRead() {
 }
 
 function goToMyLastTweet() {
-	if(mylasttweetid > 0 )
-        self.location = '#status_' + mylasttweetid;
+    if (mylasttweetid > 0)
+        scrollTo(mylasttweetid);
+}
+
+/** Scrolls to a tweet specified by it's id. */
+function scrollTo(tweet_id) {
+    // Jump to the tweet's anchor
+    self.location = '#status_' + tweet_id;
+
+    // The selected tweet is now behind the form-overlay, so we need to scroll back up a little bit.
+    // The padding-top of the content-area equals the height of the overlay, so we use that.
+    var top = $("html").scrollTop();
+    var topheight = parseInt($('#content').css("padding-top"));
+    $("html").scrollTop(top - topheight);
+}
+
+/** Sets a status message. The colors are actually class names. */
+function setStatus(message, color) {
+    $("#status").text(message).removeClass().addClass(color);
 }
 
 function goToLastRead(){ //springt zum zuletzt gelesenen Tweet
