@@ -19,3 +19,7 @@ var delay = 2;
 var mindelay = 2;
 var maxPages = 2;
 var maxdelay = 160;
+
+// Show an error message if no place is set.
+var error_if_no_place_set = true;
+
