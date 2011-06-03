@@ -832,8 +832,9 @@ function setStatus(message, color) {
     $("#status").text(message).removeClass().addClass(color);
 }
 
-function goToLastRead(){ //springt zum zuletzt gelesenen Tweet
-	self.location = '#status_' + maxreadid;
+/** Scrolls down to the last read tweet. */
+function goToLastRead(){
+    scrollTo(maxreadid);
 }
 
 function biggerThan(a, b) {
