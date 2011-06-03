@@ -1,3 +1,4 @@
+// Twitter Access Keys
 var accessor = {
     token: "INSERT_USER_TOKEN_HERE",
     tokenSecret: "INSERT_USER_TOKEN_SECRET_HERE",
@@ -5,19 +6,26 @@ var accessor = {
     consumerSecret: "INSERT_CONSUMER_SECRET_TOKEN_HERE"
 }
 
+// user-defined Places
 var places = [
     {name:"--leer--",     lat:0.0000000, lon:0.000000},
     {name:"sweetSixteen", lat:51.52212,  lon:7.45281,  place_id:"c0ca217810f379fa"}, // "sweetSixteen"
 ];
 
+// chars or strings for the automatic insert function
 var chars = new Array("™", "☹", "☺", "☠", "☐", "☑", "♻", "⚠", "♫", "⋘", "⋙", "⍨", "⊙▂⊙", "⨀_⨀", "┌∩┐");
+
+// this string can be used to automatically split a long text into multiple tweets
 var tweetSeperator = "<|>";
+// Prefix and Suffix for splitted tweets
 var tweetSeperatorPrefix = "« ";
 var tweetSeperatorSuffix = " »";
 
-var delay = 2;
+
+// minimum delay in case of disconnects
 var mindelay = 2;
-var maxPages = 2;
+
+// maximum delay (delay gets incremented every time it is used)
 var maxdelay = 160;
 
 // Show an error message if no place is set.

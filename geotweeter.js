@@ -27,6 +27,9 @@ var minknownid = 0;
 /** ID of the newest tweet belonging to "this" user. */
 var mylasttweetid = 0;
 
+/** delay to use the next time the stream gets disconnected. */
+var delay = mindelay;
+
 /** Time the connection to the streaming API was established / got the last data. */
 var connectionStartedAt = new Date();
 var lastDataReceivedAt = null;
