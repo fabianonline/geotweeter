@@ -1,19 +1,49 @@
+/****************************************/
+/********** Fabians Geotweeter **********/
+/****************************************/
 
+
+
+/** Keeps track of how much of the server stream has already been processed. */
 var responseOffset = 0;
+
+/** Contains "new" parts of the stream for processing. */
 var buffer = "";
+
+/** isProcessing is true while parseData is running. */
 var isProcessing = false;
+
+/** Keeps track of a user and his tweet's id if we're replying to a tweet. */
 var reply_to_user = null;
 var reply_to_id = null;
+
+/** ID of last "marked as read" tweet. Any tweet with an ID bigger than this is considered new. */
 var maxreadid = 0;
+
+/** IDs of newest and oldest knwon tweets. */
 var maxknownid = "0";
 var minknownid = 0;
+
+/** ID of the newest tweet belonging to "this" user. */
 var mylasttweetid = 0;
+
+/** Time the connection to the streaming API was established / got the last data. */
 var connectionStartedAt = new Date();
-var disconnectBecauseOfTimeout = false;
 var lastDataReceivedAt = null;
+
+/** true, if the streaming connection was terminated because of a timeout. */
+var disconnectBecauseOfTimeout = false;
+
+/** ID of tweet to jump down to after posting an update. */
 var goDownTo = null;
+
+/** Keeps track of all tweets being replied to. */
 var repliesData = new Array();
+
+/** Gets filled by verify_credentials with the current user's name. */
 var this_users_name = null;
+
+/** Gets filled with the IDs of all followers. */
 var friends_ids = new Array();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
