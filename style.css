@@ -167,23 +167,19 @@ textarea, input, select {
     color: #333;
 }
 
-#status #connected {
+#status.green {
     background-color: #0f0;
-    display: none;
 }
 
-#status #connecting {
+#status.orange {
     background-color: #fc0;
-    display: none;
 }
 
-#status #filling,
-#status #validating {
+#status.yellow {
     background-color: #ff0;
-    display: none;
 }
 
-#status #disconnected {
+#status.red {
     background-color: #f00;
 }
 

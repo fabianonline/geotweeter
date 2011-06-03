@@ -79,8 +79,7 @@ function start() {
 }
 
 function validateCredentials() {
-    $('#status').find("*").hide();
-    $('#status #validating').show();
+    setStatus("Validating credentials...", "yellow");
     var message = {
         action: "https://api.twitter.com/1/account/verify_credentials.json",
         method: "GET"
@@ -134,8 +133,7 @@ function checkForTimeout() {
 }
 
 function fillList() {
-    $('#status').find("*").hide();
-    $('#status #filling').show();
+    setStatus("Filling List. Request 1/2...", "yellow");
 
     var parameters = {include_rts: "1", count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
@@ -156,6 +154,7 @@ function fillList() {
     }).responseText;
 
 
+    setStatus("Filling List. Request 2/2...", "yellow");
     message.action = "https://api.twitter.com/1/statuses/mentions.json";
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, accessor);
@@ -185,8 +184,7 @@ function startRequest() {
     OAuth.SignatureMethod.sign(message, accessor);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
     
-    $('#status').find('*').hide();
-    $('#status #connecting').show();
+    setStatus("Connecting to stream...", "orange");
 
     disconnectBecauseOfTimeout = false;
 
@@ -202,8 +200,7 @@ function parseResponse() {
     if (req.readyState == 1) {
         connectionStartedAt = new Date();
     } else if (req.readyState == 4) {
-        $('#status').find('*').hide();
-        $('#status #disconnected').show();
+        setStatus("Disconnected.", "red");
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt.getTime() > 10000)
             delay = mindelay;
@@ -221,8 +218,7 @@ function parseResponse() {
         if (delay*2 <= maxdelay)
             delay = delay * 2;
     } else if (req.readyState == 3) {
-        $('#status').find('*').hide();
-        $('#status #connected').show();
+        setStatus("Connected to stream.", "green");
         lastDataReceivedAt = new Date();
     }
     buffer += req.responseText.substr(responseOffset);
@@ -831,6 +827,11 @@ function scrollTo(tweet_id) {
     var top = $("html").scrollTop();
     var topheight = parseInt($('#content').css("padding-top"));
     $("html").scrollTop(top - topheight);
+}
+
+/** Sets a status message. The colors are actually class names. */
+function setStatus(message, color) {
+    $("#status").text(message).removeClass().addClass(color);
 }
 
 function biggerThan(a, b) {
