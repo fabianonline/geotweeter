@@ -339,7 +339,7 @@ function addEvent(event, text) {
 }
 
 function addFollowEvent(event) {
-    if (event.source.screen_name=="fabianonline") return;
+    if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += 'Neuer Follower: ';
     html += '<span class="poster">';
@@ -350,7 +350,7 @@ function addFollowEvent(event) {
 }
 
 function addFavoriteEvent(event) {
-    if (event.source.screen_name=="fabianonline") return;
+    if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
@@ -361,7 +361,7 @@ function addFavoriteEvent(event) {
 }
 
 function addListMemberAddedEvent(event) {
-    if (event.source.screen_name=="fabianonline") return;
+    if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
@@ -373,7 +373,7 @@ function addListMemberAddedEvent(event) {
 }
 
 function addListMemberRemovedEvent(event) {
-    if (event.source.screen_name=="fabianonline") return;
+    if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
@@ -414,7 +414,7 @@ function getStatusHTML(status) {
     if (!isDM && (minknownid==0 || status.id < minknownid))
         minknownid = status.id;
 
-    if (!isDM && user=="fabianonline" && biggerThan(status.id, mylasttweetid))
+    if (!isDM && user==this_users_name && biggerThan(status.id, mylasttweetid))
         mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
