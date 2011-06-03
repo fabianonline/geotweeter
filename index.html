@@ -34,9 +34,10 @@
 </div>
 <div id="buttonbar">
     <a href="#" onClick="location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
+     <a href="#" onClick="goToLastRead(); return false;"><img src="icons/arrowdown.png" title="Zum letzten ungelesenen Tweet springen" /></a>
     <a href="#" onClick="markAllRead(); return false;"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
+     <a href="#" onClick="goToMyLastTweet(); return false;"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
     <a href="#" onClick="$('#chars').toggle(500); return false;"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
-    <a href="#" onClick="goToMyLastTweet(); return false;"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
     <a href="#" onClick="$('#text').val($('#text').val() + '<Nelson>Ha, ha!</Nelson>'); return false;"><img src="icons/bug.png" title="Nelson" /></a>
 </div>
 <div id="chars"></div>
