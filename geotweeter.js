@@ -568,7 +568,7 @@ function replies_close() {
 function sendTweet(event) {
     if (event) event.preventDefault();
     if(error_if_no_place_set && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
-        return;
+        return false;
 
     var text = $('#text').val();
     
