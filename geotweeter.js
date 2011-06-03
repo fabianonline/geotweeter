@@ -567,8 +567,6 @@ function replies_close() {
 
 function sendTweet(event) {
     if (event) event.preventDefault();
-    if(document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
-        return;
 
     var text = $('#text').val();
     
@@ -832,6 +830,10 @@ function scrollTo(tweet_id) {
 /** Sets a status message. The colors are actually class names. */
 function setStatus(message, color) {
     $("#status").text(message).removeClass().addClass(color);
+}
+
+function goToLastRead(){
+	self.location = '#status_' + maxreadid;
 }
 
 function biggerThan(a, b) {
