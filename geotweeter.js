@@ -664,32 +664,15 @@ function _sendTweet(text) {
 }
 
 function splitTweet(text) {
-    var mention = text.match(/^(@[a-z0-9_]+) /i);
+    var mention = text.match(/^(((@[a-z0-9_]+) +)+)/i);
     var words = text.split(' ');
     var word;
-    var text = "";
 
-    var parts = new Array();
-    while ((word = words.shift())!=null) {
-        text = text.trim();
-        if (text.length + word.length + 1 <= 140-tweetSeperatorSuffix.length && word!=tweetSeperator)
-            text += " " + word;
-        else if (words.length==0 && text.length+word.length+1<=140 && word!=tweetSeperator)
-            text += " " + word;
-        else {
-            parts.push((text + tweetSeperatorSuffix).trim());
-            if (mention)
-                text = mention[1] + ' ';
-            else
-                text = '';
-            if (word==tweetSeperator)
-                text += tweetSeperatorPrefix;
-            else
-                text += tweetSeperatorPrefix + word;
-        }
+    var parts = text.split(tweetSeperator);
+    for (var i=0; i<parts.length; i++) {
+        parts[i] = parts[i].trim();
+        if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
     }
-    if (text.trim().length>0)
-        parts.push(text.trim());
     return parts;
 }
 
