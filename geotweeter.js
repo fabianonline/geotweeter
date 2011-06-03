@@ -54,6 +54,7 @@ regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
 
 $(document).ready(start);
 
+/** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
 function start() {
     // Fill Form
     for(var i=0; i<places.length; i++) {
@@ -81,6 +82,7 @@ function start() {
     if (window.opera) window.setInterval("parseResponse()", 5000);
 }
 
+/** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
     setStatus("Validating credentials...", "yellow");
     var message = {
@@ -108,6 +110,7 @@ function validateCredentials() {
     });
 }
 
+/** Asynchronously gets the IDs of all followers of the current user. */
 function getFollowers() {
     var message = {
         action: "https://api.twitter.com/1/followers/ids.json",
@@ -127,14 +130,27 @@ function getFollowers() {
     });
 }
 
+/**
+ * Checks if a timeout in the stream occured. Gets run via timer every 30 Seconds.
+ * The stream should at least send a newline every 30 seconds.
+ * If this doesn't happen we assume the connection timed out and force it to be re-established.
+ */
 function checkForTimeout() {
     var jetzt = new Date();
-    if (lastDataReceivedAt && jetzt.getTime() - lastDataReceivedAt.getTime() > 45000) {
+    if (lastDataReceivedAt && jetzt.getTime() - lastDataReceivedAt.getTime() > 30000) {
         disconnectBecauseOfTimeout = true;
         req.abort();
     }
 }
 
+/**
+ * Requests all tweets for the timeline (non-streaming).
+ * If this is the first call since start of the geotweeter, as many tweets as possible are requested.
+ * Otherwise it gets called after a disconnect. Then only missed tweets are fetched.
+ *
+ * Queries the home_timeline and then mentions, since home_timeline doesn't contain mentions from
+ * people you don't follow.
+ */
 function fillList() {
     setStatus("Filling List. Request 1/2...", "yellow");
 
@@ -173,6 +189,8 @@ function fillList() {
     parseData(returned, returned_mentions);
 }
     
+
+/** Starts a request to the streaming api. */
 function startRequest() {
     fillList();
 
@@ -197,6 +215,11 @@ function startRequest() {
     req.send(null);
 }
 
+
+/**
+ * Gets run by onreadystatechange of the XHR object of the streaming connection.
+ * (On Opera, this doesn't work, so here we use a timer to call it every 5 seconds.
+ */
 function parseResponse() {
     if (!req) return;
 
@@ -229,6 +252,10 @@ function parseResponse() {
     if (!isProcessing) processBuffer();
 }
 
+
+/**
+ * Processes the stream buffer. Gets new data from the end of the stream data and gives it to parseData().
+ */
 function processBuffer() {
     isProcessing = true;
     reg = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
@@ -245,6 +272,12 @@ function processBuffer() {
     isProcessing = false;
 }
 
+
+/**
+ * Get json-encoded data, parse it, determine it's type and give the object to a matching display method.
+ *
+ * Can take two datasets, which then get analyzed and "interleaved".
+ */
 function parseData(data, data2) {
     try {
         var message = eval('(' + data + ')');
@@ -309,6 +342,12 @@ function parseData(data, data2) {
     }
 }
 
+/** 
+ * Adds HTML to the DOM.
+ *
+ * Note: Adding the HTML to a new <div> and then append the <div> to the DOM is MUCH faster than
+ * adding the HTML directly to the DOM.
+ */
 function addHTML(text) {
     var elm = document.createElement("div");
     elm.innerHTML = text;
@@ -340,6 +379,8 @@ function addHTML(text) {
     document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
 }
 
+
+/** Uses unshorten.me to unshorten a given URL. */
 function unshortenLink(url) {
     var result = null;
     $.ajax({
@@ -353,6 +394,8 @@ function unshortenLink(url) {
     return url;
 }
 
+
+/** Adds an event with custom text to the DOM. */
 function addEvent(event, text) {
     var html = "";
     html += '<div class="status">';
@@ -364,6 +407,7 @@ function addEvent(event, text) {
     addHTML(html);
 }
 
+/** Creates html for a new follower-event and adds it to the DOM via addEvent(). */
 function addFollowEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
@@ -375,6 +419,7 @@ function addFollowEvent(event) {
     addEvent(event, html);
 }
 
+/** Creates html for a favorite added-event and adds it to the DOM via addEvent(). */
 function addFavoriteEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
@@ -386,6 +431,7 @@ function addFavoriteEvent(event) {
     addEvent(event, html);
 }
 
+/** Creates html for an added to list-event and adds it to the DOM via addEvent(). */
 function addListMemberAddedEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
@@ -398,6 +444,7 @@ function addListMemberAddedEvent(event) {
     addEvent(event, html);
 }
 
+/** Creates html for a removed from list-event and adds it to the DOM via addEvent(). */
 function addListMemberRemovedEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
@@ -410,6 +457,7 @@ function addListMemberRemovedEvent(event) {
 }
 
 
+/** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status) {
     if (status.id_str)
         status.id = status.id_str;
@@ -531,12 +579,14 @@ function getStatusHTML(status) {
     return html;
 }
 
+/** Adds a leading null to numbers less than 10. */
 function addnull(number) {
     if (number<10)
         return "0" + number;
     return number;
 }
 
+/** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
 function linkify(text) {
     text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
     text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
@@ -546,6 +596,7 @@ function linkify(text) {
     return text;
 }
 
+/** Shows the conversation leading to a given tweet. */
 function replies_show(id) {
     $('#replies').show();
     //$('#form_area, #content, #status, #buttonbar').hide();
@@ -563,11 +614,16 @@ function replies_show(id) {
     }
 }
 
+/** Closes the conservation list view opened by replies_show() */
 function replies_close() {
     $('#replies').hide();
     //$('#form_area, #content, #status, #buttonbar').show();
 }
 
+/** 
+ * Get called when the user clicks the "Tweet" button. Does not actually send the tweet,
+ * but calls _sendTweet(), which does.
+ */
 function sendTweet(event) {
     if (event) event.preventDefault();
     if(error_if_no_place_set && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
@@ -604,6 +660,10 @@ function sendTweet(event) {
     }
 }
 
+/** Send a tweet. Depending on the parameter async, this happens asynchronously or synchronously.
+ * Asynchronously is used, if there's just one tweet to send.
+ * Synchronously, if there are multiple tweets (a long, splitted tweet).
+ */
 function _sendTweet(text, async) {
     if (async==undefined) async=false;
     var parameters = {status: text};
@@ -674,6 +734,7 @@ function _sendTweet(text, async) {
    return req.status==200;
 }
 
+/** Splits a tweet at the tweetSeperator, but maintains mentions for all parts. */
 function splitTweet(text) {
     var mention = text.match(/^(((@[a-z0-9_]+) +)+)/i);
     var words = text.split(' ');
@@ -687,6 +748,7 @@ function splitTweet(text) {
     return parts;
 }
 
+/** Natively retweets a given tweet. */
 function retweet(id) {
     if (!confirm('Wirklich direkt retweeten?'))
         return false;
@@ -732,6 +794,7 @@ function retweet(id) {
    });
 }
 
+/** Quotes a tweet (using the old "RT" syntax). */
 function quote(tweet_id, user, text) {
     text = 'RT @' + user + ': ' + unescape(text);
     reply_to_user = user;
@@ -741,6 +804,10 @@ function quote(tweet_id, user, text) {
     updateCounter();
 }
 
+/** 
+ * Prepares the form to reply to a tweet.
+ * Prefills the textarea with "@user ", sets in_reply_to_id and sets the focus to the textarea.
+ */
 function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = user;
     reply_to_id = tweet_id;
@@ -754,6 +821,7 @@ function replyToTweet(tweet_id, user, isDM) {
     updateCounter();
 }
 
+/** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
 function updateCounter() {
     var text = $('#text').val();
     var parts = splitTweet(text);
@@ -782,6 +850,10 @@ function updateCounter() {
     }
 }
 
+/** 
+ * Gets called if the user removed a mention and klicked the link in the appearing warning message.
+ * Especially removes the in_reply_to_id value.
+ */
 function removeReplyWarning() {
     $('#reply_to_id').val('');
     $('#reply_warning').fadeOut();
@@ -789,6 +861,7 @@ function removeReplyWarning() {
     reply_to_id = null;
 }
 
+/** Gets the max read ID from the server. */
 function getMaxReadID() {
     return $.ajax({
         method: 'GET',
@@ -798,6 +871,7 @@ function getMaxReadID() {
     }).responseText;
 }
 
+/** Sets the max read ID on the server. */
 function setMaxReadID(id) {
     $.ajax({
         method: 'GET',
@@ -808,6 +882,7 @@ function setMaxReadID(id) {
     });
 }
 
+/** Sets the max read ID by using setmaxReadID and marks all tweets as read. */
 function markAllRead() {
     if (maxknownid > 0)
         setMaxReadID(maxknownid);
@@ -815,6 +890,7 @@ function markAllRead() {
     $('.new').removeClass('new');
 }
 
+/** Scrolls to the last tweet written by the current user. */
 function goToMyLastTweet() {
     if (mylasttweetid > 0)
         scrollTo(mylasttweetid);
@@ -842,6 +918,7 @@ function goToLastRead(){
     scrollTo(maxreadid);
 }
 
+/** Compares two number-strings. True, if a is bigger than b. Else returns false. */
 function biggerThan(a, b) {
     var l1 = a.length;
     var l2 = b.length;
@@ -849,3 +926,4 @@ function biggerThan(a, b) {
     if (l1<l2) return false;
     return a>b;
 }
+
