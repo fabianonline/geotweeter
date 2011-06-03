@@ -34,9 +34,6 @@ var lastDataReceivedAt = null;
 /** true, if the streaming connection was terminated because of a timeout. */
 var disconnectBecauseOfTimeout = false;
 
-/** ID of tweet to jump down to after posting an update. */
-var goDownTo = null;
-
 /** Keeps track of all tweets being replied to. */
 var repliesData = new Array();
 
@@ -760,7 +757,6 @@ function replyToTweet(tweet_id, user, isDM) {
     else
         $('#text').val('@' + user + ' ').focus();
     $('#reply_to_id').val(tweet_id);
-    setGoDownTo('status_' + tweet_id);
     updateCounter();
 }
 
@@ -823,17 +819,6 @@ function markAllRead() {
         setMaxReadID(maxknownid);
     maxreadid = maxknownid;
     $('.new').removeClass('new');
-}
-
-function setGoDownTo(hash) {
-    goDownTo = hash;
-    $('#godown').show();
-}
-
-function goDown() {
-    self.location = '#' + goDownTo;
-    goDownTo = null;
-    $('#godown').hide();
 }
 
 function goToMyLastTweet() {
