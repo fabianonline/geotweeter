@@ -48,6 +48,7 @@ function start() {
     $(document).bind('keydown', 'Alt+s', sendTweet);
 
     window.setInterval("checkForTimeout()", 30000);
+    if (window.opera) window.setInterval("parseResponse()", 5000);
 }
 
 function validateCredentials() {
@@ -169,10 +170,11 @@ function startRequest() {
 }
 
 function parseResponse() {
-    // <this> is the XMLHTTPRequest object, which called this function
-    if (this.readyState == 1) {
+    if (!req) return;
+
+    if (req.readyState == 1) {
         connectionStartedAt = new Date();
-    } else if (this.readyState == 4) {
+    } else if (req.readyState == 4) {
         $('#status').find('*').hide();
         $('#status #disconnected').show();
         var jetzt = new Date();
@@ -182,21 +184,22 @@ function parseResponse() {
         if (disconnectBecauseOfTimeout) {
             html += 'Grund: Timeout. ';
         }
-        if (this.status != 200) {
-            html += 'Status: ' + this.status + ' (' + this.statusText + '). ';
+        if (req.status != 200) {
+            html += 'Status: ' + req.status + ' (' + req.statusText + '). ';
             delay = maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
         window.setTimeout('startRequest()', delay*1000);
+        req = null;
         if (delay*2 <= maxdelay)
             delay = delay * 2;
-    } else if (this.readyState == 3) {
+    } else if (req.readyState == 3) {
         $('#status').find('*').hide();
         $('#status #connected').show();
         lastDataReceivedAt = new Date();
     }
-    buffer += this.responseText.substr(responseOffset);
-    responseOffset = this.responseText.length;
+    buffer += req.responseText.substr(responseOffset);
+    responseOffset = req.responseText.length;
     if (!isProcessing) processBuffer();
 }
 
