@@ -41,7 +41,7 @@
 <form name="tweet_form" id="form">
     <select name="place" id="place"></select>
     <span id="counter"></span>
-    <input type="submit" onClick="sendTweet(); return false;" value="Tweet" /><br />
+    <input type="submit" onClick="void(sendTweet()); return false;" value="Tweet" /><br />
 
     <textarea name="text" rows="5" cols="80" id="text" onKeyUp="updateCounter();"></textarea>
     <input type="hidden" name="reply_to_id" id="reply_to_id" value="" />
