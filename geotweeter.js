@@ -731,6 +731,10 @@ function _sendTweet(text, async) {
             });
         }
    });
+   // if we're running asynchronously, we have to return false to prevent the browser from reloading
+   // the current page.
+   // I don't know why this happens, probably because some weird Javascript-Foo... *sigh*
+   if (async) return false;
    return req.status==200;
 }
 
