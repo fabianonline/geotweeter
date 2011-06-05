@@ -658,6 +658,7 @@ function sendTweet(event) {
             }
         }
     }
+    return false;
 }
 
 /** Send a tweet. Depending on the parameter async, this happens asynchronously or synchronously.
