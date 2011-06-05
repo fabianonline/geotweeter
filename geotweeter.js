@@ -400,7 +400,7 @@ function addEvent(event, text) {
     var html = "";
     html += '<div class="status">';
     html += '<span class="avatar">';
-    html += '<a href="http://twitter.com/account/profile_image/' + event.source.screen_name + '"><img class="user_avatar" src="' + event.source.profile_image_url + '" /></a>';
+    html += '<a href="http://twitter.com/account/profile_image/' + event.source.screen_name + '" target="_blank"><img class="user_avatar" src="' + event.source.profile_image_url + '" /></a>';
     html += '</span>';
     html += text;
     html += '</div>';
@@ -413,7 +413,7 @@ function addFollowEvent(event) {
     var html = "";
     html += 'Neuer Follower: ';
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a> (' + event.source.name + ')';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
     friends_ids.push(event.source.id);
     addEvent(event, html);
@@ -424,7 +424,7 @@ function addFavoriteEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
     html += '</span>';
     html += ' favorisierte:<br />';
     html += linkify(event.text);
@@ -436,10 +436,10 @@ function addListMemberAddedEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
     html += '</span>';
     html += ' fügte dich zu einer Liste hinzu:<br />';
-    html += '<a href="http://twitter.com' + event.target_object.uri + '">' + event.target_object.full_name + '</a> ';
+    html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
     html += '(' + event.target_object.members_count + 'Members, ' + event.target_object.subscriber_count + ' Subscribers)';
     addEvent(event, html);
 }
@@ -449,10 +449,10 @@ function addListMemberRemovedEvent(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '">' + event.source.screen_name + '</a>';
+    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
     html += '</span>';
     html += ' löschte dich von einer Liste:<br />';
-    html += '<a href="http://twitter.com' + event.target_object.uri + '">' + event.target_object.full_name + '</a> ';
+    html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
     addEvent(event, html);
 }
 
@@ -524,7 +524,7 @@ function getStatusHTML(status) {
     html += '</span>';
     // Ende Tooltip-Info
 
-    html += '<a href="http://twitter.com/account/profile_image/' + user + '"><img class="user_avatar" src="';
+    html += '<a href="http://twitter.com/account/profile_image/' + user + '" target="_blank"><img class="user_avatar" src="';
     if (status.retweeted_status)
         html += status.retweeted_status.user.profile_image_url;
     else if (isDM)
@@ -543,12 +543,12 @@ function getStatusHTML(status) {
         html += linkify(status.text);
     html += '</span>';
     if (status.retweeted_status)
-        html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '">' + status.user.screen_name + '</a></div>';
+        html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
     if (status.place)
-        html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '">' + status.place.full_name + '</a></div>';
+        html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '" target="_blank">' + status.place.full_name + '</a></div>';
     html += '<div class="overlay">';
     html += '<div class="info">';
-    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '">' + datum + '</a> ';
+    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank">' + datum + '</a> ';
     if(status.in_reply_to_status_id) {
         html += '<a href="#" onClick="replies_show(\'' + status.id + '\'); return false;">in reply to...</a> ';
     }
@@ -569,7 +569,7 @@ function getStatusHTML(status) {
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '"><img src="icons/link.png" title="Permalink" /></a>';
     if (status.coordinates) {
         html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a>';
-        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250"><img src="icons/world_add.png" title="All Geotags" /></a>';
+        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250" target="_blank"><img src="icons/world_add.png" title="All Geotags" /></a>';
     }
 
     html += '</div>'; // Links
