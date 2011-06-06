@@ -691,17 +691,19 @@ function sendTweet(event) {
 function _sendTweet(text, async) {
     if (async==undefined) async=false;
     var parameters = {status: text};
-    placeIndex = document.tweet_form.place.value;
-    if(placeIndex > 0) {
-        // Substract placeIndex by one:
-        // The first index in the HTML is the "empty" place, which has id 0.
-        // The elements in the places-array begin with 0, too, so in the HTML they got their id plus one.
-        placeIndex--;
-        parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
-        parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
-        if (setting.places[placeIndex].place_id)
-            parameters.place_id = settings.places[placeIndex].place_id;
-        parameters.display_coordinates = "true";
+    if (settings.places.length>0) {
+        placeIndex = document.tweet_form.place.value;
+        if(placeIndex > 0) {
+            // Substract placeIndex by one:
+            // The first index in the HTML is the "empty" place, which has id 0.
+            // The elements in the places-array begin with 0, too, so in the HTML they got their id plus one.
+            placeIndex--;
+            parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
+            parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
+            if (setting.places[placeIndex].place_id)
+                parameters.place_id = settings.places[placeIndex].place_id;
+            parameters.display_coordinates = "true";
+        }
     }
     if (document.tweet_form.reply_to_id.value != "")
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
