@@ -28,7 +28,7 @@ var minknownid = 0;
 var mylasttweetid = 0;
 
 /** delay to use the next time the stream gets disconnected. */
-var delay = mindelay;
+var delay;
 
 /** Time the connection to the streaming API was established / got the last data. */
 var connectionStartedAt = new Date();
@@ -46,6 +46,9 @@ var this_users_name = null;
 /** Gets filled with the IDs of all followers. */
 var friends_ids = new Array();
 
+/** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
+var expected_settings_version = 1;
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -56,12 +59,19 @@ $(document).ready(start);
 
 /** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
 function start() {
-    // Fill Form
-    for(var i=0; i<places.length; i++) {
-        document.tweet_form.place.options[document.tweet_form.place.length] = new Option(places[i].name, i);
+    if (!checkSettings()) {
+        alert("settings.js veraltet. Bitte mit settings.js.example abgleichen und DANACH die Version auf " + expected_settings_version + " setzen. Breche ab.");
+        return;
     }
-    for(var i=0; i<chars.length; i++) {
-        $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + chars[i] + '\');">' + chars[i] + '</a>');
+
+    delay = settings.timings.mindelay;
+
+    // Fill Form
+    for(var i=0; i<settings.places.length; i++) {
+        document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i);
+    }
+    for(var i=0; i<settings.chars.length; i++) {
+        $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
     }
 
     // check the credentials and exit if not okay.
@@ -82,6 +92,11 @@ function start() {
     if (window.opera) window.setInterval("parseResponse()", 5000);
 }
 
+function checkSettings() {
+    if (typeof(settings)=="undefined") return false;
+    return (settings.version == expected_settings_version);
+}
+
 /** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
     setStatus("Validating credentials...", "yellow");
@@ -90,8 +105,8 @@ function validateCredentials() {
         method: "GET"
     }
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/account/verify_credentials.json?' + OAuth.formEncode(message.parameters);
     return $.ajax({
         url: url,
@@ -117,8 +132,8 @@ function getFollowers() {
         method: "GET"
     }
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = "proxy/api/followers/ids.json?" + OAuth.formEncode(message.parameters);
     $.ajax({
         url: url,
@@ -162,8 +177,8 @@ function fillList() {
         parameters: parameters
     }
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
     var returned = $.ajax({
         url: url,
@@ -176,8 +191,8 @@ function fillList() {
     setStatus("Filling List. Request 2/2...", "yellow");
     message.action = "https://api.twitter.com/1/statuses/mentions.json";
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/mentions.json?' + OAuth.formEncode(message.parameters);
     var returned_mentions = $.ajax({
         url: url,
@@ -201,8 +216,8 @@ function startRequest() {
     }
 
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
     
     setStatus("Connecting to stream...", "orange");
@@ -229,19 +244,19 @@ function parseResponse() {
         setStatus("Disconnected.", "red");
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt.getTime() > 10000)
-            delay = mindelay;
+            delay = settings.timings.mindelay;
         var html = '<div class="status">Disconnect. ';
         if (disconnectBecauseOfTimeout) {
             html += 'Grund: Timeout. ';
         }
         if (req.status != 200) {
             html += 'Status: ' + req.status + ' (' + req.statusText + '). ';
-            delay = maxdelay;
+            delay = settings.timings.maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
         window.setTimeout('startRequest()', delay*1000);
         req = null;
-        if (delay*2 <= maxdelay)
+        if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
     } else if (req.readyState == 3) {
         setStatus("Connected to stream.", "green");
@@ -626,7 +641,7 @@ function replies_close() {
  */
 function sendTweet(event) {
     if (event) event.preventDefault();
-    if(error_if_no_place_set && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
+    if(settings.show_error_if_no_place_is_set && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
         return;
 
     var text = $('#text').val();
@@ -670,10 +685,10 @@ function _sendTweet(text, async) {
     var parameters = {status: text};
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
-        parameters.lat = places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
-        parameters.lon = places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
-        if (places[placeIndex].place_id)
-            parameters.place_id = places[placeIndex].place_id;
+        parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
+        parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
+        if (setting.places[placeIndex].place_id)
+            parameters.place_id = settings.places[placeIndex].place_id;
         parameters.display_coordinates = "true";
     }
     if (document.tweet_form.reply_to_id.value != "")
@@ -688,8 +703,8 @@ function _sendTweet(text, async) {
     $('#form').fadeTo(500, 0).delay(500);
     
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/update.json';
     var data = OAuth.formEncode(message.parameters);
 
@@ -745,7 +760,7 @@ function splitTweet(text) {
     var words = text.split(' ');
     var word;
 
-    var parts = text.split(tweetSeperator);
+    var parts = text.split(settings.tweetSeperator.seperator);
     for (var i=0; i<parts.length; i++) {
         parts[i] = parts[i].trim();
         if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
@@ -766,8 +781,8 @@ function retweet(id) {
     $('#form').fadeTo(500, 0).delay(500);
     
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, accessor);
-    OAuth.SignatureMethod.sign(message, accessor);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/retweet/' + id + '.json';
     var data = OAuth.formEncode(message.parameters);
 
