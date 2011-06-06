@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 1,
+    version: 2,
 
     // Twitter Access Keys
     twitter: {
@@ -12,9 +12,8 @@ var settings = {
     },
 
     // Places. Array of objects containing Name, lat, lon and optionally place_id.
-    // First entry is used as default.
+    // Make it an empty array ("places: []") to disable the places feature completely.
     places: [
-        {name:"--leer--",     lat:0.0000000, lon:0.000000},
         {name:"sweetSixteen", lat:51.52212,  lon:7.45281,  place_id:"c0ca217810f379fa"}
     ],
 

@@ -47,7 +47,7 @@ var this_users_name = null;
 var friends_ids = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 1;
+var expected_settings_version = 2;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -66,9 +66,16 @@ function start() {
 
     delay = settings.timings.mindelay;
 
-    // Fill Form
-    for(var i=0; i<settings.places.length; i++) {
-        document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i);
+    // Fill Places
+    if (settings.places.length==0) {
+        // If there are no places defined in settings.js, we don't even show the dropdown field
+        $("#place").remove();
+    } else {
+        // otherwise, the first (default) entry is an empty entry
+        document.tweet_form.place.options[document.tweet_form.place.length] = new Option("-- leer --", 0);
+        for(var i=0; i<settings.places.length; i++) {
+            document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i+1);
+        }
     }
     for(var i=0; i<settings.chars.length; i++) {
         $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
@@ -92,6 +99,7 @@ function start() {
     if (window.opera) window.setInterval("parseResponse()", 5000);
 }
 
+/** Checks the settings object for the right version. */
 function checkSettings() {
     if (typeof(settings)=="undefined") return false;
     return (settings.version == expected_settings_version);
@@ -641,7 +649,7 @@ function replies_close() {
  */
 function sendTweet(event) {
     if (event) event.preventDefault();
-    if(settings.show_error_if_no_place_is_set && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
+    if(settings.show_error_if_no_place_is_set && settings.places.length>0 && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
         return;
 
     var text = $('#text').val();
@@ -685,6 +693,10 @@ function _sendTweet(text, async) {
     var parameters = {status: text};
     placeIndex = document.tweet_form.place.value;
     if(placeIndex > 0) {
+        // Substract placeIndex by one:
+        // The first index in the HTML is the "empty" place, which has id 0.
+        // The elements in the places-array begin with 0, too, so in the HTML they got their id plus one.
+        placeIndex--;
         parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
         parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
         if (setting.places[placeIndex].place_id)
