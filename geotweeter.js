@@ -700,7 +700,7 @@ function _sendTweet(text, async) {
             placeIndex--;
             parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
             parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
-            if (setting.places[placeIndex].place_id)
+            if (settings.places[placeIndex].place_id)
                 parameters.place_id = settings.places[placeIndex].place_id;
             parameters.display_coordinates = "true";
         }
