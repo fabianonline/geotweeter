@@ -116,6 +116,11 @@ textarea, input, select {
     margin-right: 10px;
 }
 
+#counter {
+    float: right;
+    font-size: 18px;
+}
+
 #success, #failure {
     position: absolute;
     top: 0px;
