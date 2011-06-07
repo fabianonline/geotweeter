@@ -865,15 +865,18 @@ function updateCounter() {
     var parts = splitTweet(text);
 
     var lengths = "";
+    var color = "#0b0";
     if (parts.length==0)
         lengths = "140+";
     for (var i=0; i<parts.length; i++) {
         var len = 140 - parts[i].length;
+        if (len<0) color="#f00";
         lengths += len+'+';
     }
     lengths = lengths.substr(0, lengths.length-1);
         
     $('#counter').html(lengths);
+    $('#counter').css("color", color);
 
     if (reply_to_id != null) {
         var re = new RegExp("(^| )@" + reply_to_user + "([\.:, ]|$)");
