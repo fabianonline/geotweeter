@@ -47,7 +47,10 @@ var this_users_name = null;
 var friends_ids = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 2;
+var expected_settings_version = 3;
+
+/** Time of the last press of Enter. Used for double-Enter-recognition. */
+var timeOfLastEnter = 0;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -94,6 +97,7 @@ function start() {
     updateCounter();
 
     $(document).bind('keydown', 'Alt+s', sendTweet);
+    $('#text').bind('keydown', 'return', checkEnter);
 
     window.setInterval("checkForTimeout()", 30000);
     if (window.opera) window.setInterval("parseResponse()", 5000);
@@ -950,6 +954,14 @@ function setStatus(message, color) {
 /** Scrolls down to the last read tweet. */
 function goToLastRead(){
     scrollTo(maxreadid);
+}
+
+/** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
+function checkEnter() {
+    var d = new Date();
+    if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) sendTweet();
+    console.log("Diff: " + (d.getTime() - timeOfLastEnter));
+    timeOfLastEnter = d.getTime();
 }
 
 /** Compares two number-strings. True, if a is bigger than b. Else returns false. */

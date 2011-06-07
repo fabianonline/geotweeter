@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 2,
+    version: 3,
 
     // Twitter Access Keys
     twitter: {
@@ -36,7 +36,10 @@ var settings = {
     timings: {
         // delays for reconnects (we don't want to hit the server too hard)
         mindelay: 2,
-        maxdelay: 160
+        maxdelay: 160,
+
+        // if there are less than x ms delay between two enter presses, send the tweet
+        max_double_enter_time: 150
     },
 
     // show an error if no place is set?
