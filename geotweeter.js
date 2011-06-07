@@ -960,7 +960,6 @@ function goToLastRead(){
 function checkEnter() {
     var d = new Date();
     if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) sendTweet();
-    console.log("Diff: " + (d.getTime() - timeOfLastEnter));
     timeOfLastEnter = d.getTime();
 }
 
