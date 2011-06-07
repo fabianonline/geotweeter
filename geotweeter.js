@@ -623,28 +623,34 @@ function linkify(text) {
     return text;
 }
 
+/** Shows a "fullscreen" element with defined title and content. */
+function infoarea_show(title, content) {
+    $('#infoarea_title').html(title);
+    $('#infoarea_content').html(content);
+    $('#infoarea').show();
+}
+
+/** Closes the infoarea view displayed by infoarea_show() */
+function infoarea_close() {
+    $('#infoarea').hide();
+}
+
 /** Shows the conversation leading to a given tweet. */
 function replies_show(id) {
-    $('#replies').show();
-    //$('#form_area, #content, #status, #buttonbar').hide();
+    var html = "";
 
     // Quelle als erstes anzeigen
-    $('#replies_content').html(
-        $('#id_' + id).fullhtml()
-    );
+    html += $('#id_' + id).fullhtml();
+
     while (repliesData[id]) {
         id = repliesData[id];
         if($('#id_' + id).length>0)
-            $('#replies_content').append($('#id_' + id).fullhtml());
+            html += $('#id_' + id).fullhtml();
         else
-            $('#replies_content').append('<a href="http://twitter.com/#!/user/status/' + id + '" target="_blank">Show next status</a>');
+            html += '<a href="http://twitter.com/#!/user/status/' + id + '" target="_blank">Show next status</a>';
     }
-}
 
-/** Closes the conservation list view opened by replies_show() */
-function replies_close() {
-    $('#replies').hide();
-    //$('#form_area, #content, #status, #buttonbar').show();
+    infoarea_show("Replies", html);
 }
 
 /** 

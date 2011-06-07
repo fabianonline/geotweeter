@@ -189,7 +189,7 @@ textarea, input, select {
     background-color: #f00;
 }
 
-#replies {
+#infoarea {
     display: none;
     z-index: 105;
     position: fixed;
