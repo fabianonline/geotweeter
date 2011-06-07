@@ -653,6 +653,17 @@ function show_replies(id) {
     infoarea_show("Replies", html);
 }
 
+/** Shows some stats */
+function show_stats() {
+    var html = "";
+    html += "<strong>Anzahl Tweets:</strong>        " + $('.tweet').length + "<br />";
+    html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt + "<br />";
+    html += "<strong>Bekannte Follower:</strong>    " + followers_ids.length + "<br />";
+    html += "<strong>Buffer-Größe:</strong>         " + responseOffset + "<br />";
+
+    infoarea_show("Stats", html);
+}
+
 /** 
  * Get called when the user clicks the "Tweet" button. Does not actually send the tweet,
  * but calls _sendTweet(), which does.
