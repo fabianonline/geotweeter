@@ -44,7 +44,7 @@ var repliesData = new Array();
 var this_users_name = null;
 
 /** Gets filled with the IDs of all followers. */
-var friends_ids = new Array();
+var followers_ids = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
 var expected_settings_version = 3;
@@ -442,7 +442,7 @@ function addFollowEvent(event) {
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
-    friends_ids.push(event.source.id);
+    followers_ids.push(event.source.id);
     addEvent(event, html);
 }
 
