@@ -113,6 +113,7 @@ textarea, input, select {
 
 #form_area {
     position: relative;
+    margin-right: 10px;
 }
 
 #success, #failure {
@@ -124,7 +125,7 @@ textarea, input, select {
 }
 
 #text {
-    width: 200px;
+    width: 100%;
 }
 
 #buttonbar img {
