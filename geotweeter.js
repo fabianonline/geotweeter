@@ -577,7 +577,7 @@ function getStatusHTML(status) {
     html += '<div class="info">';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank">' + datum + '</a> ';
     if(status.in_reply_to_status_id) {
-        html += '<a href="#" onClick="replies_show(\'' + status.id + '\'); return false;">in reply to...</a> ';
+        html += '<a href="#" onClick="show_replies(\'' + status.id + '\'); return false;">in reply to...</a> ';
     }
     if (status.source)
         html += 'from ' + status.source + ' ';
@@ -636,7 +636,7 @@ function infoarea_close() {
 }
 
 /** Shows the conversation leading to a given tweet. */
-function replies_show(id) {
+function show_replies(id) {
     var html = "";
 
     // Quelle als erstes anzeigen
