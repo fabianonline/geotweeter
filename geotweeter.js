@@ -364,6 +364,8 @@ function parseData(data, data2) {
         addListMemberAddedEvent(message);
     } else if (message.event && message.event=="list_member_removed") {
         addListMemberRemovedEvent(message);
+    } else if (message.event && message.event=="block") {
+        // You blocked someone. Do nothing.
     } else {
         addHTML('<hr />Unbekannte Daten:<br />' + data);
     }
