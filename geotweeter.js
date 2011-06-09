@@ -47,7 +47,7 @@ var this_users_name = null;
 var followers_ids = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 3;
+var expected_settings_version = 4;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -305,7 +305,7 @@ function processBuffer() {
  *
  * Can take two datasets, which then get analyzed and "interleaved".
  */
-function parseData(data, data2) {
+function parseData(data, data2) {	
     try {
         var message = eval('(' + data + ')');
     } catch (e) {
@@ -316,13 +316,14 @@ function parseData(data, data2) {
     if (data2 != undefined) try {
         message2 = eval('(' + data2 + ')');
     } catch(e) {}
+	
 
     if (message.constructor.toString().indexOf('Array')!=-1) {
 
         var html = '';
         if (message2 == null) {
             for(var i=0; i<message.length; i++) {
-                if (message[i]) html += getStatusHTML(message[i]);
+			if (message[i]) html += getStatusHTML(message[i]);
             }
         } else {
             var i=0;
@@ -378,6 +379,9 @@ function parseData(data, data2) {
  * adding the HTML directly to the DOM.
  */
 function addHTML(text) {
+	
+   if(text == "") return;	
+	
     var elm = document.createElement("div");
     elm.innerHTML = text;
     $(elm).find('.user_avatar').tooltip({
@@ -488,6 +492,11 @@ function addListMemberRemovedEvent(event) {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status) {
+	/*Check if tweet contains blacklisted words */
+	if(check_blacklist(status.text)){
+		return "";
+	}
+	
     if (status.id_str)
         status.id = status.id_str;
     if (status.in_reply_to_status_id_str)
@@ -539,6 +548,8 @@ function getStatusHTML(status) {
             if (mention == this_users_name) html += "mentions_this_user ";
         }
     }
+  
+    
     html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
@@ -993,4 +1004,12 @@ function biggerThan(a, b) {
     if (l1<l2) return false;
     return a>b;
 }
-
+function check_blacklist(text){
+	
+	for (var i=0;i<settings.blacklist.length;i++)
+	{
+		if(text.indexOf(settings.blacklist[i]) > 0)
+		return true;
+	}
+	return false;
+}
