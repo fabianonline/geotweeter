@@ -13,6 +13,7 @@ var settings = {
 
     // Places. Array of objects containing Name, lat, lon and optionally place_id.
     // Make it an empty array ("places: []") to disable the places feature completely.
+    //Values for North and East are positive, values for South and West negative
     places: [
         {name:"sweetSixteen", lat:51.52212,  lon:7.45281,  place_id:"c0ca217810f379fa"}
     ],
