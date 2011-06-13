@@ -122,6 +122,7 @@ function start() {
     if (window.opera) window.setInterval("parseResponse()", 5000);
 }
 
+/** Returns the last word of the given string. Used by autocompletion. */
 function extractLast(term) {
     return term.split(/\s+/).pop();
 }
@@ -542,7 +543,7 @@ function getStatusHTML(status) {
         user_object = status.user;
 
     user = user_object.screen_name;
-    if ($.inArray("@" + user, autocompletes)==-1) autocompletes.push("@" + user);
+    addToAutoCompletion("@" + user);
 
     if (!isDM && biggerThan(status.id, maxknownid))
         maxknownid = status.id;
@@ -653,14 +654,12 @@ function addnull(number) {
 function linkify(text) {
     var matches = text.match(regexp_user);
     if (matches) for (var i=0; i<matches.length; i++) {
-        var val = matches[i].trim();
-        if ($.inArray(val, autocompletes)==-1) autocompletes.push(val);
+        addToAutoCompletion(matches[i].trim());
     }
 
     var matches = text.match(regexp_hash);
     if (matches) for (var i=0; i<matches.length; i++) {
-        var val = matches[i].trim();
-        if ($.inArray(val, autocompletes)==-1) autocompletes.push(val);
+        addToAutoCompletion(matches[i].trim());
     }
 
     text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
@@ -1048,4 +1047,12 @@ function check_blacklist(text){
             return true;
     }
     return false;
+}
+
+/** Adds a term to the list of usable autocompletions. */
+function addToAutoCompletion(term) {
+    if ($.inArray(term, autocompletes)==-1) {
+        autocompletes.push(term);
+        autocompletes.sort();
+    }
 }
