@@ -105,7 +105,9 @@ function start() {
     $('#text').autocomplete({
         minLength: 1,
         source: function(request, response) {
-            response($.ui.autocomplete.filter(autocompletes, extractLast(request.term)));
+            var word = extractLast(request.term);
+            if (word[0]!="@" && word[0]!="#") response(new array());
+            else response($.ui.autocomplete.filter(autocompletes, extractLast(request.term)));
         },
         focus: function() { return false; },
         appendTo: "#autocomplete_area",
