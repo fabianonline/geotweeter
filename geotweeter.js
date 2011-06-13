@@ -113,7 +113,7 @@ function start() {
         appendTo: "#autocomplete_area",
         select: function(event, ui) {
             var term = this.value.split(/\s+/).pop();
-            this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value;
+            this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " ";
             return false;
         }
     });
