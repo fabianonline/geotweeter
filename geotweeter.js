@@ -45,6 +45,7 @@ var this_users_name = null;
 
 /** Gets filled with the IDs of all followers. */
 var followers_ids = new Array();
+var followers = new Array("@fabianonline", "@simonszu");
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
 var expected_settings_version = 4;
@@ -99,8 +100,26 @@ function start() {
     $(document).bind('keydown', 'Alt+s', sendTweet);
     $('#text').bind('keydown', 'return', checkEnter);
 
+    $('#text').autocomplete({
+        minLength: 1,
+        source: function(request, response) {
+            response($.ui.autocomplete.filter(followers, extractLast(request.term)));
+        },
+        focus: function() { return false; },
+        appendTo: "#autocomplete_area",
+        select: function(event, ui) {
+            var term = this.value.split(/\s+/).pop();
+            this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value;
+            return false;
+        }
+    });
+
     window.setInterval("checkForTimeout()", 30000);
     if (window.opera) window.setInterval("parseResponse()", 5000);
+}
+
+function extractLast(term) {
+    return term.split(/\s+/).pop();
 }
 
 /** Checks the settings object for the right version. */

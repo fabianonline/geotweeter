@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Fabians Geotweeter</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css" href="lib/jquery.ui.css" />
 <script src="lib/oauth.js"></script>
 <script src="lib/sha1.js"></script>
 <script src="lib/jquery.min.js"></script>
@@ -13,6 +14,7 @@
 <!-- needed for tooltip -->
 <script src="lib/jquery.dimensions.min.js"></script>
 <script src="lib/jquery.tooltip.min.js"></script>
+<script src="lib/jquery.ui.min.js"></script>
 <script src="settings.js"></script>
 <script src="geotweeter.js"></script>
 </head>
@@ -49,6 +51,7 @@
 
     <textarea name="text" rows="5" cols="80" id="text" onKeyUp="updateCounter();"></textarea>
     <input type="hidden" name="reply_to_id" id="reply_to_id" value="" />
+    <div style="height: 0px; position: relative;" id="autocomplete_area"></div>
 </form>
 <div id="success">
     <h1>OK</h1>
