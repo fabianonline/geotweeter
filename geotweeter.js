@@ -45,7 +45,9 @@ var this_users_name = null;
 
 /** Gets filled with the IDs of all followers. */
 var followers_ids = new Array();
-var followers = new Array("@fabianonline", "@simonszu");
+
+/** Collects all possible autocompletion values. */
+var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
 var expected_settings_version = 4;
@@ -103,7 +105,7 @@ function start() {
     $('#text').autocomplete({
         minLength: 1,
         source: function(request, response) {
-            response($.ui.autocomplete.filter(followers, extractLast(request.term)));
+            response($.ui.autocomplete.filter(autocompletes, extractLast(request.term)));
         },
         focus: function() { return false; },
         appendTo: "#autocomplete_area",
@@ -538,6 +540,7 @@ function getStatusHTML(status) {
         user_object = status.user;
 
     user = user_object.screen_name;
+    if ($.inArray("@" + user, autocompletes)==-1) autocompletes.push("@" + user);
 
     if (!isDM && biggerThan(status.id, maxknownid))
         maxknownid = status.id;
@@ -646,6 +649,18 @@ function addnull(number) {
 
 /** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
 function linkify(text) {
+    var matches = text.match(regexp_user);
+    if (matches) for (var i=0; i<matches.length; i++) {
+        var val = matches[i].trim();
+        if ($.inArray(val, autocompletes)==-1) autocompletes.push(val);
+    }
+
+    var matches = text.match(regexp_hash);
+    if (matches) for (var i=0; i<matches.length; i++) {
+        var val = matches[i].trim();
+        if ($.inArray(val, autocompletes)==-1) autocompletes.push(val);
+    }
+
     text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
     text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
     text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
