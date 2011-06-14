@@ -110,6 +110,8 @@ function start() {
             else response($.ui.autocomplete.filter(autocompletes, extractLast(request.term)));
         },
         focus: function() { return false; },
+        autoFocus: true,
+        delay: 0,
         appendTo: "#autocomplete_area",
         select: function(event, ui) {
             var term = this.value.split(/\s+/).pop();
