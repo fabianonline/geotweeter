@@ -55,6 +55,9 @@ var expected_settings_version = 4;
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
 
+/** Text from the textbox before pressing double-enter. Used to remove unwanted newlines. */
+var textBeforeEnter = "";
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -1026,9 +1029,14 @@ function goToLastRead(){
 }
 
 /** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
-function checkEnter() {
+function checkEnter(event) {
     var d = new Date();
-    if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) sendTweet();
+    if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) {
+        if (event) event.preventDefault();
+        $('#text').val(textBeforeEnter);
+        sendTweet();
+    }
+    textBeforeEnter = $('#text').val();
     timeOfLastEnter = d.getTime();
 }
 
