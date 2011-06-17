@@ -109,7 +109,7 @@ function start() {
         minLength: 1,
         source: function(request, response) {
             var word = extractLast(request.term);
-            if (word[0]!="@" && word[0]!="#") response(new array());
+            if (word[0]!="@" && word[0]!="#") response(new Array());
             else response($.ui.autocomplete.filter(autocompletes, extractLast(request.term)));
         },
         focus: function() { return false; },
