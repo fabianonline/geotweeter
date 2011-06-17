@@ -543,7 +543,12 @@ function getStatusHTML(status) {
     if (status.retweeted_status)
         user_object = status.retweeted_status.user;
     else if (isDM)
-        user_object = status.sender;
+        if (status.sender.screen_name == this_users_name) {
+            user_object = status.recipient;
+            user_object.is_receiver = true;
+        } else {
+            user_object = status.sender;
+        }
     else
         user_object = status.user;
 
@@ -603,7 +608,9 @@ function getStatusHTML(status) {
     html += '" /></a>';
     html += '</span>';
     html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + user + '" target="_blank">' + user + '</a>';
+    var extra="";
+    if (user_object.is_receiver) extra = "to ";
+    html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
     html += '</span> ';
     html += '<span class="text">';
     if (status.retweeted_status)
