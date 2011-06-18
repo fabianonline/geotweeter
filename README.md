@@ -27,13 +27,34 @@ In der `.htaccess` werden ein paar Proxys definiert, um die Same-Origin-Policy
 zu umgehen. Dafür sollte der Geotweeter auf einem Apache-Server laufen, der entsprechend mod_proxy und
 so zur Verfügung hat.
 
-In der `settings.js` werden Twitter-OAuth-Tokens und -Secrets hinterlegt.
+## Apache-Konfiguration
+Folgende Module sollten geladen werden:
+* mod_proxy
+* mod_proxy_http
+* mod_rewrite
+* mod_ssl
+
+Folgende Einstellungen sollten zudem vorgenommen werden:
+
+    # Wenn man Proxys sonst nicht nutzt, sollte man sie sicherheitshalber deaktivieren
+    ProxyRequests off
+    <Proxy *>
+      Order deny,allow
+      Deny from all
+    </Proxy>
+    
+    # Twitter nutzt SSL
+    SSLProxyEngine on
+
+Zudem muss die .htaccess genug Rechte haben. Hier wäre dann also im Ordner-Kontext ein
+`AllowOverride all` sinnvoll.
+
+## Konfiguration
+
+In der `settings.js` werden Twitter-OAuth-Tokens und -Secrets sowie sonstige Einstellungen hinterlegt.
+`settings.js.example` dient hier als Vorlage.
 
 `setmaxreadid.php` und `getmaxreadid.php` sind minimale PHP-Skripte, über die eine Echofon-mäßige Sync-
 Funktionalität realisiert wird. Diese müssen Schreibzugriff auf eine Datei `maxreadid.dat` im gleichen
 Ordner haben.
-
-Und im Haupt-Code in `geotweeter.js` dürfte noch an einigen Stellen mein Twitter-Username fest kodiert
-sein. Einfach mal nach "fabianonline" suchen und evtl. ersetzen. Oder gleich forken, ordentlich
-konfigurierbar machen (oder gar direkt via verify_credentials abfragen) und nen Pull-Request absetzen.
 
