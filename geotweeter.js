@@ -50,7 +50,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 4;
+var expected_settings_version = 5;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -429,14 +429,16 @@ function addHTML(text) {
         showURL: false,
         left: 5
     });
-    $(elm).find("a.external").tooltip({
-        bodyHandler: function() {
-            return unshortenLink(this.href).replace(/\//g, "<wbr>/");
-        },
-        track: true,
-        showURL: false,
-        delay: 750
-    });
+    if (settings.unshorten_links) {
+        $(elm).find("a.external").tooltip({
+            bodyHandler: function() {
+                return unshortenLink(this.href).replace(/\//g, "<wbr>/");
+            },
+            track: true,
+            showURL: false,
+            delay: 750
+        });
+    }
     document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
 }
 

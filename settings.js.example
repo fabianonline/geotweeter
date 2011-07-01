@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 4,
+    version: 5,
 
     // Twitter Access Keys
     twitter: {
@@ -47,6 +47,9 @@ var settings = {
     },
 
     // show an error if no place is set?
-    show_error_if_no_place_is_set: true
+    show_error_if_no_place_is_set: true,
+
+    // unshorten links on mouseover?
+    unshorten_links: true
 }
 
