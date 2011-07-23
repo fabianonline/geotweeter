@@ -22,7 +22,7 @@ var maxreadid = 0;
 
 /** IDs of newest and oldest knwon tweets. */
 var maxknownid = "0";
-var minknownid = 0;
+var minknownid = "0";
 
 /** ID of the newest tweet belonging to "this" user. */
 var mylasttweetid = 0;
@@ -208,7 +208,9 @@ function checkForTimeout() {
  * people you don't follow.
  */
 function fillList() {
+    log_message("fillList", "Starting");
     setStatus("Filling List. Request 1/2...", "yellow");
+    var page = 1;
 
     var parameters = {include_rts: "1", count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
@@ -248,6 +250,7 @@ function fillList() {
 
 /** Starts a request to the streaming api. */
 function startRequest() {
+    log_message("startRequest", "Calling fillList()...");
     fillList();
 
     var message = {
@@ -982,12 +985,14 @@ function removeReplyWarning() {
 
 /** Gets the max read ID from the server. */
 function getMaxReadID() {
-    return $.ajax({
+    value = $.ajax({
         method: 'GET',
         url: 'maxreadid/get.php',
         async: false,
         dataType: 'text'
     }).responseText;
+    log_message("getMaxReadID", "result: " + value);
+    return value;
 }
 
 /** Sets the max read ID on the server. */
@@ -1077,8 +1082,11 @@ function addToAutoCompletion(term) {
 }
 
 /** Adds an entry to the debug log if enabled in settings.js. */
-function log(s) {
+function log_message(place, s) {
     if (settings.debug && console) {
-        console.log(s);
+        var str = "[ " + place;
+        for(var i=0; i<(20-place.length); i++) str += " ";
+        str += " ] " + s;
+        console.log(str);
      }
 }
