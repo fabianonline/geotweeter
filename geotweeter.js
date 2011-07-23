@@ -209,10 +209,11 @@ function checkForTimeout() {
  */
 function fillList() {
     log_message("fillList", "Starting");
-    setStatus("Filling List. Request 1/2...", "yellow");
-    var page = 1;
 
-    var parameters = {include_rts: "1", count: 200, include_entities: true};
+    var strings = new array();
+
+    setStatus("Filling List. Request 1/3...", "yellow");
+    var parameters = {include_rts: "1", count: 200, include_entities: true, page: 1};
     if (maxknownid!="0") parameters.since_id = maxknownid;
     var message = {
         action: "https://api.twitter.com/1/statuses/home_timeline.json",
@@ -223,28 +224,48 @@ function fillList() {
     OAuth.completeRequest(message, settings.twitter);
     OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
-    var returned = $.ajax({
+    strings.push($.ajax({
         url: url,
         type: "GET",
         async: false,
         dataType: "text"
-    }).responseText;
+    }).responseText);
 
 
-    setStatus("Filling List. Request 2/2...", "yellow");
+    setStatus("Filling List. Request 2/3...", "yellow");
+    var parameters = {include_rts: "1", count: 200, include_entities: true, page: 2};
+    if (maxknownid!="0") parameters.since_id = maxknownid;
+    var message = {
+        action: "https://api.twitter.com/1/statuses/home_timeline.json",
+        method: "GET",
+        parameters: parameters
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
+    strings.push($.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType: "text"
+    }).responseText);
+
+
+    setStatus("Filling List. Request 3/3...", "yellow");
     message.action = "https://api.twitter.com/1/statuses/mentions.json";
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, settings.twitter);
     OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/statuses/mentions.json?' + OAuth.formEncode(message.parameters);
-    var returned_mentions = $.ajax({
+    strings.push($.ajax({
         url: url,
         type: "GET",
         async: false,
         dataType: "text"
-    }).responseText;
+    }).responseText);
 
-    parseData(returned, returned_mentions);
+    parseData(strings);
 }
     
 
@@ -337,18 +358,26 @@ function processBuffer() {
  *
  * Can take two datasets, which then get analyzed and "interleaved".
  */
-function parseData(data, data2) {
+function parseData(data) {
+    if (data.constructor.toString.indexOf('Array')!=-1) {
+        // Wir haben ein Array mit Strings bekommen - also mehrere Responses der API.
+        // Wir parsen alle und geben sie dann zurück.
+        
+        var objects = new array();
+
+        for (var i=0; i<data.length; i++) {
+            try {
+                objects.push($.parseJSON(data[i]));
+            } catch (e) {}
+        }
+
+
     try {
         var message = $.parseJSON(data);
     } catch (e) {
-        addHTML("Exception: " + e + '<br />' + data + '<hr />');
+        return("Exception: " + e + '<br />' + data + '<hr />');
     }
 
-    var message2 = null;
-    if (data2 != undefined) try {
-        message2 = $.parseJSON(data);
-    } catch(e) {}
-	
 
     if (message.constructor.toString().indexOf('Array')!=-1) {
 
@@ -381,13 +410,13 @@ function parseData(data, data2) {
         return; // Fix for NULLs in stream
 
     if (message.text) {
-        addHTML(getStatusHTML(message));
+        return getStatusHTML(message);
     } else if (message.friends) {
         twitter_friends = message.friends;
     } else if ("delete" in message) {
         // Deletion-Request. Do nothing ,-)
     } else if (message.direct_message) {
-        addHTML(getStatusHTML(message));
+        return getStatusHTML(message);
     } else if (message.event && message.event=="follow") {
         // Social Event.
         addFollowEvent(message);
