@@ -339,14 +339,14 @@ function processBuffer() {
  */
 function parseData(data, data2) {
     try {
-        var message = eval('(' + data + ')');
+        var message = $.parseJSON(data);
     } catch (e) {
         addHTML("Exception: " + e + '<br />' + data + '<hr />');
     }
 
     var message2 = null;
     if (data2 != undefined) try {
-        message2 = eval('(' + data2 + ')');
+        message2 = $.parseJSON(data);
     } catch(e) {}
 	
 
