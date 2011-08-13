@@ -58,7 +58,11 @@ var timeOfLastEnter = 0;
 /** Text from the textbox before pressing double-enter. Used to remove unwanted newlines. */
 var textBeforeEnter = "";
 
-regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
+/** Lengths of automatically shorted t.co-links */
+var short_url_length = null;
+var short_url_length_https = null;
+
+regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
@@ -92,6 +96,7 @@ function start() {
 
     // check the credentials and exit if not okay.
     validateCredentials();
+    get_twitter_configuration();
     if (!this_users_name) return;
 
 
@@ -162,6 +167,33 @@ function validateCredentials() {
         },
         error: function(data, result, request) {
             addHTML("Unknown error in validateCredentials. Exiting. " + data.responseText);
+        }
+    });
+}
+
+/** Get twitter configuration */
+function get_twitter_configuration() {
+    setStatus("Getting Twitter Configuration...", "yellow");
+    var message = {
+        action: "https://api.twitter.com/1/help/configuration.json",
+        method: "GET"
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/help/configuration.json?' + OAuth.formEncode(message.parameters);
+    return $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        success: function(data, result, request) {
+            short_url_length = data.short_url_length;
+            log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
+            short_url_length_https = data.short_url_length_https;
+            log_message("get_twitter_config", "short_url_length_https: "+data.short_url_length_https);
+        },
+        error: function(data, result, request) {
+            addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
         }
     });
 }
@@ -819,7 +851,10 @@ function sendTweet(event) {
  */
 function _sendTweet(text, async) {
     if (async==undefined) async=false;
-    var parameters = {status: text};
+    var parameters = {
+        status: text,
+        wrap_links: true
+    };
     if (settings.places.length>0) {
         placeIndex = document.tweet_form.place.value;
         if(placeIndex > 0) {
@@ -995,6 +1030,14 @@ function updateCounter() {
         lengths = "140+";
     for (var i=0; i<parts.length; i++) {
         var len = 140 - parts[i].length;
+        var matches = parts[i].match(regexp_url);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            var m = matches[i].trim();
+            if (m.length < short_url_length) continue;
+            len += m.length;
+            if (m.slice(0, 5)=="https") len -= short_url_length_https;
+            else len -= short_url_length;
+        }
         if (len<0) color="#f00";
         lengths += len+'+';
     }
