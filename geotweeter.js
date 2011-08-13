@@ -694,6 +694,7 @@ function linkify(text, entities) {
             entity = all_entities_sort[i];
             if (entity.type=="user_mentions") {
                 text = replace_entity(text, '<a href="https://twitter.com/' + entity.screen_name + '" target="_blank">@' + entity.screen_name + '</a>', entity);
+                addToAutoCompletion('@' + entity.screen_name);
             } else if (entity.type=="urls") {
                 if (entity.expanded_url) {
                     text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
@@ -702,6 +703,7 @@ function linkify(text, entities) {
                 }
             } else if (entity.type=="hashtags") {
                 text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
+                addToAutoCompletion('#' + entity.text);
             }
         }
 
