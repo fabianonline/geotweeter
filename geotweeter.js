@@ -619,9 +619,9 @@ function getStatusHTML(status) {
     html += '</span> ';
     html += '<span class="text">';
     if (status.retweeted_status)
-        html += linkify(status.retweeted_status.text);
+        html += linkify(status.retweeted_status.text, status.retweeted_status.entities);
     else
-        html += linkify(status.text);
+        html += linkify(status.text, status.entities);
     html += '</span>';
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
@@ -667,21 +667,63 @@ function addnull(number) {
     return number;
 }
 
+/** Sort funtion for an array containing entities */
+function entity_sort(a, b) {
+    return a.indices[0] - b.indices[0];
+}
+
+/** Offset-based string replacement function for use with entity indices */
+function replace_entity(str, replace, entity) {
+    var result = str.slice(0, entity.indices[0]) + replace + str.slice(entity.indices[1]);
+    return result;
+}
+
 /** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
-function linkify(text) {
-    var matches = text.match(regexp_user);
-    if (matches) for (var i=0; i<matches.length; i++) {
-        addToAutoCompletion(matches[i].trim());
-    }
+function linkify(text, entities) {
+    if (entities) {
+        var all_entities = new Array();
+        for (var entity_type in entities) {
+            for (var i=0; i<entities[entity_type].length; i++) {
+                var entity = entities[entity_type][i];
+                entity.type = entity_type;
+                all_entities.push(entity);
+            }
+        }
+        var all_entities_sort = all_entities.sort(entity_sort).reverse();
+        for (var i=0; i<all_entities_sort.length; i++) {
+            entity = all_entities_sort[i];
+            if (entity.type=="user_mentions") {
+                text = replace_entity(text, '<a href="https://twitter.com/' + entity.screen_name + '" target="_blank">@' + entity.screen_name + '</a>', entity);
+            } else if (entity.type=="urls") {
+                if (entity.expanded_url) {
+                    text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
+                } else {
+                    text = replace_entity(text, '<a href="' + entity.url + '" class="external" target="_blank">' + entity.url + '</a>', entity);
+                }
+            } else if (entity.type=="hashtags") {
+                text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
+            }
+        }
 
-    var matches = text.match(regexp_hash);
-    if (matches) for (var i=0; i<matches.length; i++) {
-        addToAutoCompletion(matches[i].trim());
-    }
+    } else {
+        // We got no entities. This can happen with status messages and so on.
+        // In that case we use the old regexp-based replacement method.
+        var matches = text.match(regexp_user);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            addToAutoCompletion(matches[i].trim());
+        }
 
-    text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
-    text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
-    text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
+        var matches = text.match(regexp_hash);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            addToAutoCompletion(matches[i].trim());
+        }
+
+        text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
+        text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
+        text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
+    }
+    
+    // Add Links to geocaching.com and "properly" display linebreaks.
     text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
     text = text.replace(/\n/g, '<br />\n');
     return text;
