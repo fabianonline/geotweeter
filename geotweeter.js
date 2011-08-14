@@ -686,6 +686,8 @@ function getStatusHTML(status) {
     }
     if ( user==this_users_name) {
         html += '<a href="#" onClick="delete_tweet(\'' + status.id + '\'); return false;"><img src="icons/cross.png" title="Delete Tweet" /></a>';
+    } else {
+        html += '<a href="#" onClick="report_spam(\'' + user + '\'); return false;"><img src="icons/exclamation.png" title="Block and report as spam" /></a>';
     }
 
     html += '</div>'; // Links
@@ -1022,6 +1024,54 @@ function delete_tweet(id) {
             if (req.status==200) {
                 $('#success_info').html("Tweet deleted");
                 $('#id_' + id).remove();
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            } else {
+                $('#failure_info').html(data.error);
+                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            }
+            updateCounter();
+        },
+        error: function(req, testStatus, exc) {
+            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+        }
+   });
+}
+
+/** Delete one of your own tweets. */
+function report_spam(sender_name) {
+    if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
+        return false;
+
+    var message = {
+        action: "https://api.twitter.com/1/report_spam.json",
+        method: "POST",
+        parameters : {screen_name: sender_name}
+    }
+
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/report_spam.json';
+    var data = OAuth.formEncode(message.parameters);
+
+    $.ajax({
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (req.status==200) {
+                $('#success_info').html("Spam gemeldet.");
+                $('.by_' + sender_name).remove();
                 $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
