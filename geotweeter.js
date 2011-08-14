@@ -1029,8 +1029,13 @@ function updateCounter() {
     if (parts.length==0)
         lengths = "140+";
     for (var i=0; i<parts.length; i++) {
-        var len = 140 - parts[i].length;
-        var matches = parts[i].match(regexp_url);
+        var text = parts[i];
+        var dm_match = text.match(/^d \w+ (.*)$/i);
+        if (dm_match) {
+            text = dm_match[1];
+        }
+        var len = 140 - text.length;
+        var matches = text.match(regexp_url);
         if (matches) for (var i=0; i<matches.length; i++) {
             var m = matches[i].trim();
             if (m.length < short_url_length) continue;
