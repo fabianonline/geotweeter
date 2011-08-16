@@ -145,6 +145,10 @@ textarea, input, select {
     margin: 5px 0px 3px 3px;
 }
 
+.button {
+    margin: 0px !important;
+}
+
 #buttonbar img:hover,
 .button.on {
     border-color: #666 #eee #eee #666 !important;
