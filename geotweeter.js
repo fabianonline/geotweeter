@@ -878,9 +878,9 @@ function _sendTweet(text, async) {
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
 
     var message = {
-        action: "https://api.twitter.com/1/statuses/update.json",
+        action: "https://upload.twitter.com/1/statuses/update_with_media.json",
         method: "POST",
-        parameters: parameters
+        //parameters: parameters
     }
 
     $('#form').fadeTo(500, 0).delay(500);
@@ -888,15 +888,30 @@ function _sendTweet(text, async) {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, settings.twitter);
     OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/update.json';
-    var data = OAuth.formEncode(message.parameters);
+    var url = 'proxy/upload/statuses/update_with_media.json';
+    var formdata = new FormData();
+    formdata.append('media[]', $('#file')[0].files[0]);
+    var auth_string = "OAuth ";
+    for (var key in message.parameters) {
+        auth_string += "" + key + "='" + message.parameters[key] + "', ";
+        //formdata.append(key, message.parameters[key]);
+    }
+    auth_string = auth_string.slice(0, auth_string.length -2);
+    formdata.append("status", "Test-Tweet, nativ mit Bild.");
+    //var data = OAuth.formEncode(message.parameters);
+
 
     var req = $.ajax({
         url: url,
-        data: data,
+        data: formdata,
+        processData: false,
+        contentType: false,
         async: async,
         dataType: "json",
         type: "POST",
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("Authorization", auth_string);
+        },
         success: function(data, textStatus, req) {
             if (data.text) {
                 //$('#counter').html(data + textStatus);
