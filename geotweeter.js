@@ -95,7 +95,14 @@ function start() {
         for(var i=0; i<settings.places.length; i++) {
             document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i+1);
         }
+        
+        if ($.cookie('last_place')) $("#place option[value='" + $.cookie('last_place') + "']").attr('selected', true);
     }
+
+    $('#place').change(function(){
+        $.cookie('last_place', $('#place option:selected').val(), {expires: 365});
+    });
+
     for(var i=0; i<settings.chars.length; i++) {
         $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
     }
