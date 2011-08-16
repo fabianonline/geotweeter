@@ -899,6 +899,7 @@ function _sendTweet(text, async) {
     auth_string = auth_string.slice(0, auth_string.length -2);
     formdata.append("status", "Test-Tweet, nativ mit Bild.");
     //var data = OAuth.formEncode(message.parameters);
+    url += '?' + OAuth.formEncode(message.parameters);
 
 
     var req = $.ajax({
@@ -909,9 +910,6 @@ function _sendTweet(text, async) {
         async: async,
         dataType: "json",
         type: "POST",
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader("Authorization", auth_string);
-        },
         success: function(data, textStatus, req) {
             if (data.text) {
                 //$('#counter').html(data + textStatus);
