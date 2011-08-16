@@ -61,6 +61,12 @@ var textBeforeEnter = "";
 /** Lengths of automatically shorted t.co-links */
 var short_url_length = null;
 var short_url_length_https = null;
+var characters_reserved_per_media = null;
+var max_media_per_upload = null;
+var photo_size_limit = null;
+
+/** If file-field is visible */
+var show_file_field = false;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -191,6 +197,12 @@ function get_twitter_configuration() {
             log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
             short_url_length_https = data.short_url_length_https;
             log_message("get_twitter_config", "short_url_length_https: "+data.short_url_length_https);
+            characters_reserved_per_media = data.characters_reserved_per_media;
+            log_message("get_twitter_config", "characters_reserved_per_media: "+data.characters_reserved_per_media);
+            max_media_per_upload = data.max_media_per_upload;
+            log_message("get_twitter_config", "max_media_per_upload: "+data.max_media_per_upload);
+            photo_size_limit = data.photo_size_limit;
+            log_message("get_twitter_config", "photo_size_limit");
         },
         error: function(data, result, request) {
             addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
@@ -741,6 +753,8 @@ function linkify(text, entities) {
             } else if (entity.type=="hashtags") {
                 text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
                 addToAutoCompletion('#' + entity.text);
+            } else if (entity.type=="media") {
+                text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
             }
         }
 
@@ -796,6 +810,15 @@ function show_replies(id) {
     }
 
     infoarea_show("Replies", html);
+}
+
+function toggle_file(force_hide) {
+    show_file_field = !show_file_field;
+    if (force_hide) show_file_field=false;
+    $('#file_div').toggle(show_file_field);
+    if (!show_file_field) {
+        $('#file').val('');
+    }
 }
 
 /** Shows some stats */
@@ -876,24 +899,56 @@ function _sendTweet(text, async) {
     }
     if (document.tweet_form.reply_to_id.value != "")
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
-
-    var message = {
-        action: "https://api.twitter.com/1/statuses/update.json",
-        method: "POST",
-        parameters: parameters
-    }
+    
+    var message; 
+    var url;
+    var data;
+    var content_type = 'application/x-www-form-urlencoded';
 
     $('#form').fadeTo(500, 0).delay(500);
-    
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/update.json';
-    var data = OAuth.formEncode(message.parameters);
+
+    if ($('#file')[0].files[0]) {
+        // Es ist ein Bild vorhanden, das hochgeladen werden soll.
+
+        message = {
+            action: "https://upload.twitter.com/1/statuses/update_with_media.json",
+            method: "POST"
+        }
+
+        OAuth.setTimestampAndNonce(message);
+        OAuth.completeRequest(message, settings.twitter);
+        OAuth.SignatureMethod.sign(message, settings.twitter);
+
+        url = 'proxy/upload/statuses/update_with_media.json?' + OAuth.formEncode(message.parameters);
+        content_type = false;
+
+        data = new FormData();
+        data.append("media[]", $('#file')[0].files[0]);
+
+        for (var key in parameters) {
+            data.append(key, parameters[key]);
+        }
+
+    } else {
+        message = {
+            action: "https://api.twitter.com/1/statuses/update.json",
+            method: "POST",
+            parameters: parameters
+        }
+        url = "proxy/api/statuses/update.json";
+        
+        OAuth.setTimestampAndNonce(message);
+        OAuth.completeRequest(message, settings.twitter);
+        OAuth.SignatureMethod.sign(message, settings.twitter);
+
+        data = OAuth.formEncode(message.parameters);
+    }
 
     var req = $.ajax({
         url: url,
         data: data,
+        processData: false,
+        contentType: content_type,
         async: async,
         dataType: "json",
         type: "POST",
@@ -912,6 +967,7 @@ function _sendTweet(text, async) {
                     updateCounter();
                 }
 
+                toggle_file(true);
                 $('#success_info').html(html);
                 $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
@@ -1135,6 +1191,7 @@ function updateCounter() {
             text = dm_match[1];
         }
         var len = 140 - text.length;
+        if ($('#file')[0].files[0]) len -= characters_reserved_per_media;
         var matches = text.match(regexp_url);
         if (matches) for (var i=0; i<matches.length; i++) {
             var m = matches[i].trim();
