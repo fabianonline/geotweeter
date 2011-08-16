@@ -202,7 +202,7 @@ function get_twitter_configuration() {
             max_media_per_upload = data.max_media_per_upload;
             log_message("get_twitter_config", "max_media_per_upload: "+data.max_media_per_upload);
             photo_size_limit = data.photo_size_limit;
-            log_message("get_twitter_config", "photo_size_limit");
+            log_message("get_twitter_config", "photo_size_limit: "+data.photo_size_limit);
         },
         error: function(data, result, request) {
             addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
