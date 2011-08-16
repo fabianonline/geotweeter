@@ -61,6 +61,9 @@ var textBeforeEnter = "";
 /** Lengths of automatically shorted t.co-links */
 var short_url_length = null;
 var short_url_length_https = null;
+var characters_reserved_per_media = null;
+var max_media_per_upload = null;
+var photo_size_limit = null;
 
 /** If file-field is visible */
 var show_file_field = false;
@@ -194,6 +197,12 @@ function get_twitter_configuration() {
             log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
             short_url_length_https = data.short_url_length_https;
             log_message("get_twitter_config", "short_url_length_https: "+data.short_url_length_https);
+            characters_reserved_per_media = data.characters_reserved_per_media;
+            log_message("get_twitter_config", "characters_reserved_per_media: "+data.characters_reserved_per_media);
+            max_media_per_upload = data.max_media_per_upload;
+            log_message("get_twitter_config", "max_media_per_upload: "+data.max_media_per_upload);
+            photo_size_limit = data.photo_size_limit;
+            log_message("get_twitter_config", "photo_size_limit");
         },
         error: function(data, result, request) {
             addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
@@ -1180,6 +1189,7 @@ function updateCounter() {
             text = dm_match[1];
         }
         var len = 140 - text.length;
+        if ($('#file')[0].files[0]) len -= characters_reserved_per_media;
         var matches = text.match(regexp_url);
         if (matches) for (var i=0; i<matches.length; i++) {
             var m = matches[i].trim();
