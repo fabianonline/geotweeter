@@ -22,7 +22,7 @@ var maxreadid = 0;
 
 /** IDs of newest and oldest knwon tweets. */
 var maxknownid = "0";
-var minknownid = 0;
+var minknownid = "0";
 
 /** ID of the newest tweet belonging to "this" user. */
 var mylasttweetid = 0;
@@ -50,7 +50,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 5;
+var expected_settings_version = 6;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -58,7 +58,11 @@ var timeOfLastEnter = 0;
 /** Text from the textbox before pressing double-enter. Used to remove unwanted newlines. */
 var textBeforeEnter = "";
 
-regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@]*[^" \.,;\)@])?))/ig;
+/** Lengths of automatically shorted t.co-links */
+var short_url_length = null;
+var short_url_length_https = null;
+
+regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
@@ -92,6 +96,7 @@ function start() {
 
     // check the credentials and exit if not okay.
     validateCredentials();
+    get_twitter_configuration();
     if (!this_users_name) return;
 
 
@@ -166,6 +171,33 @@ function validateCredentials() {
     });
 }
 
+/** Get twitter configuration */
+function get_twitter_configuration() {
+    setStatus("Getting Twitter Configuration...", "yellow");
+    var message = {
+        action: "https://api.twitter.com/1/help/configuration.json",
+        method: "GET"
+    }
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/help/configuration.json?' + OAuth.formEncode(message.parameters);
+    return $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        success: function(data, result, request) {
+            short_url_length = data.short_url_length;
+            log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
+            short_url_length_https = data.short_url_length_https;
+            log_message("get_twitter_config", "short_url_length_https: "+data.short_url_length_https);
+        },
+        error: function(data, result, request) {
+            addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
+        }
+    });
+}
+
 /** Asynchronously gets the IDs of all followers of the current user. */
 function getFollowers() {
     var message = {
@@ -208,7 +240,9 @@ function checkForTimeout() {
  * people you don't follow.
  */
 function fillList() {
+    log_message("fillList", "Starting");
     setStatus("Filling List. Request 1/2...", "yellow");
+    var page = 1;
 
     var parameters = {include_rts: "1", count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
@@ -248,6 +282,7 @@ function fillList() {
 
 /** Starts a request to the streaming api. */
 function startRequest() {
+    log_message("startRequest", "Calling fillList()...");
     fillList();
 
     var message = {
@@ -336,14 +371,14 @@ function processBuffer() {
  */
 function parseData(data, data2) {
     try {
-        var message = eval('(' + data + ')');
+        var message = $.parseJSON(data);
     } catch (e) {
         addHTML("Exception: " + e + '<br />' + data + '<hr />');
     }
 
     var message2 = null;
     if (data2 != undefined) try {
-        message2 = eval('(' + data2 + ')');
+        message2 = $.parseJSON(data);
     } catch(e) {}
 	
 
@@ -616,9 +651,9 @@ function getStatusHTML(status) {
     html += '</span> ';
     html += '<span class="text">';
     if (status.retweeted_status)
-        html += linkify(status.retweeted_status.text);
+        html += linkify(status.retweeted_status.text, status.retweeted_status.entities);
     else
-        html += linkify(status.text);
+        html += linkify(status.text, status.entities);
     html += '</span>';
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
@@ -649,6 +684,11 @@ function getStatusHTML(status) {
         html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a>';
         html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250" target="_blank"><img src="icons/world_add.png" title="All Geotags" /></a>';
     }
+    if ( user==this_users_name) {
+        html += '<a href="#" onClick="delete_tweet(\'' + status.id + '\'); return false;"><img src="icons/cross.png" title="Delete Tweet" /></a>';
+    } else {
+        html += '<a href="#" onClick="report_spam(\'' + user + '\'); return false;"><img src="icons/exclamation.png" title="Block and report as spam" /></a>';
+    }
 
     html += '</div>'; // Links
     html += '</div>'; // overlay
@@ -664,21 +704,65 @@ function addnull(number) {
     return number;
 }
 
+/** Sort funtion for an array containing entities */
+function entity_sort(a, b) {
+    return a.indices[0] - b.indices[0];
+}
+
+/** Offset-based string replacement function for use with entity indices */
+function replace_entity(str, replace, entity) {
+    var result = str.slice(0, entity.indices[0]) + replace + str.slice(entity.indices[1]);
+    return result;
+}
+
 /** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
-function linkify(text) {
-    var matches = text.match(regexp_user);
-    if (matches) for (var i=0; i<matches.length; i++) {
-        addToAutoCompletion(matches[i].trim());
-    }
+function linkify(text, entities) {
+    if (entities) {
+        var all_entities = new Array();
+        for (var entity_type in entities) {
+            for (var i=0; i<entities[entity_type].length; i++) {
+                var entity = entities[entity_type][i];
+                entity.type = entity_type;
+                all_entities.push(entity);
+            }
+        }
+        var all_entities_sort = all_entities.sort(entity_sort).reverse();
+        for (var i=0; i<all_entities_sort.length; i++) {
+            entity = all_entities_sort[i];
+            if (entity.type=="user_mentions") {
+                text = replace_entity(text, '<a href="https://twitter.com/' + entity.screen_name + '" target="_blank">@' + entity.screen_name + '</a>', entity);
+                addToAutoCompletion('@' + entity.screen_name);
+            } else if (entity.type=="urls") {
+                if (entity.expanded_url) {
+                    text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
+                } else {
+                    text = replace_entity(text, '<a href="' + entity.url + '" class="external" target="_blank">' + entity.url + '</a>', entity);
+                }
+            } else if (entity.type=="hashtags") {
+                text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
+                addToAutoCompletion('#' + entity.text);
+            }
+        }
 
-    var matches = text.match(regexp_hash);
-    if (matches) for (var i=0; i<matches.length; i++) {
-        addToAutoCompletion(matches[i].trim());
-    }
+    } else {
+        // We got no entities. This can happen with status messages and so on.
+        // In that case we use the old regexp-based replacement method.
+        var matches = text.match(regexp_user);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            addToAutoCompletion(matches[i].trim());
+        }
 
-    text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
-    text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
-    text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
+        var matches = text.match(regexp_hash);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            addToAutoCompletion(matches[i].trim());
+        }
+
+        text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
+        text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
+        text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
+    }
+    
+    // Add Links to geocaching.com and "properly" display linebreaks.
     text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
     text = text.replace(/\n/g, '<br />\n');
     return text;
@@ -772,7 +856,10 @@ function sendTweet(event) {
  */
 function _sendTweet(text, async) {
     if (async==undefined) async=false;
-    var parameters = {status: text};
+    var parameters = {
+        status: text,
+        wrap_links: true
+    };
     if (settings.places.length>0) {
         placeIndex = document.tweet_form.place.value;
         if(placeIndex > 0) {
@@ -910,6 +997,101 @@ function retweet(id) {
    });
 }
 
+/** Delete one of your own tweets. */
+function delete_tweet(id) {
+    if (!confirm('Wirklich diesen Tweet löschen?'))
+        return false;
+
+    var message = {
+        action: "https://api.twitter.com/1/statuses/destroy/" + id + ".json",
+        method: "POST"
+    }
+
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/statuses/destroy/' + id + '.json';
+    var data = OAuth.formEncode(message.parameters);
+
+    $.ajax({
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (req.status==200) {
+                $('#success_info').html("Tweet deleted");
+                $('#id_' + id).remove();
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            } else {
+                $('#failure_info').html(data.error);
+                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            }
+            updateCounter();
+        },
+        error: function(req, testStatus, exc) {
+            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+        }
+   });
+}
+
+/** Delete one of your own tweets. */
+function report_spam(sender_name) {
+    if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
+        return false;
+
+    var message = {
+        action: "https://api.twitter.com/1/report_spam.json",
+        method: "POST",
+        parameters : {screen_name: sender_name}
+    }
+
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/report_spam.json';
+    var data = OAuth.formEncode(message.parameters);
+
+    $.ajax({
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (req.status==200) {
+                $('#success_info').html("Spam gemeldet.");
+                $('.by_' + sender_name).remove();
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            } else {
+                $('#failure_info').html(data.error);
+                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+            }
+            updateCounter();
+        },
+        error: function(req, testStatus, exc) {
+            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+        }
+   });
+}
+
 /** Quotes a tweet (using the old "RT" syntax). */
 function quote(tweet_id, user, text) {
     text = 'RT @' + user + ': ' + unescape(text);
@@ -947,7 +1129,20 @@ function updateCounter() {
     if (parts.length==0)
         lengths = "140+";
     for (var i=0; i<parts.length; i++) {
-        var len = 140 - parts[i].length;
+        var text = parts[i];
+        var dm_match = text.match(/^d \w+ (.*)$/i);
+        if (dm_match) {
+            text = dm_match[1];
+        }
+        var len = 140 - text.length;
+        var matches = text.match(regexp_url);
+        if (matches) for (var i=0; i<matches.length; i++) {
+            var m = matches[i].trim();
+            if (m.length < short_url_length) continue;
+            len += m.length;
+            if (m.slice(0, 5)=="https") len -= short_url_length_https;
+            else len -= short_url_length;
+        }
         if (len<0) color="#f00";
         lengths += len+'+';
     }
@@ -982,12 +1177,14 @@ function removeReplyWarning() {
 
 /** Gets the max read ID from the server. */
 function getMaxReadID() {
-    return $.ajax({
+    value = $.ajax({
         method: 'GET',
         url: 'maxreadid/get.php',
         async: false,
         dataType: 'text'
     }).responseText;
+    log_message("getMaxReadID", "result: " + value);
+    return value;
 }
 
 /** Sets the max read ID on the server. */
@@ -1074,4 +1271,14 @@ function addToAutoCompletion(term) {
         autocompletes.push(term);
         autocompletes.sort();
     }
+}
+
+/** Adds an entry to the debug log if enabled in settings.js. */
+function log_message(place, s) {
+    if (settings.debug && console) {
+        var str = "[ " + place;
+        for(var i=0; i<(20-place.length); i++) str += " ";
+        str += " ] " + s;
+        console.log(str);
+     }
 }
