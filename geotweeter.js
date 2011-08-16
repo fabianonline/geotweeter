@@ -753,6 +753,8 @@ function linkify(text, entities) {
             } else if (entity.type=="hashtags") {
                 text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
                 addToAutoCompletion('#' + entity.text);
+            } else if (entity.type=="media") {
+                text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
             }
         }
 
