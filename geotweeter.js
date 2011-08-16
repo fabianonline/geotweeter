@@ -62,6 +62,9 @@ var textBeforeEnter = "";
 var short_url_length = null;
 var short_url_length_https = null;
 
+/** If file-field is visible */
+var show_file_field = false;
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -798,6 +801,15 @@ function show_replies(id) {
     infoarea_show("Replies", html);
 }
 
+function toggle_file(force_hide) {
+    show_file_field = !show_file_field;
+    if (force_hide) show_file_field=false;
+    $('#file_div').toggle(show_file_field);
+    if (!show_file_field) {
+        $('#file').val('');
+    }
+}
+
 /** Shows some stats */
 function show_stats() {
     var html = "";
@@ -876,37 +888,56 @@ function _sendTweet(text, async) {
     }
     if (document.tweet_form.reply_to_id.value != "")
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
-
-    var message = {
-        action: "https://upload.twitter.com/1/statuses/update_with_media.json",
-        method: "POST",
-        //parameters: parameters
-    }
+    
+    var message; 
+    var url;
+    var data;
+    var content_type = 'application/x-www-form-urlencoded';
 
     $('#form').fadeTo(500, 0).delay(500);
-    
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/upload/statuses/update_with_media.json';
-    var formdata = new FormData();
-    formdata.append('media[]', $('#file')[0].files[0]);
-    var auth_string = "OAuth ";
-    for (var key in message.parameters) {
-        auth_string += "" + key + "='" + message.parameters[key] + "', ";
-        //formdata.append(key, message.parameters[key]);
-    }
-    auth_string = auth_string.slice(0, auth_string.length -2);
-    formdata.append("status", "Test-Tweet, nativ mit Bild.");
-    //var data = OAuth.formEncode(message.parameters);
-    url += '?' + OAuth.formEncode(message.parameters);
 
+    if ($('#file')[0].files[0]) {
+        // Es ist ein Bild vorhanden, das hochgeladen werden soll.
+
+        message = {
+            action: "https://upload.twitter.com/1/statuses/update_with_media.json",
+            method: "POST"
+        }
+
+        OAuth.setTimestampAndNonce(message);
+        OAuth.completeRequest(message, settings.twitter);
+        OAuth.SignatureMethod.sign(message, settings.twitter);
+
+        url = 'proxy/upload/statuses/update_with_media.json?' + OAuth.formEncode(message.parameters);
+        content_type = false;
+
+        data = new FormData();
+        data.append("media[]", $('#file')[0].files[0]);
+
+        for (var key in parameters) {
+            data.append(key, parameters[key]);
+        }
+
+    } else {
+        message = {
+            action: "https://api.twitter.com/1/statuses/update.json",
+            method: "POST",
+            parameters: parameters
+        }
+        url = "proxy/api/statuses/update.json";
+        
+        OAuth.setTimestampAndNonce(message);
+        OAuth.completeRequest(message, settings.twitter);
+        OAuth.SignatureMethod.sign(message, settings.twitter);
+
+        data = OAuth.formEncode(message.parameters);
+    }
 
     var req = $.ajax({
         url: url,
-        data: formdata,
+        data: data,
         processData: false,
-        contentType: false,
+        contentType: content_type,
         async: async,
         dataType: "json",
         type: "POST",
@@ -925,6 +956,7 @@ function _sendTweet(text, async) {
                     updateCounter();
                 }
 
+                toggle_file(true);
                 $('#success_info').html(html);
                 $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);

@@ -43,13 +43,16 @@
 <div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
 <form name="tweet_form" id="form">
-    <input type="file" name="file" id="file" />
     <select name="place" id="place"></select>
     <span style="float: right;">
         <span id="counter"></span>
+        <a href="#" onClick="toggle_file(); return false;"><img src="icons/image.png" title="Bild anhängen." class="button off" /></a>
         <input type="submit" onClick="void(sendTweet()); return false;" value="Tweet" />
     </span>
     <br style="clear: both;"/>
+    <div id="file_div">
+        <input type="file" name="file" id="file" />
+    </div>
 
     <textarea name="text" rows="5" cols="80" id="text" onKeyUp="updateCounter();"></textarea>
     <input type="hidden" name="reply_to_id" id="reply_to_id" value="" />
