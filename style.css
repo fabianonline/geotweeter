@@ -120,6 +120,10 @@ textarea, input, select {
     font-size: 18px;
 }
 
+#file_div {
+    display: none;
+}
+
 #success, #failure {
     position: absolute;
     top: 0px;
@@ -132,7 +136,8 @@ textarea, input, select {
     width: 100%;
 }
 
-#buttonbar img {
+#buttonbar img,
+.button {
     border-width: 1px;
     border-style: solid;
     border-color: #eee #666 #666 #eee;
@@ -140,7 +145,12 @@ textarea, input, select {
     margin: 5px 0px 3px 3px;
 }
 
-#buttonbar img:hover {
+.button {
+    margin: 0px !important;
+}
+
+#buttonbar img:hover,
+.button.on {
     border-color: #666 #eee #eee #666 !important;
 }
 
