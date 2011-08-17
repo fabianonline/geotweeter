@@ -577,10 +577,7 @@ function addListMemberRemovedEvent(event) {
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status) {
 	// Check if tweet contains blacklisted words
-	if(check_blacklist(status.text)){
-		return "";
-	}
-	
+
     if (status.id_str)
         status.id = status.id_str;
     if (status.in_reply_to_status_id_str)
@@ -712,6 +709,10 @@ function getStatusHTML(status) {
     html += '</div>'; // Links
     html += '</div>'; // overlay
     html += '</div>'; // tweet
+    
+    	if(check_blacklist(html)){
+		return "";
+	}	
     
     return html;
 }
