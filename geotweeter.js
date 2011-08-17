@@ -686,10 +686,20 @@ function getStatusHTML(status) {
     html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
     html += '</span> ';
     html += '<span class="text">';
+    var temp_text = "";
     if (status.retweeted_status)
-        html += linkify(status.retweeted_status.text, status.retweeted_status.entities);
+        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
     else
-        html += linkify(status.text, status.entities);
+        temp_text += linkify(status.text, status.entities);
+	
+	    
+    	if(check_blacklist(temp_text)){
+		return "";
+	}
+	else
+	html += temp_text;
+	
+	
     html += '</span>';
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
@@ -729,10 +739,6 @@ function getStatusHTML(status) {
     html += '</div>'; // Links
     html += '</div>'; // overlay
     html += '</div>'; // tweet
-    
-    	if(check_blacklist(html)){
-		return "";
-	}	
     
     return html;
 }
