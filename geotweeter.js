@@ -698,7 +698,6 @@ function getStatusHTML(status) {
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
     if (status.place)
         html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '" target="_blank">' + status.place.full_name + '</a></div>';
-    html += '<div class="overlay">';
     html += '<div class="info">';
     html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank">' + datum + '</a> ';
     if(status.in_reply_to_status_id) {
@@ -708,6 +707,7 @@ function getStatusHTML(status) {
         html += 'from ' + status.source + ' ';
     html += '</div>';
 
+    html += '<div class="overlay">';
     html += '<div class="links">';
     if (isDM)
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
