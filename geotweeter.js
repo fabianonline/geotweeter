@@ -364,7 +364,7 @@ function parseResponse() {
         if (disconnectBecauseOfTimeout) {
             html += 'Grund: Timeout. ';
         }
-        if (req.status != 200) {
+        if (req.status != 200 && !disconnectBecauseOfTimeout) {
             html += 'Status: ' + req.status + ' (' + req.statusText + '). ';
             delay = settings.timings.maxdelay;
         }
