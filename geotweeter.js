@@ -103,6 +103,8 @@ function start() {
         $.cookie('last_place', $('#place option:selected').val(), {expires: 365});
     });
 
+    $('#file').change(check_file);
+
     for(var i=0; i<settings.chars.length; i++) {
         $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
     }
@@ -143,6 +145,24 @@ function start() {
 
     window.setInterval("checkForTimeout()", 30000);
     if (window.opera) window.setInterval("parseResponse()", 5000);
+}
+
+/** Checks the selected file for compatibility with twitter. That is
+ *  *) The size is less or equal to photo_size_limit (determined by get_twitter_configuration at startup)
+ *  *) The file type is acceptable (list according to twitter docs)
+ */
+function check_file() {
+    var file = $('#file')[0].files[0];
+    var error = false;
+    if (file && file.fileSize>photo_size_limit) {
+        alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + photo_size_limit + " Bytes");
+        error = true;
+    }
+    if (file && $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1) {
+        alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
+        error = true;
+    }
+    if (error) $('#file').val('');
 }
 
 /** Returns the last word of the given string. Used by autocompletion. */
