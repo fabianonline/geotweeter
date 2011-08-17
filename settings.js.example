@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 6,
+    version: 7,
 
     // Twitter Access Keys
     twitter: {
@@ -53,6 +53,12 @@ var settings = {
     unshorten_links: true,
 
     // send debug messages to the JS console?
-    debug: false
+    debug: false,
+
+    // Used to detect "silent" timeouts of the streaming api
+    // It calculates the average of the last x tweets and simply reloads the Geotweeter
+    // if the last received tweet is more then y times that time ago.
+    timeout_detect_tweet_count: 10,
+    timeout_detect_factor: 4
 }
 

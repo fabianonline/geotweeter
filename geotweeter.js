@@ -50,7 +50,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 6;
+var expected_settings_version = 7;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -67,6 +67,9 @@ var photo_size_limit = null;
 
 /** If file-field is visible */
 var show_file_field = false;
+
+/** Saves the creation-times of the last received tweets. */
+var last_event_times = new Array();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -261,13 +264,29 @@ function getFollowers() {
  * Checks if a timeout in the stream occured. Gets run via timer every 30 Seconds.
  * The stream should at least send a newline every 30 seconds.
  * If this doesn't happen we assume the connection timed out and force it to be re-established.
+ *
+ * This code also checks for long pauses within the stream and restarts the geotweeter if necessary.
  */
 function checkForTimeout() {
     var jetzt = new Date();
     if (lastDataReceivedAt && jetzt.getTime() - lastDataReceivedAt.getTime() > 30000) {
         disconnectBecauseOfTimeout = true;
         req.abort();
+        return;
     }
+    if (get_time_since_last_tweet() > get_average_tweet_time()*settings.timeout_detect_factor && $('#text').val()=='') {
+        disconnectBecauseOfTimeout = true;
+        req.abort();
+    }
+}
+
+function get_average_tweet_time() {
+    if (last_event_times.length<2) return NaN;
+    return (last_event_times[0] - last_event_times[last_event_times.length-1]) / (last_event_times.length-1);
+}
+
+function get_time_since_last_tweet() {
+    return (Date.now() - last_event_times[0]);
 }
 
 /**
@@ -316,6 +335,8 @@ function fillList() {
     }).responseText;
 
     parseData(returned, returned_mentions);
+    last_event_times.unshift(Date.now());
+    last_event_times.pop();
 }
     
 
@@ -426,7 +447,7 @@ function parseData(data, data2) {
         var html = '';
         if (message2 == null) {
             for(var i=0; i<message.length; i++) {
-                if (message[i]) html += getStatusHTML(message[i]);
+                if (message[i]) html += getStatusHTML(message[i], true);
             }
         } else {
             var i=0;
@@ -434,11 +455,11 @@ function parseData(data, data2) {
             var last_id = null;
             while (i<message.length || j<message2.length) {
                 if(!message2[j] || (message[i] && biggerThan(message[i].id, message2[j].id))) {
-                    if (last_id!=message[i].id) html += getStatusHTML(message[i]);
+                    if (last_id!=message[i].id) html += getStatusHTML(message[i], true);
                     last_id = message[i].id;
                     i++;
                 } else {
-                    if (last_id!=message2[j].id) html += getStatusHTML(message2[j]);
+                    if (last_id!=message2[j].id) html += getStatusHTML(message2[j], true);
                     last_id = message2[j].id;
                     j++;
                 }
@@ -595,7 +616,7 @@ function addListMemberRemovedEvent(event) {
 
 
 /** Creates html for a normal tweet, RT or DM. */
-function getStatusHTML(status) {
+function getStatusHTML(status, multi_add) {
 	// Check if tweet contains blacklisted words
 
     if (status.id_str)
@@ -637,6 +658,14 @@ function getStatusHTML(status) {
         mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
+    if (multi_add) {
+        // Multi-Add = Tweets kommen chronologisch absteigend
+        last_event_times.push(date);
+    } else {
+        // Stream-Add = Tweets kommen chronologisch aufsteigend
+        last_event_times.unshift(date);
+    }
+    if (last_event_times.length > (settings.timeout_detect_tweet_count+1)) last_event_times.pop();
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
     html += '<div class="';
     if (!isDM)
@@ -862,6 +891,10 @@ function show_stats() {
     html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt + "<br />";
     html += "<strong>Bekannte Follower:</strong>    " + followers_ids.length + "<br />";
     html += "<strong>Buffer-Größe:</strong>         " + responseOffset + "<br />";
+    
+    html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
+    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_average_tweet_time()*settings.timeout_detect_factor/1000 + " Sekunden<br />";
+    html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet()/1000 + " Sekunden";
 
     infoarea_show("Stats", html);
 }
