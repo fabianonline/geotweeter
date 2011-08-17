@@ -43,32 +43,24 @@ textarea, input, select {
     padding-bottom: 5px;
 }
 
-.overlay {
-    background-color: #fff;
-    margin-left: 33px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 5px;
-}
-
-.dm, .dm .overlay {
-    background-color: #fc0 !important;
+.dm {
+    background-color: #fc0;
 }
 
 .status {
     background-color: #f6f;
 }
 
-.tweet.new, .tweet.new .overlay {
-    background-color: #fdd !important;
-}
-
-.tweet.mentions_this_user, .tweet.mentions_this_user .overlay {
-    background-color: #ddf !important;
-}
-
-.tweet.by_this_user, .tweet.by_this_user .overlay {
+.tweet.by_this_user {
     background-color: #afa !important;
+}
+
+.tweet.new {
+    background-color: #fdd;
+}
+
+.tweet.mentions_this_user {
+    background-color: #ddf;
 }
 
 .avatar{
@@ -178,14 +170,6 @@ textarea, input, select {
     display: none;
     text-decoration: none !important;
     color: #333 !important;
-    position: absolute;
-    top: 0px;
-}
-
-.info {
-    font-size: 8px;
-    color: #333 !important;
-    text-decoration: none !important;
 }
 
 .tweet:hover .overlay,
@@ -193,13 +177,9 @@ textarea, input, select {
     display: block;
 }
 
-.info a {
+.overlay a {
     text-decoration: none;
     color: #333;
-}
-
-.links a {
-    margin-right: 3px;
 }
 
 #status.green {
