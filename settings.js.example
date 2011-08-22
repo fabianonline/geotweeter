@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 7,
+    version: 8,
 
     // Twitter Access Keys
     twitter: {
@@ -59,6 +59,8 @@ var settings = {
     // It calculates the average of the last x tweets and simply reloads the Geotweeter
     // if the last received tweet is more then y times that time ago.
     timeout_detect_tweet_count: 10,
-    timeout_detect_factor: 4
+    timeout_detect_factor: 4,
+    timeout_minimum_delay: 120,
+    timeout_maximum_delay: 600
 }
 

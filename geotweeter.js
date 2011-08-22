@@ -50,7 +50,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 7;
+var expected_settings_version = 8;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -274,11 +274,18 @@ function checkForTimeout() {
         req.abort();
         return;
     }
-    if (get_time_since_last_tweet() > get_average_tweet_time()*settings.timeout_detect_factor && $('#text').val()=='') {
+    if (get_time_since_last_tweet() > get_timeout_difference() && $('#text').val()=='') {
         disconnectBecauseOfTimeout = true;
         req.abort();
     }
 }
+
+function get_timeout_difference() {
+    var delay = get_average_tweet_time()*settings.timeout_detect_factor;
+    if (settings.timeout_minimum_delay*1000 > delay) return settings.timeout_minimum_delay*1000;
+    if (settings.timeout_maximum_delay*1000 < delay) return settings.timeout_maximum_delay*1000;
+    return delay;
+ }
 
 function get_average_tweet_time() {
     if (last_event_times.length<2) return NaN;
@@ -364,6 +371,7 @@ function startRequest() {
     req.open('GET', url, true);
     req.onreadystatechange = parseResponse;
     req.send(null);
+    lastDataReceivedAt = new Date();
 }
 
 
@@ -893,7 +901,7 @@ function show_stats() {
     html += "<strong>Buffer-Größe:</strong>         " + responseOffset + "<br />";
     
     html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
-    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_average_tweet_time()*settings.timeout_detect_factor/1000 + " Sekunden<br />";
+    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference()/1000 + " Sekunden<br />";
     html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet()/1000 + " Sekunden";
 
     infoarea_show("Stats", html);
