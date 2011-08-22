@@ -270,11 +270,16 @@ function getFollowers() {
 function checkForTimeout() {
     var jetzt = new Date();
     if (lastDataReceivedAt && jetzt.getTime() - lastDataReceivedAt.getTime() > 30000) {
+        log_message("checkForTimeout", "Timeout: No data received for the last " + (jetzt.getTime() - lastDataReceivedAt.getTime())/1000 + "seconds");
         disconnectBecauseOfTimeout = true;
         req.abort();
         return;
     }
     if (get_time_since_last_tweet() > get_timeout_difference() && $('#text').val()=='') {
+        log_message("checkForTimeout", "Timeout: Lack of tweets");
+        log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time()/1000);
+        log_message("checkForTimeout", "Timeout after: " + get_timeout_difference()/1000);
+        log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweets()/1000);
         disconnectBecauseOfTimeout = true;
         req.abort();
     }
