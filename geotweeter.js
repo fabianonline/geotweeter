@@ -280,18 +280,28 @@ function checkForTimeout() {
     }
 }
 
+/**
+ * Returns the max allowed time between two tweets in seconds. Used to reconnect if
+ * the stream didn't send tweets in the last time.
+ */
 function get_timeout_difference() {
     var delay = get_average_tweet_time()*settings.timeout_detect_factor;
     if (settings.timeout_minimum_delay*1000 > delay) return settings.timeout_minimum_delay*1000;
     if (settings.timeout_maximum_delay*1000 < delay) return settings.timeout_maximum_delay*1000;
     return delay;
- }
+}
 
+/**
+ * Returns the average time between the last x tweets.
+ **/
 function get_average_tweet_time() {
     if (last_event_times.length<2) return NaN;
     return (last_event_times[0] - last_event_times[last_event_times.length-1]) / (last_event_times.length-1);
 }
 
+/**
+ * Returns the time since the last received tweet in milliseconds.
+ */
 function get_time_since_last_tweet() {
     return (Date.now() - last_event_times[0]);
 }
