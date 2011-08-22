@@ -514,6 +514,8 @@ function parseData(data, data2) {
         addListMemberRemovedEvent(message);
     } else if (message.event && message.event=="block") {
         // You blocked someone. Do nothing.
+    } else if {message.event && message.event=="user_update") {
+        // You changed your profile settings on twitter.com. Do nothing.
     } else {
         addHTML('<hr />Unbekannte Daten:<br />' + data);
     }
