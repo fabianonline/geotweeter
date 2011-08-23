@@ -1103,46 +1103,22 @@ function splitTweet(text) {
 function retweet(id) {
     if (!confirm('Wirklich direkt retweeten?'))
         return false;
-
-    var message = {
-        action: "https://api.twitter.com/1/statuses/retweet/" + id + ".json",
-        method: "POST"
-    }
-
-    $('#form').fadeTo(500, 0).delay(500);
-    
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/retweet/' + id + '.json';
-    var data = OAuth.formEncode(message.parameters);
-
-    $.ajax({
-        url: url,
-        data: data,
-        dataType: "json",
-        type: "POST",
-        success: function(data, textStatus, req) {
-            if (req.status==200) {
-                $('#success_info').html("Retweet successful");
-                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            } else {
-                $('#failure_info').html(data.error);
-                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            }
-            updateCounter();
-        },
-        error: function(req, testStatus, exc) {
-            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
-            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                $('#form').fadeTo(500, 1);
-            });
-        }
-   });
+        
+    simple_twitter_request('statuses/retweet/' + id + '.json',
+    	true, // async
+    	null, // parameters
+    	function(element, data) { // success
+    		element.html('Retweet successfull');
+    		updateCounter();
+    	},
+    	function(element, data, req, text) { // error
+    		if (data) {
+    			element.html(data.error);
+    		} else {
+    			element.html('Error ' + req.status + ' (' + req.statusText + ')');
+    		}
+    	}
+    );
 }
 
 /** Delete one of your own tweets. */
@@ -1238,6 +1214,75 @@ function report_spam(sender_name) {
             });
         }
    });
+}
+
+/** 
+   Sends a simple request to the Twitter API
+   Expects following parameters:
+     * URL of the Twitter API endpoint (the part after https://api.twitter.com/1/)
+     * asnyc request or not?
+     * parameters for the request
+     * What to do after an successfull request. Either:
+       * String - Shows the string on success
+       * function - Gets following parameters on call:
+         * jQuery element to fill with info via it's html()-method
+         * Un-JSON-ified data resulting from the request
+         * the actual request object used
+     * function to call on error (or null for generic error display). Gets following parameters on call:
+       * jQuery element to fill with info via it's html()-method
+       * Un-JSON-ified data resulting from the request. May be null.
+       * the actual request object
+       * raw text returned by the server
+       * exception thrown
+ */
+function simple_twitter_request(url, async, parameters, success, error) {
+	var message = {
+        action: "https://api.twitter.com/1/" + url,
+        method: "POST",
+        parameters: parameters
+    }
+    
+    $('#form').fadeTo(500, 0).delay(500);
+    
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, settings.twitter);
+    OAuth.SignatureMethod.sign(message, settings.twitter);
+    var url = 'proxy/api/' + url;
+    var data = OAuth.formEncode(message.parameters);
+    
+    $.ajax({
+    	url: url,
+    	data: data,
+    	dataType: "json",
+    	type: "POST",
+    	success: function(data, textStatus, req) {
+    		if (req.status=="200") {
+    			success($('#success_info'), data, req);
+    			$('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+    		} else {
+    			if (error) {
+    				error($('#failure_info'), data, req);
+    			} else {
+    				$('#failure_info').html(data.error);
+    			}
+    			$('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                    $('#form').fadeTo(500, 1);
+                });
+    		}
+    	},
+    	error: function(req, textStatus, exc) {
+    		if (error) {
+    			error($('#failure_info'), null, req, textStatus, exc);
+    		} else {
+    			$('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+    		}
+    		$('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                $('#form').fadeTo(500, 1);
+            });
+    	}
+    });
 }
 
 /** Quotes a tweet (using the old "RT" syntax). */
