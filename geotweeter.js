@@ -463,7 +463,7 @@ function parseData(data, data2) {
     if (data2 != undefined) try {
         message2 = $.parseJSON(data);
     } catch(e) {}
-	
+    
 
     if (message.constructor.toString().indexOf('Array')!=-1) {
 
@@ -528,8 +528,8 @@ function parseData(data, data2) {
  * adding the HTML directly to the DOM.
  */
 function addHTML(text) {
-    if(text == "") return;	
-	
+    if(text == "") return;
+    
     var elm = document.createElement("div");
     elm.innerHTML = text;
     $(elm).find('.user_avatar').tooltip({
@@ -642,7 +642,7 @@ function addListMemberRemovedEvent(event) {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status, multi_add) {
-	// Check if tweet contains blacklisted words
+    // Check if tweet contains blacklisted words
 
     if (status.id_str)
         status.id = status.id_str;
@@ -745,15 +745,15 @@ function getStatusHTML(status, multi_add) {
         temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
     else
         temp_text += linkify(status.text, status.entities);
-	
-	    
-    	if(check_blacklist(temp_text)){
-		return "";
-	}
-	else
-	html += temp_text;
-	
-	
+    
+        
+        if(check_blacklist(temp_text)){
+        return "";
+    }
+    else
+    html += temp_text;
+    
+    
     html += '</span>';
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
@@ -1236,7 +1236,7 @@ function report_spam(sender_name) {
        * exception thrown
  */
 function simple_twitter_request(url, async, parameters, success, error) {
-	var message = {
+    var message = {
         action: "https://api.twitter.com/1/" + url,
         method: "POST",
         parameters: parameters
