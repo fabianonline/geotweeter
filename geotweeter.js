@@ -1105,19 +1105,9 @@ function retweet(id) {
         return false;
         
     simple_twitter_request('statuses/retweet/' + id + '.json',
-    	true, // async
-    	null, // parameters
-    	function(element, data) { // success
-    		element.html('Retweet successfull');
-    		updateCounter();
-    	},
-    	function(element, data, req, text) { // error
-    		if (data) {
-    			element.html(data.error);
-    		} else {
-    			element.html('Error ' + req.status + ' (' + req.statusText + ')');
-    		}
-    	}
+        true, // async
+        null, // parameters
+        "Retweet successfull" // success
     );
 }
 
@@ -1251,37 +1241,41 @@ function simple_twitter_request(url, async, parameters, success, error) {
     var data = OAuth.formEncode(message.parameters);
     
     $.ajax({
-    	url: url,
-    	data: data,
-    	dataType: "json",
-    	type: "POST",
-    	success: function(data, textStatus, req) {
-    		if (req.status=="200") {
-    			success($('#success_info'), data, req);
-    			$('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+        url: url,
+        data: data,
+        dataType: "json",
+        type: "POST",
+        success: function(data, textStatus, req) {
+            if (req.status=="200") {
+                if (typeof success == "string") {
+                    $('#success_info').html(success);
+                } else {
+                    success($('#success_info'), data, req);
+                }
+                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
-    		} else {
-    			if (error) {
-    				error($('#failure_info'), data, req);
-    			} else {
-    				$('#failure_info').html(data.error);
-    			}
-    			$('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            } else {
+                if (error) {
+                    error($('#failure_info'), data, req);
+                } else {
+                    $('#failure_info').html(data.error);
+                }
+                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
-    		}
-    	},
-    	error: function(req, textStatus, exc) {
-    		if (error) {
-    			error($('#failure_info'), null, req, textStatus, exc);
-    		} else {
-    			$('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
-    		}
-    		$('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            }
+        },
+        error: function(req, textStatus, exc) {
+            if (error) {
+                error($('#failure_info'), null, req, textStatus, exc);
+            } else {
+                $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            }
+            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
                 $('#form').fadeTo(500, 1);
             });
-    	}
+        }
     });
 }
 
