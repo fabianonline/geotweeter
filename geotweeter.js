@@ -2,8 +2,6 @@
 /********** Fabians Geotweeter **********/
 /****************************************/
 
-
-
 /** Keeps track of how much of the server stream has already been processed. */
 var responseOffset = 0;
 
@@ -1194,7 +1192,7 @@ function delete_tweet(id) {
    });
 }
 
-/** Delete one of your own tweets. */
+/** Report user as spamming. */
 function report_spam(sender_name) {
     if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
         return false;
