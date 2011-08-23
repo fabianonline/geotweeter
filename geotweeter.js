@@ -96,7 +96,7 @@ function start() {
         for(var i=0; i<settings.places.length; i++) {
             document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i+1);
         }
-        
+
         if ($.cookie('last_place')) $("#place option[value='" + $.cookie('last_place') + "']").attr('selected', true);
     }
 
@@ -180,27 +180,17 @@ function checkSettings() {
 /** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
     setStatus("Validating credentials...", "yellow");
-    var message = {
-        action: "https://api.twitter.com/1/account/verify_credentials.json",
-        method: "GET"
-    }
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/account/verify_credentials.json?' + OAuth.formEncode(message.parameters);
-    return $.ajax({
-        url: url,
-        type: "GET",
+    
+    simple_twitter_request('account/verify_credentials.json', {
+        method: "GET",
+        silent: true,
         async: false,
-        success: function(data, result, request) {
+        success: function(element, data) {
             if (data.screen_name) {
                 this_users_name = data.screen_name;
             } else {
                 addHTML("Unknown error in validateCredentials. Exiting. " + data);
             }
-        },
-        error: function(data, result, request) {
-            addHTML("Unknown error in validateCredentials. Exiting. " + data.responseText);
         }
     });
 }
@@ -208,19 +198,11 @@ function validateCredentials() {
 /** Get twitter configuration */
 function get_twitter_configuration() {
     setStatus("Getting Twitter Configuration...", "yellow");
-    var message = {
-        action: "https://api.twitter.com/1/help/configuration.json",
-        method: "GET"
-    }
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/help/configuration.json?' + OAuth.formEncode(message.parameters);
-    return $.ajax({
-        url: url,
-        type: "GET",
+    
+    simple_twitter_request('help/configuration.json', {
+        silent: true,
         async: false,
-        success: function(data, result, request) {
+        success: function(element, data) { // success
             short_url_length = data.short_url_length;
             log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
             short_url_length_https = data.short_url_length_https;
@@ -231,28 +213,16 @@ function get_twitter_configuration() {
             log_message("get_twitter_config", "max_media_per_upload: "+data.max_media_per_upload);
             photo_size_limit = data.photo_size_limit;
             log_message("get_twitter_config", "photo_size_limit: "+data.photo_size_limit);
-        },
-        error: function(data, result, request) {
-            addHTML("Unknown error in get_twitter_configuration. Exiting. " + data.responseText);
         }
     });
 }
 
 /** Asynchronously gets the IDs of all followers of the current user. */
 function getFollowers() {
-    var message = {
-        action: "https://api.twitter.com/1/followers/ids.json",
-        method: "GET"
-    }
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = "proxy/api/followers/ids.json?" + OAuth.formEncode(message.parameters);
-    $.ajax({
-        url: url,
+    simple_twitter_request('followers/ids.json', {
+        silent: true,
         type: "GET",
-        async: true,
-        success: function(data) {
+        success: function(element, data) {
             followers_ids = data;
         }
     });
@@ -358,7 +328,7 @@ function fillList() {
     last_event_times.unshift(Date.now());
     last_event_times.pop();
 }
-    
+
 
 /** Starts a request to the streaming api. */
 function startRequest() {
@@ -375,7 +345,7 @@ function startRequest() {
     OAuth.completeRequest(message, settings.twitter);
     OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
-    
+
     setStatus("Connecting to stream...", "orange");
 
     disconnectBecauseOfTimeout = false;
@@ -463,7 +433,7 @@ function parseData(data, data2) {
     if (data2 != undefined) try {
         message2 = $.parseJSON(data);
     } catch(e) {}
-    
+
 
     if (message.constructor.toString().indexOf('Array')!=-1) {
 
@@ -521,7 +491,7 @@ function parseData(data, data2) {
     }
 }
 
-/** 
+/**
  * Adds HTML to the DOM.
  *
  * Note: Adding the HTML to a new <div> and then append the <div> to the DOM is MUCH faster than
@@ -529,7 +499,7 @@ function parseData(data, data2) {
  */
 function addHTML(text) {
     if(text == "") return;
-    
+
     var elm = document.createElement("div");
     elm.innerHTML = text;
     $(elm).find('.user_avatar').tooltip({
@@ -709,8 +679,8 @@ function getStatusHTML(status, multi_add) {
             if (mention == this_users_name) html += "mentions_this_user ";
         }
     }
-  
-    
+
+
     html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
@@ -745,15 +715,15 @@ function getStatusHTML(status, multi_add) {
         temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
     else
         temp_text += linkify(status.text, status.entities);
-    
-        
+
+
         if(check_blacklist(temp_text)){
         return "";
     }
     else
     html += temp_text;
-    
-    
+
+
     html += '</span>';
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
@@ -793,7 +763,7 @@ function getStatusHTML(status, multi_add) {
     html += '</div>'; // Links
     html += '</div>'; // overlay
     html += '</div>'; // tweet
-    
+
     return html;
 }
 
@@ -863,7 +833,7 @@ function linkify(text, entities) {
         text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
         text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
     }
-    
+
     // Add Links to geocaching.com and "properly" display linebreaks.
     text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
     text = text.replace(/\n/g, '<br />\n');
@@ -916,7 +886,7 @@ function show_stats() {
     html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt + "<br />";
     html += "<strong>Bekannte Follower:</strong>    " + followers_ids.length + "<br />";
     html += "<strong>Buffer-Größe:</strong>         " + responseOffset + "<br />";
-    
+
     html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
     html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference()/1000 + " Sekunden<br />";
     html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet()/1000 + " Sekunden";
@@ -924,7 +894,7 @@ function show_stats() {
     infoarea_show("Stats", html);
 }
 
-/** 
+/**
  * Get called when the user clicks the "Tweet" button. Does not actually send the tweet,
  * but calls _sendTweet(), which does.
  */
@@ -934,7 +904,7 @@ function sendTweet(event) {
         return;
 
     var text = $('#text').val();
-    
+
     var parts = splitTweet(text);
 
     if (parts.length==1) {
@@ -991,8 +961,8 @@ function _sendTweet(text, async) {
     }
     if (document.tweet_form.reply_to_id.value != "")
         parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
-    
-    var message; 
+
+    var message;
     var url;
     var data;
     var content_type = 'application/x-www-form-urlencoded';
@@ -1028,7 +998,7 @@ function _sendTweet(text, async) {
             parameters: parameters
         }
         url = "proxy/api/statuses/update.json";
-        
+
         OAuth.setTimestampAndNonce(message);
         OAuth.completeRequest(message, settings.twitter);
         OAuth.SignatureMethod.sign(message, settings.twitter);
@@ -1103,176 +1073,104 @@ function splitTweet(text) {
 function retweet(id) {
     if (!confirm('Wirklich direkt retweeten?'))
         return false;
-        
-    simple_twitter_request('statuses/retweet/' + id + '.json',
-        true, // async
-        null, // parameters
-        "Retweet successfull" // success
-    );
+
+    simple_twitter_request('statuses/retweet/' + id + '.json', {
+        success_string: "Retweet successfull"
+    });
 }
 
 /** Delete one of your own tweets. */
 function delete_tweet(id) {
     if (!confirm('Wirklich diesen Tweet löschen?'))
         return false;
-
-    var message = {
-        action: "https://api.twitter.com/1/statuses/destroy/" + id + ".json",
-        method: "POST"
-    }
-
-    $('#form').fadeTo(500, 0).delay(500);
     
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/destroy/' + id + '.json';
-    var data = OAuth.formEncode(message.parameters);
-
-    $.ajax({
-        url: url,
-        data: data,
-        dataType: "json",
-        type: "POST",
-        success: function(data, textStatus, req) {
-            if (req.status==200) {
-                $('#success_info').html("Tweet deleted");
-                $('#id_' + id).remove();
-                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            } else {
-                $('#failure_info').html(data.error);
-                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            }
-            updateCounter();
-        },
-        error: function(req, testStatus, exc) {
-            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
-            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                $('#form').fadeTo(500, 1);
-            });
+    simple_twitter_request('statuses/destroy/' + id + '.json', {
+        success_string: 'Tweet deleted',
+        success: function() {
+            $('#id_' + id).remove();
         }
-   });
+    });
 }
 
 /** Report user as spamming. */
 function report_spam(sender_name) {
     if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
         return false;
-
-    var message = {
-        action: "https://api.twitter.com/1/report_spam.json",
-        method: "POST",
-        parameters : {screen_name: sender_name}
-    }
-
-    $('#form').fadeTo(500, 0).delay(500);
     
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/report_spam.json';
-    var data = OAuth.formEncode(message.parameters);
-
-    $.ajax({
-        url: url,
-        data: data,
-        dataType: "json",
-        type: "POST",
-        success: function(data, textStatus, req) {
-            if (req.status==200) {
-                $('#success_info').html("Spam gemeldet.");
-                $('.by_' + sender_name).remove();
-                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            } else {
-                $('#failure_info').html(data.error);
-                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            }
-            updateCounter();
-        },
-        error: function(req, testStatus, exc) {
-            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
-            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                $('#form').fadeTo(500, 1);
-            });
+    simple_twitter_request('report_spam.json', {
+        parameters: {screen_name: sender_name},
+        success_string: 'Spam reported',
+        success: function() {
+            $('.by_' + sender_name).remove();
         }
-   });
+    });
 }
 
-/** 
+/**
    Sends a simple request to the Twitter API
    Expects following parameters:
      * URL of the Twitter API endpoint (the part after https://api.twitter.com/1/)
-     * asnyc request or not?
-     * parameters for the request
-     * What to do after an successfull request. Either:
-       * String - Shows the string on success
-       * function - Gets following parameters on call:
-         * jQuery element to fill with info via it's html()-method
-         * Un-JSON-ified data resulting from the request
-         * the actual request object used
-     * function to call on error (or null for generic error display). Gets following parameters on call:
-       * jQuery element to fill with info via it's html()-method
-       * Un-JSON-ified data resulting from the request. May be null.
-       * the actual request object
-       * raw text returned by the server
-       * exception thrown
+     * Hash containing following options:
+       * method - "POST"
+       * parameters - Hash with parameters for the request
+       * silent - Show status
+       * success_string - String to be shown after a successfull request
+       * success - function to be called after request. Parameters: (info_element, data, request)
+       * error - function to be called on error. Parameters: (info_element, data, request, raw_response, exception)
+       
  */
-function simple_twitter_request(url, async, parameters, success, error) {
+function simple_twitter_request(url, options) {
     var message = {
         action: "https://api.twitter.com/1/" + url,
-        method: "POST",
-        parameters: parameters
+        method: options.method || "POST",
+        parameters: options.parameters
     }
     
-    $('#form').fadeTo(500, 0).delay(500);
-    
+    var verbose = !(!!options.silent && true);
+
+    if (verbose) $('#form').fadeTo(500, 0).delay(500);
+
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, settings.twitter);
     OAuth.SignatureMethod.sign(message, settings.twitter);
     var url = 'proxy/api/' + url;
     var data = OAuth.formEncode(message.parameters);
-    
+
     $.ajax({
         url: url,
         data: data,
         dataType: "json",
-        type: "POST",
+        async: options.async && true,
+        type: options.method || "POST",
         success: function(data, textStatus, req) {
             if (req.status=="200") {
-                if (typeof success == "string") {
-                    $('#success_info').html(success);
-                } else {
-                    success($('#success_info'), data, req);
+                if (options.success_string) {
+                    $('#success_info').html(success_string);
                 }
-                $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                if (options.success) {
+                    options.success($('#success_info'), data, req);
+                }
+                if (verbose) $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
             } else {
-                if (error) {
-                    error($('#failure_info'), data, req);
+                if (options.error) {
+                    options.error($('#failure_info'), data, req);
                 } else {
                     $('#failure_info').html(data.error);
                 }
-                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                if (verbose) $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
             }
         },
         error: function(req, textStatus, exc) {
-            if (error) {
-                error($('#failure_info'), null, req, textStatus, exc);
+            if (options.error) {
+                options.error($('#failure_info'), null, req, textStatus, exc);
             } else {
                 $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
             }
-            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            if (verbose) $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
                 $('#form').fadeTo(500, 1);
             });
         }
@@ -1289,7 +1187,7 @@ function quote(tweet_id, user, text) {
     updateCounter();
 }
 
-/** 
+/**
  * Prepares the form to reply to a tweet.
  * Prefills the textarea with "@user ", sets in_reply_to_id and sets the focus to the textarea.
  */
@@ -1335,7 +1233,7 @@ function updateCounter() {
         lengths += len+'+';
     }
     lengths = lengths.substr(0, lengths.length-1);
-        
+
     $('#counter').html(lengths);
     $('#counter').css("color", color);
 
@@ -1352,7 +1250,7 @@ function updateCounter() {
     }
 }
 
-/** 
+/**
  * Gets called if the user removed a mention and klicked the link in the appearing warning message.
  * Especially removes the in_reply_to_id value.
  */
