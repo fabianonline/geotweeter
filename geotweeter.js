@@ -421,8 +421,10 @@ function parseResponse() {
         setStatus("Connected to stream.", "green");
         lastDataReceivedAt = new Date();
     }
-    buffer += req.responseText.substr(responseOffset);
-    responseOffset = req.responseText.length;
+    if (req) {
+        buffer += req.responseText.substr(responseOffset);
+        responseOffset = req.responseText.length;
+    }
     if (!isProcessing) processBuffer();
 }
 
