@@ -46,6 +46,10 @@ var settings = {
         max_double_enter_time: 150
     },
 
+    // Endpoints to a script used for setting and getting the last read tweet id
+    get_maxreadid_url: "maxreadid/get.php",
+    set_maxreadid_url: "maxreadid/set.php",
+
     // show an error if no place is set?
     show_error_if_no_place_is_set: true,
 

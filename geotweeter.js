@@ -1265,7 +1265,7 @@ function removeReplyWarning() {
 function getMaxReadID() {
     value = $.ajax({
         method: 'GET',
-        url: 'maxreadid/get.php',
+        url: settings.get_maxreadid_url || 'maxreadid/get.php',
         async: false,
         dataType: 'text'
     }).responseText;
@@ -1277,7 +1277,7 @@ function getMaxReadID() {
 function setMaxReadID(id) {
     $.ajax({
         method: 'GET',
-        url: 'maxreadid/set.php',
+        url: settings.set_maxreadid_url || 'maxreadid/set.php',
         async: false,
         dataType: 'text',
         data: {id: id}
