@@ -221,7 +221,7 @@ function get_twitter_configuration() {
 function getFollowers() {
     simple_twitter_request('followers/ids.json', {
         silent: true,
-        type: "GET",
+        method: "GET",
         success: function(element, data) {
             followers_ids = data;
         }
