@@ -1214,16 +1214,24 @@ function quote(tweet_id, user, text) {
  * Prefills the textarea with "@user ", sets in_reply_to_id and sets the focus to the textarea.
  */
 function replyToTweet(tweet_id, user, isDM) {
-    reply_to_user = user;
-    reply_to_id = tweet_id;
-    $('#text').focus();
-    $('#text').val('');
-    if (isDM===true)
-        $('#text').val('d ' + user + ' ').focus();
-    else
+    $('#reply_to_id').val('');
+    sending_dm_to = null;
+    reply_to_user = null;
+    reply_to_id = null;
+    $('#text').val('').focus();
+    
+    if (isDM===true) {
+        sending_dm_to = user;
+    } else {
+        reply_to_user = user;
+        reply_to_id = tweet_id;
         $('#text').val('@' + user + ' ').focus();
-    $('#reply_to_id').val(tweet_id);
+        $('#reply_to_id').val(tweet_id);
+    }
+    
+    $('#text').focus();
     updateCounter();
+    update_form_display();
 }
 
 /** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
@@ -1233,6 +1241,8 @@ function updateCounter() {
     var dm_match = text.match(/^d @?(\w+) (.*)$/i);
     if (!sending_dm_to && dm_match) {
         sending_dm_to = dm_match[1];
+        reply_to_id = null;
+        reply_to_user = null;
         text = dm_match[2];
         $('#text').val(text);
         $('#dm_info_text').html('DM @' + sending_dm_to);
