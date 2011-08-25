@@ -69,10 +69,10 @@ textarea, input, select {
 
 .tweet.by_this_user {
     background: #afa !important;
-    background: -webkit-linear-gradient(bottom, #8f8 0%, #afa 20%);
-    background: -moz-linear-gradient(bottom, #8f8 0%, #afa 20%);
-    background: -o-linear-gradient(bottom, #8f8 0%, #afa 20%);
-    background: -ms-linear-gradient(bottom, #8f8 0%, #afa 20%);
+    background: -webkit-linear-gradient(bottom, #6f6 0%, #afa 20%) !important;
+    background: -moz-linear-gradient(bottom, #6f6 0%, #afa 20%) !important;
+    background: -o-linear-gradient(bottom, #6f6 0%, #afa 20%) !important;
+    background: -ms-linear-gradient(bottom, #6f6 0%, #afa 20%) !important;
 }
 
 .tweet.new {
