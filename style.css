@@ -43,24 +43,52 @@ textarea, input, select {
     padding-bottom: 5px;
 }
 
+.tweet {
+    background: -webkit-linear-gradient(bottom, #eee 0%, #fff 20%);
+    background: -moz-linear-gradient(bottom, #eee 0%, #fff 20%);
+    background: -o-linear-gradient(bottom, #eee 0%, #fff 20%);
+    background: -ms-linear-gradient(bottom, #eee 0%, #fff 20%);
+}
+
 .dm {
-    background-color: #fc0;
+    background: #fc0;
+    background: -webkit-linear-gradient(bottom, #fa0 0%, #fc0 20%);
+    background: -moz-linear-gradient(bottom, #fa0 0%, #fc0 20%);
+    background: -o-linear-gradient(bottom, #fa0 0%, #fc0 20%);
+    background: -ms-linear-gradient(bottom, #fa0 0%, #fc0 20%);
+
 }
 
 .status {
-    background-color: #f6f;
+    background: #f6f;
+    background: -webkit-linear-gradient(bottom, #f4f 0%, #f6f 20%);
+    background: -moz-linear-gradient(bottom, #f4f 0%, #f6f 20%);
+    background: -o-linear-gradient(bottom, #f4f 0%, #f6f 20%);
+    background: -ms-linear-gradient(bottom, #f4f 0%, #f6f 20%);
 }
 
 .tweet.by_this_user {
-    background-color: #afa !important;
+    background: #afa !important;
+    background: -webkit-linear-gradient(bottom, #8f8 0%, #afa 20%);
+    background: -moz-linear-gradient(bottom, #8f8 0%, #afa 20%);
+    background: -o-linear-gradient(bottom, #8f8 0%, #afa 20%);
+    background: -ms-linear-gradient(bottom, #8f8 0%, #afa 20%);
 }
 
 .tweet.new {
-    background-color: #fdd;
+    background: #fdd;
+    background: -webkit-linear-gradient(bottom, #fbb 0%, #fdd 20%);
+    background: -moz-linear-gradient(bottom, #fbb 0%, #fdd 20%);
+    background: -o-linear-gradient(bottom, #fbb 0%, #fdd 20%);
+    background: -ms-linear-gradient(bottom, #fbb 0%, #fdd 20%);
 }
 
 .tweet.mentions_this_user {
-    background-color: #ddf;
+    background: #ddf;
+    background: -webkit-linear-gradient(bottom, #bbf 0%, #ddf 20%);
+    background: -moz-linear-gradient(bottom, #bbf 0%, #ddf 20%);
+    background: -o-linear-gradient(bottom, #bbf 0%, #ddf 20%);
+    background: -ms-linear-gradient(bottom, #bbf 0%, #ddf 20%);
 }
 
 .avatar{
