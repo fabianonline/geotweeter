@@ -56,6 +56,9 @@ var timeOfLastEnter = 0;
 /** Text from the textbox before pressing double-enter. Used to remove unwanted newlines. */
 var textBeforeEnter = "";
 
+/** Are we sending a DM? Who's the receiver? */
+var sending_dm_to = null;
+
 /** Lengths of automatically shorted t.co-links */
 var short_url_length = null;
 var short_url_length_https = null;
@@ -918,6 +921,10 @@ function sendTweet(event) {
                     $('#text').val('');
                     reply_to_user = null;
                     reply_to_id = null;
+                    sending_dm_to = null;
+                    $('#dm_info').hide();
+                    $('#place').show();
+                    $('#file_choose').show();
                     updateCounter();
                 }
             } else {
@@ -969,7 +976,7 @@ function _sendTweet(text, async) {
 
     $('#form').fadeTo(500, 0).delay(500);
 
-    if ($('#file')[0].files[0]) {
+    if ($('#file')[0].files[0] && !sending_dm_to) {
         // Es ist ein Bild vorhanden, das hochgeladen werden soll.
 
         message = {
@@ -997,7 +1004,15 @@ function _sendTweet(text, async) {
             method: "POST",
             parameters: parameters
         }
+        
         url = "proxy/api/statuses/update.json";
+        
+        if (sending_dm_to) {
+            message.action = "https://api.twitter.com/1/direct_messages/new.json";
+            url = "proxy/api/direct_messages/new.json";
+            message.parameters.screen_name = sending_dm_to;
+            message.parameters.text = message.parameters.status;
+        }
 
         OAuth.setTimestampAndNonce(message);
         OAuth.completeRequest(message, settings.twitter);
@@ -1017,16 +1032,26 @@ function _sendTweet(text, async) {
         success: function(data, textStatus, req) {
             if (data.text) {
                 //$('#counter').html(data + textStatus);
-                var html = 'Tweet-ID: ' + data.id_str + '<br />';
-                html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
-                html += 'Follower: ' + data.user.followers_count + '<br />';
-                html += 'Friends:' + data.user.friends_count + '<br />';
+                var html = "";
+                
+                if (data.user) { // Normaler Tweet
+                    html += 'Tweet-ID: ' + data.id_str + '<br />';
+                    html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
+                    html += 'Follower: ' + data.user.followers_count + '<br />';
+                    html += 'Friends:' + data.user.friends_count + '<br />';
+                } else if (data.recipient) { // DM
+                    html += "DM erfolgreich verschickt."
+                }
 
                 if (async) {
                     $('#text').val('');
                     reply_to_user = null;
                     reply_to_id = null;
                     updateCounter();
+                    sending_dm_to = null;
+                    $('#dm_info').hide();
+                    $('#place').show();
+                    $('#file_choose').show();
                 }
 
                 toggle_file(true);
@@ -1207,6 +1232,19 @@ function replyToTweet(tweet_id, user, isDM) {
 /** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
 function updateCounter() {
     var text = $('#text').val();
+    
+    var dm_match = text.match(/^d @?(\w+) (.*)$/i);
+    if (!sending_dm_to && dm_match) {
+        sending_dm_to = dm_match[1];
+        text = dm_match[2];
+        $('#text').val(text);
+        $('#place').hide();
+        $('#file_div').hide();
+        $('#file_toggle').hide();
+        $('#dm_info_text').html('DM @' + sending_dm_to);
+        $('#dm_info').show();
+    }
+    
     var parts = splitTweet(text);
 
     var lengths = "";
@@ -1215,10 +1253,6 @@ function updateCounter() {
         lengths = "140+";
     for (var i=0; i<parts.length; i++) {
         var text = parts[i];
-        var dm_match = text.match(/^d \w+ (.*)$/i);
-        if (dm_match) {
-            text = dm_match[1];
-        }
         var len = 140 - text.length;
         if ($('#file')[0].files[0]) len -= characters_reserved_per_media;
         var matches = text.match(regexp_url);
@@ -1248,6 +1282,15 @@ function updateCounter() {
         $('#reply_to_id').val('');
         $('#reply_warning').fadeOut();
     }
+}
+
+/** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
+function cancel_dm() {
+    $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
+    sending_dm_to = null;
+    $('#dm_info').hide();
+    $('#place').show();
+    $('#file_toggle').show();
 }
 
 /**

@@ -224,3 +224,12 @@ textarea, input, select {
     margin: 0;
 }
 
+#dm_info {
+    display: none;
+    background-color: #fd8;
+}
+
+#dm_info_text {
+    font-size: 18px;
+}
+
