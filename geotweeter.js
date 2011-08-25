@@ -1167,7 +1167,7 @@ function simple_twitter_request(url, options) {
         success: function(data, textStatus, req) {
             if (req.status=="200") {
                 if (options.success_string) {
-                    $('#success_info').html(success_string);
+                    $('#success_info').html(options.success_string);
                 }
                 if (options.success) {
                     options.success($('#success_info'), data, req);
