@@ -125,6 +125,7 @@ function start() {
     startRequest();
 
     updateCounter();
+    update_form_display();
 
     $(document).bind('keydown', 'Alt+s', sendTweet);
     $('#text').bind('keydown', 'return', checkEnter);
@@ -922,9 +923,7 @@ function sendTweet(event) {
                     reply_to_user = null;
                     reply_to_id = null;
                     sending_dm_to = null;
-                    $('#dm_info').hide();
-                    $('#place').show();
-                    $('#file_choose').show();
+                    update_form_display();
                     updateCounter();
                 }
             } else {
@@ -1049,9 +1048,7 @@ function _sendTweet(text, async) {
                     reply_to_id = null;
                     updateCounter();
                     sending_dm_to = null;
-                    $('#dm_info').hide();
-                    $('#place').show();
-                    $('#file_choose').show();
+                    update_form_display();
                 }
 
                 toggle_file(true);
@@ -1238,11 +1235,8 @@ function updateCounter() {
         sending_dm_to = dm_match[1];
         text = dm_match[2];
         $('#text').val(text);
-        $('#place').hide();
-        $('#file_div').hide();
-        $('#file_toggle').hide();
         $('#dm_info_text').html('DM @' + sending_dm_to);
-        $('#dm_info').show();
+        update_form_display();
     }
     
     var parts = splitTweet(text);
@@ -1282,6 +1276,16 @@ function updateCounter() {
         $('#reply_to_id').val('');
         $('#reply_warning').fadeOut();
     }
+}
+
+/** Updated the visibility of the different fields in the form area. */
+function update_form_display() {
+    if (sending_dm_to!=null) {
+        toggle_file(true);
+    }
+    $('#dm_info').toggle(sending_dm_to!=null);
+    $('#place').toggle(sending_dm_to==null);
+    $('#file_choose').toggle(sending_dm_to==null);
 }
 
 /** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
