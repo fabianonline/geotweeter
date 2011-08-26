@@ -21,6 +21,7 @@ var maxreadid = 0;
 /** IDs of newest and oldest knwon tweets. */
 var maxknownid = "0";
 var minknownid = "0";
+var maxknowndmid = "0";
 
 /** ID of the newest tweet belonging to "this" user. */
 var mylasttweetid = 0;
@@ -317,16 +318,22 @@ function fillList() {
         return_response: true
     });
     
+    var parameters = {count: 200};
+    if (maxknowndmid!="0") parameters.since_id = maxknowndmid;
+    log_message("fillList", "DMs...");
     var received_dms = simple_twitter_request('direct_messages.json', {
         method: "GET",
+        parameters: parameters,
         async: false,
         silent: true,
         dataType: "text",
         return_response: true
     });
     
+    log_message("fillList", "Sent DMs...");
     var sent_dms = simple_twitter_request('direct_messages/sent.json', {
         method: "GET",
+        parameters: parameters,
         async: false,
         silent: true,
         dataType: "text",
@@ -698,6 +705,9 @@ function getStatusHTML(status, multi_add) {
         maxknownid = status.id;
     if (!isDM && (minknownid==0 || status.id < minknownid))
         minknownid = status.id;
+    
+    if(isDM && biggerThan(status.id, maxknowndmid))
+        maxknowndmid = status.id;
 
     if (!isDM && user==this_users_name && biggerThan(status.id, mylasttweetid))
         mylasttweetid = status.id;
