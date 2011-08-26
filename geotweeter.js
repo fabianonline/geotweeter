@@ -317,6 +317,23 @@ function fillList() {
         return_response: true
     });
     
+    var received_dms = simple_twitter_request('direct_messages.json', {
+        method: "GET",
+        async: false,
+        silent: true,
+        dataType: "text",
+        return_response: true
+    });
+    
+    var sent_dms = simple_twitter_request('direct_messages/sent.json', {
+        method: "GET",
+        async: false,
+        silent: true,
+        dataType: "text",
+        return_response: true
+    });
+    
+    parseData([returned, returned_mentions, received_dms, sent_dms]);
     last_event_times.unshift(Date.now());
     last_event_times.pop();
 }
@@ -489,7 +506,7 @@ function display_event(element, return_html) {
     var html = "";
     
     if (element==null)
-        return; // Fix for NULLs in stream
+        return ""; // Fix for NULLs in stream
 
     if (element.text) {
         html = getStatusHTML(element);
@@ -652,6 +669,9 @@ function getStatusHTML(status, multi_add) {
     if (status.direct_message) {
         isDM = true;
         status = status.direct_message;
+    }
+    if (status.recipient) {
+        isDM = true;
     }
     if (!isDM && status.in_reply_to_status_id) {
         repliesData[status.id] = status.in_reply_to_status_id;
