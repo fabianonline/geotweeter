@@ -551,7 +551,7 @@ function display_event(element, return_html) {
     } else if (element.event && element.event=="user_update") {
         // You changed your profile settings on twitter.com. Do nothing.
     } else {
-        html = '<hr />Unbekannte Daten:<br />' + data;
+        html = '<hr />Unbekanntes Element:<br />' + element.toString();
     }
 
     if (return_html) {
