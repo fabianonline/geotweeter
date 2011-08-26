@@ -294,12 +294,13 @@ function get_time_since_last_tweet() {
  */
 function fillList() {
     log_message("fillList", "Starting");
-    setStatus("Filling List. Request 1/2...", "yellow");
+    setStatus("Filling List.", "yellow");
     var page = 1;
 
     var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
     
+    log_message("fillList", "home_timeline 1...");
     var returned = simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
         parameters: parameters,
@@ -309,9 +310,21 @@ function fillList() {
         return_response: true
     });
     
-    setStatus("Filling List. Request 2/2...", "yellow");
+    parameters.page=2;
+    log_message("fillList", "home_timeline 2...");
+    var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
+        method: "GET",
+        parameters: parameters,
+        async: false,
+        silent: true,
+        dataType: "text",
+        return_response: true
+    });
+    
+    log_message("fillList", "mentions...");
     var returned_mentions = simple_twitter_request('statuses/mentions.json', {
         method: "GET",
+        parameters: parameters,
         async: false,
         silent: true,
         dataType: "text",
@@ -340,7 +353,7 @@ function fillList() {
         return_response: true
     });
     
-    parseData([returned, returned_mentions, received_dms, sent_dms]);
+    parseData([returned, returned_2, returned_mentions, received_dms, sent_dms]);
     last_event_times.unshift(Date.now());
     last_event_times.pop();
 }
@@ -451,7 +464,9 @@ function parseData(string_data) {
             var temp = $.parseJSON(string_data[i]);
             if (temp) {
                 if (temp.constructor==Array) {
-                    responses.push(temp);
+                    if (temp.length>0) {
+                        responses.push(temp);
+                    }
                 } else {
                     responses.push(new Array(temp));
                 }
