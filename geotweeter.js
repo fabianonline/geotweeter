@@ -298,37 +298,25 @@ function fillList() {
 
     var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
-    var message = {
-        action: "https://api.twitter.com/1/statuses/home_timeline.json",
+    
+    var returned = simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
-        parameters: parameters
-    }
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/home_timeline.json?' + OAuth.formEncode(message.parameters);
-    var returned = $.ajax({
-        url: url,
-        type: "GET",
+        parameters: parameters,
         async: false,
-        dataType: "text"
-    }).responseText;
-
-
+        silent: true,
+        dataType: "text",
+        return_response: true
+    });
+    
     setStatus("Filling List. Request 2/2...", "yellow");
-    message.action = "https://api.twitter.com/1/statuses/mentions.json";
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
-    var url = 'proxy/api/statuses/mentions.json?' + OAuth.formEncode(message.parameters);
-    var returned_mentions = $.ajax({
-        url: url,
-        type: "GET",
+    var returned_mentions = simple_twitter_request('statuses/mentions.json', {
+        method: "GET",
         async: false,
-        dataType: "text"
-    }).responseText;
-
-    parseData([returned, returned_mentions]);
+        silent: true,
+        dataType: "text",
+        return_response: true
+    });
+    
     last_event_times.unshift(Date.now());
     last_event_times.pop();
 }
@@ -1173,11 +1161,12 @@ function report_spam(sender_name) {
      * Hash containing following options:
        * method - "POST"
        * parameters - Hash with parameters for the request
-       * silent - Show status
+       * silent - Don't show status
        * success_string - String to be shown after a successfull request
        * success - function to be called after request. Parameters: (info_element, data, request)
        * error - function to be called on error. Parameters: (info_element, data, request, raw_response, exception)
-       
+       * dataType - override for jQuerys dataType used in the AJAX call. Defaults to "json"
+       * return_response - returns the raw responseText
  */
 function simple_twitter_request(url, options) {
     var message = {
@@ -1196,10 +1185,10 @@ function simple_twitter_request(url, options) {
     var url = 'proxy/api/' + url;
     var data = OAuth.formEncode(message.parameters);
 
-    $.ajax({
+    var result = $.ajax({
         url: url,
         data: data,
-        dataType: "json",
+        dataType: options.dataType || "json",
         async: options.async && true,
         type: options.method || "POST",
         success: function(data, textStatus, req) {
@@ -1235,6 +1224,10 @@ function simple_twitter_request(url, options) {
             });
         }
     });
+    
+    if (options.return_response) {
+        return result.responseText;
+    }
 }
 
 /** Quotes a tweet (using the old "RT" syntax). */
