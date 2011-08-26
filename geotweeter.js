@@ -1321,7 +1321,6 @@ function updateCounter() {
         reply_to_user = null;
         text = dm_match[2];
         $('#text').val(text);
-        $('#dm_info_text').html('DM @' + sending_dm_to);
         update_form_display();
     }
 
@@ -1368,6 +1367,7 @@ function updateCounter() {
 function update_form_display() {
     if (sending_dm_to!=null) {
         toggle_file(true);
+        $('#dm_info_text').html('DM @' + sending_dm_to);
     }
     $('#dm_info').toggle(sending_dm_to!=null);
     $('#place').toggle(sending_dm_to==null);
