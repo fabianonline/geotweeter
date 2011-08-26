@@ -472,7 +472,7 @@ function parseData(string_data) {
                 }
             }
         } catch (e) {
-            addHTML("Exception: " + e + '<br />' + data + '<hr />');
+            addHTML("Exception: " + e + '<br />' + string_data[i] + '<hr />');
         }
     }
 
