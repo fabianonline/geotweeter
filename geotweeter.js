@@ -185,7 +185,7 @@ function checkSettings() {
 /** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
     setStatus("Validating credentials...", "yellow");
-    
+
     simple_twitter_request('account/verify_credentials.json', {
         method: "GET",
         silent: true,
@@ -203,7 +203,7 @@ function validateCredentials() {
 /** Get twitter configuration */
 function get_twitter_configuration() {
     setStatus("Getting Twitter Configuration...", "yellow");
-    
+
     simple_twitter_request('help/configuration.json', {
         silent: true,
         async: false,
@@ -299,7 +299,7 @@ function fillList() {
 
     var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
-    
+
     log_message("fillList", "home_timeline 1...");
     var returned = simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
@@ -309,7 +309,7 @@ function fillList() {
         dataType: "text",
         return_response: true
     });
-    
+
     parameters.page=2;
     log_message("fillList", "home_timeline 2...");
     var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
@@ -320,7 +320,7 @@ function fillList() {
         dataType: "text",
         return_response: true
     });
-    
+
     log_message("fillList", "mentions...");
     var returned_mentions = simple_twitter_request('statuses/mentions.json', {
         method: "GET",
@@ -330,7 +330,7 @@ function fillList() {
         dataType: "text",
         return_response: true
     });
-    
+
     var parameters = {count: 200};
     if (maxknowndmid!="0") parameters.since_id = maxknowndmid;
     log_message("fillList", "DMs...");
@@ -342,7 +342,7 @@ function fillList() {
         dataType: "text",
         return_response: true
     });
-    
+
     log_message("fillList", "Sent DMs...");
     var sent_dms = simple_twitter_request('direct_messages/sent.json', {
         method: "GET",
@@ -352,7 +352,7 @@ function fillList() {
         dataType: "text",
         return_response: true
     });
-    
+
     parseData([returned, returned_2, returned_mentions, received_dms, sent_dms]);
     last_event_times.unshift(Date.now());
     last_event_times.pop();
@@ -454,10 +454,10 @@ function parseData(string_data) {
     if (string_data.constructor!=Array) {
         string_data = new Array(string_data);
     }
-    
+
     // Data is an array containing one or more JSON-encoded responses from Twitter
     var responses = new Array();
-    
+
     // parse the strings
     for (var i in string_data) {
         try {
@@ -475,11 +475,11 @@ function parseData(string_data) {
             addHTML("Exception: " + e + '<br />' + data + '<hr />');
         }
     }
-    
+
     if (responses.length==0) return;
-    
+
     // responses now contains one or more Arrays containing one or more Events ordered "date DESC".
-    
+
     var html = "";
     var last_id = "";
     while (responses.length > 0) {
@@ -526,7 +526,7 @@ function parseData(string_data) {
  */
 function display_event(element, return_html) {
     var html = "";
-    
+
     if (element==null)
         return ""; // Fix for NULLs in stream
 
@@ -553,7 +553,7 @@ function display_event(element, return_html) {
     } else {
         html = '<hr />Unbekannte Daten:<br />' + data;
     }
-    
+
     if (return_html) {
         return html;
     }
@@ -720,7 +720,7 @@ function getStatusHTML(status, multi_add) {
         maxknownid = status.id;
     if (!isDM && (minknownid==0 || status.id < minknownid))
         minknownid = status.id;
-    
+
     if(isDM && biggerThan(status.id, maxknowndmid))
         maxknowndmid = status.id;
 
@@ -1074,9 +1074,9 @@ function _sendTweet(text, async) {
             method: "POST",
             parameters: parameters
         }
-        
+
         url = "proxy/api/statuses/update.json";
-        
+
         if (sending_dm_to) {
             message.action = "https://api.twitter.com/1/direct_messages/new.json";
             url = "proxy/api/direct_messages/new.json";
@@ -1103,7 +1103,7 @@ function _sendTweet(text, async) {
             if (data.text) {
                 //$('#counter').html(data + textStatus);
                 var html = "";
-                
+
                 if (data.user) { // Normaler Tweet
                     html += 'Tweet-ID: ' + data.id_str + '<br />';
                     html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
@@ -1176,7 +1176,7 @@ function retweet(id) {
 function delete_tweet(id) {
     if (!confirm('Wirklich diesen Tweet löschen?'))
         return false;
-    
+
     simple_twitter_request('statuses/destroy/' + id + '.json', {
         success_string: 'Tweet deleted',
         success: function() {
@@ -1189,7 +1189,7 @@ function delete_tweet(id) {
 function report_spam(sender_name) {
     if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
         return false;
-    
+
     simple_twitter_request('report_spam.json', {
         parameters: {screen_name: sender_name},
         success_string: 'Spam reported',
@@ -1219,7 +1219,7 @@ function simple_twitter_request(url, options) {
         method: options.method || "POST",
         parameters: options.parameters
     }
-    
+
     var verbose = !(!!options.silent && true);
 
     if (verbose) $('#form').fadeTo(500, 0).delay(500);
@@ -1269,7 +1269,7 @@ function simple_twitter_request(url, options) {
             });
         }
     });
-    
+
     if (options.return_response) {
         return result.responseText;
     }
@@ -1295,7 +1295,7 @@ function replyToTweet(tweet_id, user, isDM) {
     reply_to_user = null;
     reply_to_id = null;
     $('#text').val('').focus();
-    
+
     if (isDM===true) {
         sending_dm_to = user;
     } else {
@@ -1304,7 +1304,7 @@ function replyToTweet(tweet_id, user, isDM) {
         $('#text').val('@' + user + ' ').focus();
         $('#reply_to_id').val(tweet_id);
     }
-    
+
     $('#text').focus();
     updateCounter();
     update_form_display();
@@ -1313,7 +1313,7 @@ function replyToTweet(tweet_id, user, isDM) {
 /** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
 function updateCounter() {
     var text = $('#text').val();
-    
+
     var dm_match = text.match(/^d @?(\w+) (.*)$/i);
     if (!sending_dm_to && dm_match) {
         sending_dm_to = dm_match[1];
@@ -1324,7 +1324,7 @@ function updateCounter() {
         $('#dm_info_text').html('DM @' + sending_dm_to);
         update_form_display();
     }
-    
+
     var parts = splitTweet(text);
 
     var lengths = "";
