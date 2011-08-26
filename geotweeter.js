@@ -296,7 +296,7 @@ function fillList() {
     setStatus("Filling List. Request 1/2...", "yellow");
     var page = 1;
 
-    var parameters = {include_rts: "1", count: 200, include_entities: true};
+    var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
     var message = {
         action: "https://api.twitter.com/1/statuses/home_timeline.json",
