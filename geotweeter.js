@@ -328,7 +328,7 @@ function fillList() {
         dataType: "text"
     }).responseText;
 
-    parseData(returned, returned_mentions);
+    parseData([returned, returned_mentions]);
     last_event_times.unshift(Date.now());
     last_event_times.pop();
 }
@@ -422,77 +422,115 @@ function processBuffer() {
 
 
 /**
- * Get json-encoded data, parse it, determine it's type and give the object to a matching display method.
- *
- * Can take two datasets, which then get analyzed and "interleaved".
+ * Parses responses received from twitter.
+ * Can take multiple bunches of data in an array; those are then merged before processing.
  */
-function parseData(data, data2) {
-    try {
-        var message = $.parseJSON(data);
-    } catch (e) {
-        addHTML("Exception: " + e + '<br />' + data + '<hr />');
+function parseData(string_data) {
+    if (string_data.constructor!=Array) {
+        string_data = new Array(string_data);
     }
-
-    var message2 = null;
-    if (data2 != undefined) try {
-        message2 = $.parseJSON(data);
-    } catch(e) {}
-
-
-    if (message.constructor.toString().indexOf('Array')!=-1) {
-
-        var html = '';
-        if (message2 == null) {
-            for(var i=0; i<message.length; i++) {
-                if (message[i]) html += getStatusHTML(message[i], true);
-            }
-        } else {
-            var i=0;
-            var j=0;
-            var last_id = null;
-            while (i<message.length || j<message2.length) {
-                if(!message2[j] || (message[i] && biggerThan(message[i].id, message2[j].id))) {
-                    if (last_id!=message[i].id) html += getStatusHTML(message[i], true);
-                    last_id = message[i].id;
-                    i++;
+    
+    // Data is an array containing one or more JSON-encoded responses from Twitter
+    var responses = new Array();
+    
+    // parse the strings
+    for (var i in string_data) {
+        try {
+            var temp = $.parseJSON(string_data[i]);
+            if (temp) {
+                if (temp.constructor==Array) {
+                    responses.push(temp);
                 } else {
-                    if (last_id!=message2[j].id) html += getStatusHTML(message2[j], true);
-                    last_id = message2[j].id;
-                    j++;
+                    responses.push(new Array(temp));
                 }
             }
+        } catch (e) {
+            addHTML("Exception: " + e + '<br />' + data + '<hr />');
         }
-        addHTML(html);
-        return;
     }
+    
+    if (responses.length==0) return;
+    
+    // responses now contains one or more Arrays containing one or more Events ordered "date DESC".
+    
+    var html = "";
+    var last_id = "";
+    while (responses.length > 0) {
+        // Go through all responses and get the newest entry
+        var newest_date = null;
+        var newest_index = null;
+        for (var i in responses) {
+            var date;
+            try {
+                date = new Date(responses[i][0].created_at || responses[i][0].direct_message.created_at);
+            } catch(e) {
+                date = new Date();
+            }
+            if (newest_date==null || date>newest_date) {
+                newest_date = date;
+                newest_index = i;
+            }
+        }
+        // get the newest entry and remove it from the array
+        var array = responses[newest_index];
+        var element = array.shift();
+        if (array.length==0) {
+            // remove the whole array
+            responses.splice(newest_index, 1);
+        }
+        var this_id;
+        try {
+            this_id = element.id_str || element.direct_message.id_str;
+        } catch(e) {
+            this_id = element;
+        }
+        // Filter duplicate tweets
+        if (this_id != last_id) {
+            html += display_event(element, true);
+        }
+        last_id = this_id;
+    }
+    addHTML(html);
+}
 
-    if (message==null)
+/**
+ * Takes a single Twitter event and gets it's HTML code.
+ * Optionally, the code is returned instead of adding it to the DOM.
+ */
+function display_event(element, return_html) {
+    var html = "";
+    
+    if (element==null)
         return; // Fix for NULLs in stream
 
-    if (message.text) {
-        addHTML(getStatusHTML(message));
-    } else if (message.friends) {
-        twitter_friends = message.friends;
-    } else if ("delete" in message) {
+    if (element.text) {
+        html = getStatusHTML(element);
+    } else if (element.friends) {
+        twitter_friends = element.friends;
+    } else if ("delete" in element) {
         // Deletion-Request. Do nothing ,-)
-    } else if (message.direct_message) {
-        addHTML(getStatusHTML(message));
-    } else if (message.event && message.event=="follow") {
-        // Social Event.
-        addFollowEvent(message);
-    } else if (message.event && message.event=="favorite") {
-        addFavoriteEvent(message);
-    } else if (message.event && message.event=="list_member_added") {
-        addListMemberAddedEvent(message);
-    } else if (message.event && message.event=="list_member_removed") {
-        addListMemberRemovedEvent(message);
-    } else if (message.event && message.event=="block") {
+    } else if (element.direct_message) {
+        html = getStatusHTML(element);
+    } else if (element.event && element.event=="follow") {
+        html = getFollowEventHTML(element);
+    } else if (element.event && element.event=="favorite") {
+        html = getFavoriteEventHTML(element);
+    } else if (element.event && element.event=="list_member_added") {
+        html = getListMemberAddedEventHTML(element);
+    } else if (element.event && element.event=="list_member_removed") {
+        html = getListMemberRemovedEventHTML(element);
+    } else if (element.event && element.event=="block") {
         // You blocked someone. Do nothing.
-    } else if (message.event && message.event=="user_update") {
+    } else if (element.event && element.event=="user_update") {
         // You changed your profile settings on twitter.com. Do nothing.
     } else {
-        addHTML('<hr />Unbekannte Daten:<br />' + data);
+        html = '<hr />Unbekannte Daten:<br />' + data;
     }
+    
+    if (return_html) {
+        return html;
+    }
+    addHTML(html);
 }
 
 /**
@@ -553,7 +591,7 @@ function unshortenLink(url) {
 
 
 /** Adds an event with custom text to the DOM. */
-function addEvent(event, text) {
+function getEventHTML(event, text) {
     var html = "";
     html += '<div class="status">';
     html += '<span class="avatar">';
@@ -561,11 +599,11 @@ function addEvent(event, text) {
     html += '</span>';
     html += text;
     html += '</div>';
-    addHTML(html);
+    return html;
 }
 
 /** Creates html for a new follower-event and adds it to the DOM via addEvent(). */
-function addFollowEvent(event) {
+function getFollowEventHTML(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += 'Neuer Follower: ';
@@ -573,11 +611,11 @@ function addFollowEvent(event) {
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
     followers_ids.push(event.source.id);
-    addEvent(event, html);
+    return getEventHTML(event, html);
 }
 
 /** Creates html for a favorite added-event and adds it to the DOM via addEvent(). */
-function addFavoriteEvent(event) {
+function getFavoriteEventHTML(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
@@ -585,11 +623,11 @@ function addFavoriteEvent(event) {
     html += '</span>';
     html += ' favorisierte:<br />';
     html += linkify(event.text);
-    addEvent(event, html);
+    return getEventHTML(event, html);
 }
 
 /** Creates html for an added to list-event and adds it to the DOM via addEvent(). */
-function addListMemberAddedEvent(event) {
+function getListMemberAddedEventHTML(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
@@ -598,11 +636,11 @@ function addListMemberAddedEvent(event) {
     html += ' fügte dich zu einer Liste hinzu:<br />';
     html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
     html += '(' + event.target_object.members_count + 'Members, ' + event.target_object.subscriber_count + ' Subscribers)';
-    addEvent(event, html);
+    return getEventHTML(event, html);
 }
 
 /** Creates html for a removed from list-event and adds it to the DOM via addEvent(). */
-function addListMemberRemovedEvent(event) {
+function getListMemberRemovedEventHTML(event) {
     if (event.source.screen_name==this_users_name) return;
     var html = "";
     html += '<span class="poster">';
@@ -610,7 +648,7 @@ function addListMemberRemovedEvent(event) {
     html += '</span>';
     html += ' löschte dich von einer Liste:<br />';
     html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
-    addEvent(event, html);
+    return getEventHTML(event, html);
 }
 
 
