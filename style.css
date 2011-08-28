@@ -92,7 +92,11 @@ textarea, input, select {
 }
 
 .tweet.highlight {
-    background: red;
+	background: #ddf;
+    background: -webkit-linear-gradient(bottom, #FF0 0%, #8B0 20%);
+    background: -moz-linear-gradient(bottom, #FF0 0%, #8B0 20%);
+    background: -o-linear-gradient(bottom, #FF0 0%, #8B0 20%);
+    background: -ms-linear-gradient(bottom, #FF0 0%, #8B0 20%);
 }
 
 .avatar{
