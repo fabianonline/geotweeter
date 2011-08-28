@@ -73,6 +73,10 @@ var show_file_field = false;
 /** Saves the creation-times of the last received tweets. */
 var last_event_times = new Array();
 
+/** Used in fillList. */
+var temp_responses = new Array();
+var counter = 0;
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -123,7 +127,7 @@ function start() {
     getFollowers();
 
     maxreadid = getMaxReadID();
-    startRequest();
+    fillList(); // after fillList completed, it will automatically start startRequest to start listening to the stream
 
     updateCounter();
     update_form_display();
@@ -294,20 +298,30 @@ function get_time_since_last_tweet() {
  */
 function fillList() {
     log_message("fillList", "Starting");
-    setStatus("Filling List.", "yellow");
-    var page = 1;
+    setStatus("Filling List...", "yellow");
+    
+    counter = 5;
+    temp_responses = new Array();
+    
+    var success = function(element, data) {
+        temp_responses.push(data);
+        counter-=1;
+        if (counter==0) {
+            startRequest();
+        }
+    }
 
     var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
 
     log_message("fillList", "home_timeline 1...");
-    var returned = simple_twitter_request('statuses/home_timeline.json', {
+    simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
         parameters: parameters,
-        async: false,
+        async: true,
         silent: true,
         dataType: "text",
-        return_response: true
+        success: success
     });
 
     parameters.page=2;
@@ -315,20 +329,20 @@ function fillList() {
     var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
         parameters: parameters,
-        async: false,
+        async: true,
         silent: true,
         dataType: "text",
-        return_response: true
+        success: success
     });
 
     log_message("fillList", "mentions...");
     var returned_mentions = simple_twitter_request('statuses/mentions.json', {
         method: "GET",
         parameters: parameters,
-        async: false,
+        async: true,
         silent: true,
         dataType: "text",
-        return_response: true
+        success: success
     });
 
     var parameters = {count: 200};
@@ -337,33 +351,30 @@ function fillList() {
     var received_dms = simple_twitter_request('direct_messages.json', {
         method: "GET",
         parameters: parameters,
-        async: false,
+        async: true,
         silent: true,
         dataType: "text",
-        return_response: true
+        success: success
     });
 
     log_message("fillList", "Sent DMs...");
     var sent_dms = simple_twitter_request('direct_messages/sent.json', {
         method: "GET",
         parameters: parameters,
-        async: false,
+        async: true,
         silent: true,
         dataType: "text",
-        return_response: true
+        success: success
     });
-
-    parseData([returned, returned_2, returned_mentions, received_dms, sent_dms]);
-    last_event_times.unshift(Date.now());
-    last_event_times.pop();
 }
 
 
 /** Starts a request to the streaming api. */
 function startRequest() {
-    log_message("startRequest", "Calling fillList()...");
-    fillList();
-
+    parseData(temp_responses);
+    last_event_times.unshift(Date.now());
+    last_event_times.pop();
+    
     var message = {
         action: "https://userstream.twitter.com/2/user.json",
         method: "GET",
@@ -410,7 +421,7 @@ function parseResponse() {
             delay = settings.timings.maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
-        window.setTimeout('startRequest()', delay*1000);
+        window.setTimeout('fillList()', delay*1000);
         req = null;
         if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
