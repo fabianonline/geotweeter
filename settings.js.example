@@ -13,6 +13,9 @@ var settings = {
     
     //Array for blacklisted words
     blacklist: ["Test1", "Test2"],
+    
+     //Array for highlighted words
+    highlight: ["Android"],
 
     // Places. Array of objects containing Name, lat, lon and optionally place_id.
     // Make it an empty array ("places: []") to disable the places feature completely.
