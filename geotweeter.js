@@ -631,7 +631,7 @@ function getEventHTML(event, text) {
 
 /** Creates html for a new follower-event and adds it to the DOM via addEvent(). */
 function getFollowEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return;
+    if (event.source.screen_name==this_users_name) return "";
     var html = "";
     html += 'Neuer Follower: ';
     html += '<span class="poster">';
@@ -643,7 +643,7 @@ function getFollowEventHTML(event) {
 
 /** Creates html for a favorite added-event and adds it to the DOM via addEvent(). */
 function getFavoriteEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return;
+    if (event.source.screen_name==this_users_name) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
@@ -655,7 +655,7 @@ function getFavoriteEventHTML(event) {
 
 /** Creates html for an added to list-event and adds it to the DOM via addEvent(). */
 function getListMemberAddedEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return;
+    if (event.source.screen_name==this_users_name) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
@@ -668,7 +668,7 @@ function getListMemberAddedEventHTML(event) {
 
 /** Creates html for a removed from list-event and adds it to the DOM via addEvent(). */
 function getListMemberRemovedEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return;
+    if (event.source.screen_name==this_users_name) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
