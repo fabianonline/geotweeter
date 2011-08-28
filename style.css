@@ -91,6 +91,10 @@ textarea, input, select {
     background: -ms-linear-gradient(bottom, #bbf 0%, #ddf 20%);
 }
 
+.tweet.highlight {
+    background: red;
+}
+
 .avatar{
     display: block;
     position: relative;

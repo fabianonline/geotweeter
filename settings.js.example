@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 8,
+    version: 9,
 
     // Twitter Access Keys
     twitter: {
