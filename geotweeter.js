@@ -49,7 +49,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 8;
+var expected_settings_version = 9;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -692,8 +692,15 @@ function getListMemberRemovedEventHTML(event) {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status, multi_add) {
-    // Check if tweet contains blacklisted words
-
+	
+    /** Prepares variable with text for several checks **/
+    var temp_text = "";
+    if (status.retweeted_status)
+        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
+    else
+        temp_text += linkify(status.text, status.entities);
+	
+   
     if (status.id_str)
         status.id = status.id_str;
     if (status.in_reply_to_status_id_str)
@@ -765,6 +772,10 @@ function getStatusHTML(status, multi_add) {
             if (mention == this_users_name) html += "mentions_this_user ";
         }
     }
+    
+   // Checks Tweet for words to be highlighted 
+   if (check_highlight(temp_text))
+    html += "highlight";
 
 
     html += '" id="id_' + status.id + '">';
@@ -796,18 +807,14 @@ function getStatusHTML(status, multi_add) {
     html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
     html += '</span> ';
     html += '<span class="text">';
-    var temp_text = "";
-    if (status.retweeted_status)
-        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
-    else
-        temp_text += linkify(status.text, status.entities);
+    
+     // Check if tweet contains blacklisted words
+        if(check_blacklist(temp_text))
+              return "";    
+        else		
+	html += temp_text;
 
-
-        if(check_blacklist(temp_text)){
-        return "";
-    }
-    else
-    html += temp_text;
+	
 
 
     html += '</span>';
@@ -1490,6 +1497,16 @@ function check_blacklist(text){
     for (var i=0; i<settings.blacklist.length; i++)
     {
         if(text.indexOf(settings.blacklist[i]) != -1)
+            return true;
+    }
+    return false;
+}
+
+/** Checks for highlighted words. */
+function check_highlight(text){
+    for (var i=0; i<settings.highlight.length; i++)
+    {
+        if(text.indexOf(settings.highlight[i]) != -1)
             return true;
     }
     return false;
