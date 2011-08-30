@@ -691,7 +691,7 @@ function getListMemberRemovedEventHTML(event) {
 
 
 /** Creates html for a normal tweet, RT or DM. */
-function getStatusHTML(status, multi_add) {
+function getStatusHTML(status) {
 	
     /** Prepares variable with text for several checks **/
     var temp_text = "";
@@ -746,12 +746,10 @@ function getStatusHTML(status, multi_add) {
         mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
-    if (multi_add) {
-        // Multi-Add = Tweets kommen chronologisch absteigend
-        last_event_times.push(date);
-    } else {
-        // Stream-Add = Tweets kommen chronologisch aufsteigend
+    if (last_event_times.length==0 || date > last_event_times[0]) {
         last_event_times.unshift(date);
+    } else if (date < last_event_times[last_event_times.length-1]) {
+        last_event_times.push(date);
     }
     if (last_event_times.length > (settings.timeout_detect_tweet_count+1)) last_event_times.pop();
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
