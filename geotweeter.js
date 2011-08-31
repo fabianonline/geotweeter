@@ -561,6 +561,8 @@ function display_event(element, return_html) {
         // You blocked someone. Do nothing.
     } else if (element.event && element.event=="user_update") {
         // You changed your profile settings on twitter.com. Do nothing.
+    } else if (element.event && element.event=="unfavorite") {
+        // You unfavorited a tweet. Do nothing.
     } else {
         html = '<hr />Unbekanntes Element:<br />' + element.toString();
     }
