@@ -310,6 +310,18 @@ function fillList() {
             startRequest();
         }
     }
+    
+    var error = function(info_element, data, request, raw_response, exception, additional_info) {
+        var html = '<div class="status"><b>Fehler in ' + additional_info.name + ":</b><br />";
+        if (data && data.error) {
+            html += data.error;
+        } else {
+            html += 'Error ' + request.status + ' (' + exception + ')';
+        }
+        html += "<br />";
+        html += "Bitte den Geotweeter neu starten, um es nochmal zu versuchen.</div>";
+        addHTML(html);
+    }
 
     var parameters = {include_rts: true, count: 200, include_entities: true};
     if (maxknownid!="0") parameters.since_id = maxknownid;
@@ -321,7 +333,9 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        success: success
+        additional_info: {name: 'home_timeline 1'},
+        success: success,
+        error: error
     });
 
     parameters.page=2;
@@ -332,7 +346,9 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        success: success
+        additional_info: {name: 'home_timeline 2'},
+        success: success,
+        error: error
     });
 
     log_message("fillList", "mentions...");
@@ -342,10 +358,12 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        success: success
+        additional_info: {name: 'mentions'},
+        success: success,
+        error: error
     });
 
-    var parameters = {count: 200};
+    var parameters = {count: 100};
     if (maxknowndmid!="0") parameters.since_id = maxknowndmid;
     log_message("fillList", "DMs...");
     var received_dms = simple_twitter_request('direct_messages.json', {
@@ -354,7 +372,9 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        success: success
+        additional_info: {name: 'received dms'},
+        success: success,
+        error: error
     });
 
     log_message("fillList", "Sent DMs...");
@@ -364,7 +384,9 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        success: success
+        additional_info: {name: 'sent dms'},
+        success: success,
+        error: error
     });
 }
 
@@ -1226,8 +1248,9 @@ function report_spam(sender_name) {
        * parameters - Hash with parameters for the request
        * silent - Don't show status
        * success_string - String to be shown after a successfull request
-       * success - function to be called after request. Parameters: (info_element, data, request)
-       * error - function to be called on error. Parameters: (info_element, data, request, raw_response, exception)
+       * additional_info - Will be passed directly into the success and error callbacks
+       * success - function to be called after request. Parameters: (info_element, data, request, additional_info)
+       * error - function to be called on error. Parameters: (info_element, data, request, raw_response, exception, additional_info)
        * dataType - override for jQuerys dataType used in the AJAX call. Defaults to "json"
        * return_response - returns the raw responseText
  */
@@ -1260,14 +1283,14 @@ function simple_twitter_request(url, options) {
                     $('#success_info').html(options.success_string);
                 }
                 if (options.success) {
-                    options.success($('#success_info'), data, req);
+                    options.success($('#success_info'), data, req, options.additional_info);
                 }
                 if (verbose) $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
                     $('#form').fadeTo(500, 1);
                 });
             } else {
                 if (options.error) {
-                    options.error($('#failure_info'), data, req);
+                    options.error($('#failure_info'), data, req, "", null, options.additional_info);
                 } else {
                     $('#failure_info').html(data.error);
                 }
@@ -1278,7 +1301,7 @@ function simple_twitter_request(url, options) {
         },
         error: function(req, textStatus, exc) {
             if (options.error) {
-                options.error($('#failure_info'), null, req, textStatus, exc);
+                options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info);
             } else {
                 $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
             }
