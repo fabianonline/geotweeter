@@ -1191,6 +1191,9 @@ function _sendTweet(text, async) {
 
 /** Splits a tweet at the tweetSeperator, but maintains mentions for all parts. */
 function splitTweet(text) {
+    // if we're sending a dm, we don't support splitting tweets
+    if (sending_dm_to) return [text];
+    
     var mention = text.match(/^(((@[a-z0-9_]+) +)+)/i);
     var words = text.split(' ');
     var word;
@@ -1426,9 +1429,8 @@ function update_form_display() {
 function cancel_dm() {
     $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
     sending_dm_to = null;
-    $('#dm_info').hide();
-    $('#place').show();
-    $('#file_toggle').show();
+    updateCounter();
+    update_form_display();
 }
 
 /**
