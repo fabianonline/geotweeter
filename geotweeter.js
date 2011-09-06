@@ -1198,6 +1198,12 @@ function splitTweet(text) {
     var parts = text.split(settings.tweetSeperator.seperator);
     for (var i=0; i<parts.length; i++) {
         parts[i] = parts[i].trim();
+        if (i>0) {
+            parts[i] = settings.tweetSeperator.prefix + parts[i];
+        }
+        if (i<parts.length-1) {
+            parts[i] = parts[i] + settings.tweetSeperator.suffix;
+        }
         if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
     }
     return parts;
