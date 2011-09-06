@@ -324,7 +324,7 @@ function fillList() {
         addHTML(html);
     }
 
-    var parameters = {include_rts: true, count: 200, include_entities: true};
+    var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
     if (maxknownid!="0") parameters.since_id = maxknownid;
 
     log_message("fillList", "home_timeline 1...");
@@ -338,20 +338,7 @@ function fillList() {
         success: success,
         error: error
     });
-
-    parameters.page=2;
-    log_message("fillList", "home_timeline 2...");
-    var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        additional_info: {name: 'home_timeline 2'},
-        success: success,
-        error: error
-    });
-
+    
     log_message("fillList", "mentions...");
     var returned_mentions = simple_twitter_request('statuses/mentions.json', {
         method: "GET",
@@ -364,6 +351,19 @@ function fillList() {
         error: error
     });
 
+    parameters.page = 2;
+    log_message("fillList", "home_timeline 2...");
+    var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
+        method: "GET",
+        parameters: parameters,
+        async: true,
+        silent: true,
+        dataType: "text",
+        additional_info: {name: 'home_timeline 2'},
+        success: success,
+        error: error
+    });
+    
     var parameters = {count: 100};
     if (maxknowndmid!="0") parameters.since_id = maxknowndmid;
     log_message("fillList", "DMs...");
