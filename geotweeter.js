@@ -75,7 +75,8 @@ var last_event_times = new Array();
 
 /** Used in fillList. */
 var temp_responses = new Array();
-var counter = 0;
+var threadsStarted = 0;
+var threadsErrored = 0;
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -301,27 +302,44 @@ function fillList() {
     log_message("fillList", "Starting");
     setStatus("Filling List...", "yellow");
     
-    counter = 5;
+    threadsRunning = 5;
+    threadsErrored = 0;
     temp_responses = new Array();
+    
+    var after_run = function() {
+        if (threadsErrored==0) {
+            // everything was successfull. Great. Connect to the stream.
+            startRequest();
+        } else {
+            // oops... trigger the restart mechanism
+            var html = '<div class="status">Retrying in 30 seconds...</div>';
+            addHTML(html);
+            window.setTimeout('fillList()', 30000);
+        }
+    }
     
     var success = function(element, data) {
         temp_responses.push(data);
-        counter-=1;
-        if (counter==0) {
-            startRequest();
+        threadsRunning-=1;
+        if (threadsRunning==0) {
+            after_run();
         }
     }
     
     var error = function(info_element, data, request, raw_response, exception, additional_info) {
+        threadsRunning-=1;
+        threadsErrored+=1;
         var html = '<div class="status"><b>Fehler in ' + additional_info.name + ":</b><br />";
         if (data && data.error) {
             html += data.error;
         } else {
             html += 'Error ' + request.status + ' (' + exception + ')';
         }
-        html += "<br />";
-        html += "Bitte den Geotweeter neu starten, um es nochmal zu versuchen.</div>";
+        html += "</div>";
         addHTML(html);
+        if (threadsRunning==0) {
+            after_run();
+        }
     }
 
     var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
