@@ -489,7 +489,11 @@ function processBuffer() {
         if (res[2].length >= len) {
             parseableText = res[2].substr(0, len);
             buffer = res[2].substr(len);
-            parseData(parseableText);
+            try {
+                parseData(parseableText);
+            } catch (e) {
+                // do nothing
+            }
         } else {
             break;
         }
