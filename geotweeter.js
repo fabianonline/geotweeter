@@ -735,19 +735,13 @@ function getListMemberRemovedEventHTML(event) {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status) {
-	
-    /** Prepares variable with text for several checks **/
-    var temp_text = "";
-    if (status.retweeted_status)
-        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
-    else
-        temp_text += linkify(status.text, status.entities);
-	
-   
+    // Preparations: Replace the (too large for JS) numeric IDs with the string-based IDs
     if (status.id_str)
         status.id = status.id_str;
     if (status.in_reply_to_status_id_str)
         status.in_reply_to_status_id = status.in_reply_to_status_id_str;
+    
+    // Check if we are working on a DM. If yes, modify the structure to be more tweet-like.
     isDM = false;
     if (status.direct_message) {
         isDM = true;
@@ -759,6 +753,15 @@ function getStatusHTML(status) {
     if (!isDM && status.in_reply_to_status_id) {
         repliesData[status.id] = status.in_reply_to_status_id;
     }
+    
+    // Prepares variable with text for several checks
+    var temp_text = "";
+    if (status.retweeted_status) {
+        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
+    } else {
+        temp_text += linkify(status.text, status.entities);
+    }
+    
     var html = "";
     var user;
     var user_object;
