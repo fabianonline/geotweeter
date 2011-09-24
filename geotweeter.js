@@ -1512,7 +1512,7 @@ function check_muted(user)
 
     for (var i=0; i<settings.muted.length; i++)
     {
-        if(user.indexOf(settings.muted[i]) != -1)
+        if(user == settings.muted[i])
             return true;
     }
     return false;
