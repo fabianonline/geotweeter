@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 9,
+    version: 10,
 
     // Twitter Access Keys
     twitter: {
@@ -16,6 +16,9 @@ var settings = {
     
      //Array for highlighted words
     highlight: ["Android"],
+	
+	 //Array for muted users
+    muted: ["Troll"],
 
     // Places. Array of objects containing Name, lat, lon and optionally place_id.
     // Make it an empty array ("places: []") to disable the places feature completely.

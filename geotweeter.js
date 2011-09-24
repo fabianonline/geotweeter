@@ -49,7 +49,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 9;
+var expected_settings_version = 10;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -719,8 +719,14 @@ function getStatusHTML(status, multi_add) {
         }
     else
         user_object = status.user;
-
+	   
     user = user_object.screen_name;
+	
+	    // Check if tweet user is muted
+     if(check_muted(user))
+          return ""; 
+	
+	
     addToAutoCompletion("@" + user);
 
     if (!isDM && biggerThan(status.id, maxknownid))
@@ -1499,6 +1505,18 @@ function check_highlight(text){
             return true;
     }
     return false;
+}
+
+function check_muted(user)
+{
+
+    for (var i=0; i<settings.muted.length; i++)
+    {
+        if(user.indexOf(settings.muted[i]) != -1)
+            return true;
+    }
+    return false;
+
 }
 
 /** Adds a term to the list of usable autocompletions. */
