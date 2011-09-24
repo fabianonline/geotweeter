@@ -1488,7 +1488,13 @@ function setMaxReadID(id) {
         url: settings.set_maxreadid_url || 'maxreadid/set.php',
         async: false,
         dataType: 'text',
-        data: {id: id}
+        data: {id: id},
+        error: function(req) {
+            var html = '<div class="status"><b>Fehler in setMaxReadID():</b><br />';
+            html += 'Error ' + req.status + ' (' + req.responseText + ')';
+            html += '</div>';
+            addHTML(html);
+        }
     });
 }
 
