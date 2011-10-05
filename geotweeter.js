@@ -739,12 +739,6 @@ function getListMemberRemovedEventHTML(event) {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status) {
-    // Preparations: Replace the (too large for JS) numeric IDs with the string-based IDs
-    if (status.id_str)
-        status.id = status.id_str;
-    if (status.in_reply_to_status_id_str)
-        status.in_reply_to_status_id = status.in_reply_to_status_id_str;
-    
     // Check if we are working on a DM. If yes, modify the structure to be more tweet-like.
     isDM = false;
     if (status.direct_message) {
@@ -754,6 +748,14 @@ function getStatusHTML(status) {
     if (status.recipient) {
         isDM = true;
     }
+    
+    // Preparations: Replace the (too large for JS) numeric IDs with the string-based IDs
+    if (status.id_str)
+        status.id = status.id_str;
+    if (status.in_reply_to_status_id_str)
+        status.in_reply_to_status_id = status.in_reply_to_status_id_str;
+    
+    
     if (!isDM && status.in_reply_to_status_id) {
         repliesData[status.id] = status.in_reply_to_status_id;
     }
