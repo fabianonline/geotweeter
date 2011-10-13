@@ -49,7 +49,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 10;
+var expected_settings_version = 11;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -833,7 +833,6 @@ function getStatusHTML(status) {
    if (check_highlight(temp_text))
     html += "highlight";
 
-
     html += '" id="id_' + status.id + '">';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
@@ -867,8 +866,13 @@ function getStatusHTML(status) {
      // Check if tweet contains blacklisted words
         if(check_blacklist(temp_text))
               return "";    
-        else		
-	html += temp_text;
+        else if(check_troll(temp_text,user)) //Check for trolling users
+		return "";		
+	    html += temp_text;
+	
+	
+
+		
 
 	
 
@@ -1592,7 +1596,20 @@ function check_muted(user)
             return true;
     }
     return false;
+}
 
+function check_troll(text,user)
+{
+if (settings.troll.length == settings.trigger.length)
+{
+
+	for (var i=0; i<settings.troll.length; i++)
+		{
+			if(user == settings.troll[i]   && (text.indexOf(settings.trigger[i]) != -1))
+					return true;
+		}
+		return false;
+}
 }
 
 /** Adds a term to the list of usable autocompletions. */
