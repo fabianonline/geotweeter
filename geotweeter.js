@@ -902,10 +902,15 @@ function getStatusHTML(status) {
     html += '</div>';
 
     html += '<div class="links">';
-    if (isDM)
+    if (isDM) {
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
-    else
-        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
+    } else {
+        var recipient = user;
+        if (user==this_users_name && status.entities.user_mentions) {
+            recipient = status.entities.user_mentions[0].screen_name;
+        }
+        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + recipient + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
+    }
     if (!isDM)
         html += '<a href="#" onClick="retweet(\'' + status.id + '\'); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
     if (!isDM)
@@ -1399,8 +1404,9 @@ function replyToTweet(tweet_id, user, isDM) {
         reply_to_user = user;
         reply_to_id = tweet_id;
         var elm = $('#id_' + tweet_id);
-        if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart) {
-            $('#text').val('@' + user + ' ' + elm.data('mentions') + ' ');
+        if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart!=undefined) {
+            var text = '@' + user + ' ' + elm.data('mentions') + ' ';
+            $('#text').val(text.trim());
             $('#text')[0].selectionStart = user.length+2;
             $('#text')[0].selectionEnd = user.length+2+elm.data('mentions').length+1;
         } else {
