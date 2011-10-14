@@ -833,7 +833,16 @@ function getStatusHTML(status) {
    if (check_highlight(temp_text))
     html += "highlight";
 
-    html += '" id="id_' + status.id + '">';
+    html += '" ';
+    html += 'id="id_' + status.id + '" ';
+    html += 'data-sender="' + user_object.screen_name + '" ';
+    var mentions = "";
+    if (status.entities) for (var i in status.entities.user_mentions) {
+        if (status.entities.user_mentions[i].screen_name == this_users_name) continue;
+        mentions += "@" + status.entities.user_mentions[i].screen_name + " ";
+    }
+    html += 'data-mentions="' + mentions.trim() + '" ';
+    html += '>';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 
@@ -1389,7 +1398,16 @@ function replyToTweet(tweet_id, user, isDM) {
     } else {
         reply_to_user = user;
         reply_to_id = tweet_id;
-        $('#text').val('@' + user + ' ').focus();
+        var elm = $('#id_' + tweet_id);
+        if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart) {
+            $('#text').val('@' + user + ' ' + elm.data('mentions') + ' ');
+            $('#text')[0].selectionStart = user.length+2;
+            $('#text')[0].selectionEnd = user.length+2+elm.data('mentions').length+1;
+        } else {
+            $('#text').val('@' + user + ' ');
+        }
+        $('#text').focus();
+        //$('#text').val('@' + user + ' ').focus();
         $('#reply_to_id').val(tweet_id);
     }
 
