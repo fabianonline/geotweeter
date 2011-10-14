@@ -1622,7 +1622,7 @@ function addToAutoCompletion(term) {
 
 /** Adds an entry to the debug log if enabled in settings.js. */
 function log_message(place, s) {
-    if (settings.debug && console) {
+    if (settings.debug && console && console.log) {
         var str = "[ " + place;
         for(var i=0; i<(20-place.length); i++) str += " ";
         str += " ] " + s;
