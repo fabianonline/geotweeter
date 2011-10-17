@@ -838,8 +838,9 @@ function getStatusHTML(status) {
     html += 'data-sender="' + user_object.screen_name + '" ';
     var mentions = "";
     if (status.entities) for (var i in status.entities.user_mentions) {
-        if (status.entities.user_mentions[i].screen_name == this_users_name) continue;
-        mentions += "@" + status.entities.user_mentions[i].screen_name + " ";
+        var mention = status.entities.user_mentions[i].screen_name
+        if (mention == this_users_name) continue;
+        mentions += mention + " ";
     }
     html += 'data-mentions="' + mentions.trim() + '" ';
     html += '>';
@@ -906,7 +907,7 @@ function getStatusHTML(status) {
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     } else {
         var recipient = user;
-        if (user==this_users_name && status.entities.user_mentions) {
+        if (user==this_users_name && status.entities.user_mentions && status.entities.user_mentions.length>0) {
             recipient = status.entities.user_mentions[0].screen_name;
         }
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + recipient + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
@@ -1405,10 +1406,17 @@ function replyToTweet(tweet_id, user, isDM) {
         reply_to_id = tweet_id;
         var elm = $('#id_' + tweet_id);
         if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart!=undefined) {
-            var text = '@' + user + ' ' + elm.data('mentions') + ' ';
-            $('#text').val(text.trim());
+            var all_mentions = elm.data('mentions').split(' ');
+            var filtered_mentions = new Array();
+            for(var i in all_mentions) {
+                if (all_mentions[i] == user) continue;
+                filtered_mentions.push('@' + all_mentions[i]);
+            }
+            var mentions = filtered_mentions.join(' ');
+            var text = '@' + user + ' ' + mentions + ' ';
+            $('#text').val(text.trim() + ' ');
             $('#text')[0].selectionStart = user.length+2;
-            $('#text')[0].selectionEnd = user.length+2+elm.data('mentions').length+1;
+            $('#text')[0].selectionEnd = user.length+2+mentions.length+1;
         } else {
             $('#text').val('@' + user + ' ');
         }
