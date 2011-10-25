@@ -898,8 +898,10 @@ function getStatusHTML(status) {
     if(status.in_reply_to_status_id) {
         html += '<a href="#" onClick="show_replies(\'' + status.id + '\'); return false;">in reply to...</a> ';
     }
-    if (status.source)
-        html += 'from ' + status.source + ' ';
+    if (status.source) {
+        var obj = $(status.source);
+        html += 'from <a href="' + obj.attr('href') + '" target="_blank">' + obj.html() + '</a> ';
+    }
     html += '</div>';
 
     html += '<div class="links">';
