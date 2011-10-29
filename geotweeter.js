@@ -900,7 +900,11 @@ function getStatusHTML(status) {
     }
     if (status.source) {
         var obj = $(status.source);
-        html += 'from <a href="' + obj.attr('href') + '" target="_blank">' + obj.html() + '</a> ';
+        if (obj.attr('href')) {
+            html += 'from <a href="' + obj.attr('href') + '" target="_blank">' + obj.html() + '</a> ';
+        } else {
+            html += 'from ' + status.source + ' ';
+        }
     }
     html += '</div>';
 
