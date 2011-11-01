@@ -234,7 +234,7 @@ function getFollowers() {
         silent: true,
         method: "GET",
         success: function(element, data) {
-            followers_ids = data;
+            followers_ids = data.ids;
         }
     });
 }
