@@ -870,6 +870,9 @@ function getStatusHTML(status) {
     var extra="";
     if (user_object.is_receiver) extra = "to ";
     html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
+    if (user_object.protected) {
+        html += '🔒';
+    }
     html += '</span> ';
     html += '<span class="text">';
     
