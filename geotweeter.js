@@ -1580,19 +1580,19 @@ function markAllRead() {
 /** Scrolls to the last tweet written by the current user. */
 function goToMyLastTweet() {
     if (mylasttweetid > 0)
-        scrollTo(mylasttweetid);
+        scroll_to(mylasttweetid);
 }
 
 /** Scrolls to a tweet specified by it's id. */
-function scrollTo(tweet_id) {
+function scroll_to(tweet_id) {
     // Jump to the tweet's anchor
     self.location = '#status_' + tweet_id;
 
     // The selected tweet is now behind the form-overlay, so we need to scroll back up a little bit.
     // The padding-top of the content-area equals the height of the overlay, so we use that.
-    var top = $("html").scrollTop();
+    var top = $(document).scrollTop();
     var topheight = parseInt($('#content').css("padding-top"));
-    $("html").scrollTop(top - topheight);
+    $(document).scrollTop(top - topheight);
 }
 
 /** Sets a status message. The colors are actually class names. */
@@ -1602,7 +1602,7 @@ function setStatus(message, color) {
 
 /** Scrolls down to the last read tweet. */
 function goToLastRead(){
-    scrollTo(maxreadid);
+    scroll_to(maxreadid);
 }
 
 /** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
