@@ -843,6 +843,7 @@ function getStatusHTML(status) {
         mentions += mention + " ";
     }
     html += 'data-mentions="' + mentions.trim() + '" ';
+    html += 'data-id="' + status.id + '" ';
     html += '>';
     html += '<a name="status_' + status.id + '"></a>';
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
@@ -1553,10 +1554,27 @@ function setMaxReadID(id) {
 
 /** Sets the max read ID by using setmaxReadID and marks all tweets as read. */
 function markAllRead() {
-    if (maxknownid > 0)
-        setMaxReadID(maxknownid);
-    maxreadid = maxknownid;
-    $('.new').removeClass('new');
+    // get the id of the first visible tweet
+    var elms = $('.tweet.new');
+    var id = null;
+    var offset = $(document).scrollTop() + $('#top').height();
+    for (var i=0; i<elms.length; i++) {
+        log_message('markAllRead', id);
+        if ($(elms[i]).offset().top >= offset) {
+            id = $(elms[i]).attr('data-id');
+            break;
+        }
+    }
+    if (id && biggerThan(id,maxreadid)) {
+        setMaxReadID(id);
+        maxreadid = id;
+        var elm = $('.new');
+        for(var i=0; i<elm.length; i++) {
+            if (!biggerThan($(elm[i]).attr('data-id'), id)) {
+                $(elm[i]).removeClass('new');
+            }
+        }
+    }
 }
 
 /** Scrolls to the last tweet written by the current user. */
