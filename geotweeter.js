@@ -192,7 +192,7 @@ function checkSettings() {
 
 /** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
-    for(var i=0; i<settings.twitter.length; i++) {
+    for(var i=0; i<settings.twitter.users.length; i++) {
         
         simple_twitter_request('account/verify_credentials.json', {
             method: "GET",
@@ -1335,6 +1335,7 @@ function report_spam(sender_name) {
    Expects following parameters:
      * URL of the Twitter API endpoint (the part after https://api.twitter.com/1/)
      * Hash containing following options:
+       * account - ID of the account to use. If unset, current_account (or, as fallback, account 0) will be used
        * method - "POST"
        * parameters - Hash with parameters for the request
        * silent - Don't show status
@@ -1353,14 +1354,20 @@ function simple_twitter_request(url, options) {
     }
     
     var account = options.account || current_account || 0;
+    var keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret,
+        token: settings.twitter.users[account].token,
+        tokenSecret: settings.twitter.users[account].tokenSecret
+    }
 
     var verbose = !(!!options.silent && true);
 
     if (verbose) $('#form').fadeTo(500, 0).delay(500);
 
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter[account]);
-    OAuth.SignatureMethod.sign(message, settings.twitter[account]);
+    OAuth.completeRequest(message, keys);
+    OAuth.SignatureMethod.sign(message, keys);
     var url = 'proxy/api/' + url;
     var data = OAuth.formEncode(message.parameters);
 
