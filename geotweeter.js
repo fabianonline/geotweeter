@@ -130,7 +130,9 @@ function start() {
     getFollowers();
 
     maxreadid = getMaxReadID();
-    fillList(); // after fillList completed, it will automatically start startRequest to start listening to the stream
+    for(var i=0; i<settings.twitter.users.length; i++){
+        fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
+    }
 
     updateCounter();
     update_form_display();
@@ -214,6 +216,8 @@ function validateCredentials() {
             }
         });
     }
+    // select first account at startup
+    change_account(0);
 }
 
 /** Get twitter configuration */
@@ -317,7 +321,7 @@ function get_time_since_last_tweet() {
  * Queries the home_timeline and then mentions, since home_timeline doesn't contain mentions from
  * people you don't follow.
  */
-function fillList() {
+function fillList(account_id) {
     log_message("fillList", "Starting");
     setStatus("Filling List...", "yellow");
     
@@ -325,23 +329,26 @@ function fillList() {
     threadsErrored = 0;
     temp_responses = new Array();
     
-    var after_run = function() {
+    var after_run = function(account_id) {
         if (threadsErrored==0) {
-            // everything was successfull. Great. Connect to the stream.
-            startRequest();
+            // everything was successfull. Great.
+            // Connect to the stream, if wanted.
+            if (settings.twitter.users[account_id].stream) {
+                startRequest(account_id);
+            }
         } else {
             // oops... trigger the restart mechanism
             var html = '<div class="status">Retrying in 30 seconds...</div>';
-            addHTML(html);
+            addHTML(html, account_id);
             window.setTimeout('fillList()', 30000);
         }
     }
     
-    var success = function(element, data) {
+    var success = function(element, data, req, additional_info) {
         temp_responses.push(data);
         threadsRunning-=1;
         if (threadsRunning==0) {
-            after_run();
+            after_run(additional_info.account_id);
         }
     }
     
@@ -355,7 +362,7 @@ function fillList() {
             html += 'Error ' + request.status + ' (' + exception + ')';
         }
         html += "</div>";
-        addHTML(html);
+        addHTML(html, account_id);
         if (threadsRunning==0) {
             after_run();
         }
@@ -371,7 +378,8 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        additional_info: {name: 'home_timeline 1'},
+        account: account_id,
+        additional_info: {name: 'home_timeline 1', account_id: account_id},
         success: success,
         error: error
     });
@@ -383,7 +391,8 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        additional_info: {name: 'mentions'},
+        account: account_id,
+        additional_info: {name: 'mentions', account_id: account_id},
         success: success,
         error: error
     });
@@ -396,7 +405,8 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        additional_info: {name: 'home_timeline 2'},
+        account: account_id,
+        additional_info: {name: 'home_timeline 2', account_id: account_id},
         success: success,
         error: error
     });
@@ -410,7 +420,8 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        additional_info: {name: 'received dms'},
+        account: account_id,
+        additional_info: {name: 'received dms', account_id: account_id},
         success: success,
         error: error
     });
@@ -422,7 +433,8 @@ function fillList() {
         async: true,
         silent: true,
         dataType: "text",
-        additional_info: {name: 'sent dms'},
+        account: account_id,
+        additional_info: {name: 'sent dms', account_id: account_id},
         success: success,
         error: error
     });
@@ -643,7 +655,10 @@ function display_event(element, return_html) {
  * Note: Adding the HTML to a new <div> and then append the <div> to the DOM is MUCH faster than
  * adding the HTML directly to the DOM.
  */
-function addHTML(text) {
+function addHTML(text, account_id) {
+    if (!account_id) {
+        account_id = current_account;
+    }
     if(text == "") return;
 
     var elm = document.createElement("div");
@@ -675,7 +690,7 @@ function addHTML(text) {
             delay: 750
         });
     }
-    document.getElementById('content').insertBefore(elm, document.getElementById('content').firstChild);
+    document.getElementById('content_' + account_id).insertBefore(elm, document.getElementById('content_' + account_id).firstChild);
 }
 
 
