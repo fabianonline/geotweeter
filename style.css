@@ -23,7 +23,7 @@ textarea, input, select {
     width: 100%;
 }
 
-#content {
+.content {
     padding-top: 172px;
 }
 
@@ -245,6 +245,11 @@ textarea, input, select {
 
 .tooltip_info {
     display: none;
+}
+
+#users img {
+    width: 16px;
+    height: 16px;
 }
 
 #tooltip {

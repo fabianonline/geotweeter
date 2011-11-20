@@ -49,7 +49,7 @@ var followers_ids = new Array();
 var autocompletes = new Array();
 
 /** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 11;
+var expected_settings_version = 12;
 
 /** Time of the last press of Enter. Used for double-Enter-recognition. */
 var timeOfLastEnter = 0;
@@ -59,6 +59,8 @@ var textBeforeEnter = "";
 
 /** Are we sending a DM? Who's the receiver? */
 var sending_dm_to = null;
+
+var current_account = null;
 
 /** Lengths of automatically shorted t.co-links */
 var short_url_length = null;
@@ -190,20 +192,28 @@ function checkSettings() {
 
 /** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
 function validateCredentials() {
-    setStatus("Validating credentials...", "yellow");
-
-    simple_twitter_request('account/verify_credentials.json', {
-        method: "GET",
-        silent: true,
-        async: false,
-        success: function(element, data) {
-            if (data.screen_name) {
-                this_users_name = data.screen_name;
-            } else {
-                addHTML("Unknown error in validateCredentials. Exiting. " + data);
+    for(var i=0; i<settings.twitter.length; i++) {
+        
+        simple_twitter_request('account/verify_credentials.json', {
+            method: "GET",
+            silent: true,
+            async: false,
+            account: i,
+            success: function(element, data) {
+                if (data.screen_name) {
+                    this_users_name = data.screen_name;
+                    // Copy geotweeter content area
+                    var new_area = $('#content_template').clone();
+                    new_area.attr('id', 'content_' + i);
+                    $('body').append(new_area);
+                    
+                    $('#users').append('<div class="user" id="user_' + i + '"><a href="#" onClick="change_account(' + i + '); return false;"><img src="' + data.profile_image_url + '" /></a></div>');
+                } else {
+                    addHTML("Unknown error in validateCredentials. Exiting. " + data);
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 /** Get twitter configuration */
@@ -237,6 +247,15 @@ function getFollowers() {
             followers_ids = data.ids;
         }
     });
+}
+
+/** Changes the currently used account to the one specified. */
+function change_account(to_id) {
+    $('.content').hide();
+    $('#content_' + to_id).show();
+    $('#users .user').removeClass('active');
+    $('#user_' + to_id).addClass('active');
+    current_account = to_id;
 }
 
 /**
@@ -1332,14 +1351,16 @@ function simple_twitter_request(url, options) {
         method: options.method || "POST",
         parameters: options.parameters
     }
+    
+    var account = options.account || current_account || 0;
 
     var verbose = !(!!options.silent && true);
 
     if (verbose) $('#form').fadeTo(500, 0).delay(500);
 
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
+    OAuth.completeRequest(message, settings.twitter[account]);
+    OAuth.SignatureMethod.sign(message, settings.twitter[account]);
     var url = 'proxy/api/' + url;
     var data = OAuth.formEncode(message.parameters);
 
