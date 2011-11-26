@@ -599,7 +599,7 @@ function parseData(string_data, account_id) {
         }
         // Filter duplicate tweets
         if (this_id != last_id) {
-            html += display_event(element, true);
+            html += display_event(element, true, account_id);
         }
         last_id = this_id;
     }
@@ -610,28 +610,28 @@ function parseData(string_data, account_id) {
  * Takes a single Twitter event and gets it's HTML code.
  * Optionally, the code is returned instead of adding it to the DOM.
  */
-function display_event(element, return_html) {
+function display_event(element, return_html, account_id) {
     var html = "";
 
     if (element==null)
         return ""; // Fix for NULLs in stream
 
     if (element.text) {
-        html = getStatusHTML(element);
+        html = getStatusHTML(element, account_id);
     } else if (element.friends) {
         twitter_friends = element.friends;
     } else if ("delete" in element) {
         // Deletion-Request. Do nothing ,-)
     } else if (element.direct_message) {
-        html = getStatusHTML(element);
+        html = getStatusHTML(element, account_id);
     } else if (element.event && element.event=="follow") {
-        html = getFollowEventHTML(element);
+        html = getFollowEventHTML(element, account_id);
     } else if (element.event && element.event=="favorite") {
-        html = getFavoriteEventHTML(element);
+        html = getFavoriteEventHTML(element, account_id);
     } else if (element.event && element.event=="list_member_added") {
-        html = getListMemberAddedEventHTML(element);
+        html = getListMemberAddedEventHTML(element, account_id);
     } else if (element.event && element.event=="list_member_removed") {
-        html = getListMemberRemovedEventHTML(element);
+        html = getListMemberRemovedEventHTML(element, account_id);
     } else if (element.event && element.event=="block") {
         // You blocked someone. Do nothing.
     } else if (element.event && element.event=="user_update") {
@@ -645,7 +645,7 @@ function display_event(element, return_html) {
     if (return_html) {
         return html;
     }
-    addHTML(html);
+    addHTML(html, account_id);
 }
 
 /**
@@ -721,8 +721,8 @@ function getEventHTML(event, text) {
 }
 
 /** Creates html for a new follower-event and adds it to the DOM via addEvent(). */
-function getFollowEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return "";
+function getFollowEventHTML(event, account_id) {
+    if (event.source.screen_name==this_users_name[account_id]) return "";
     var html = "";
     html += 'Neuer Follower: ';
     html += '<span class="poster">';
@@ -733,8 +733,8 @@ function getFollowEventHTML(event) {
 }
 
 /** Creates html for a favorite added-event and adds it to the DOM via addEvent(). */
-function getFavoriteEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return "";
+function getFavoriteEventHTML(event, account_id) {
+    if (event.source.screen_name==this_users_name[account_id]) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
@@ -745,8 +745,8 @@ function getFavoriteEventHTML(event) {
 }
 
 /** Creates html for an added to list-event and adds it to the DOM via addEvent(). */
-function getListMemberAddedEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return "";
+function getListMemberAddedEventHTML(event, account_id) {
+    if (event.source.screen_name==this_users_name[account_id]) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
@@ -758,8 +758,8 @@ function getListMemberAddedEventHTML(event) {
 }
 
 /** Creates html for a removed from list-event and adds it to the DOM via addEvent(). */
-function getListMemberRemovedEventHTML(event) {
-    if (event.source.screen_name==this_users_name) return "";
+function getListMemberRemovedEventHTML(event, account_id) {
+    if (event.source.screen_name==this_users_name[account_id]) return "";
     var html = "";
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
@@ -771,7 +771,7 @@ function getListMemberRemovedEventHTML(event) {
 
 
 /** Creates html for a normal tweet, RT or DM. */
-function getStatusHTML(status) {
+function getStatusHTML(status, account_id) {
     // Check if we are working on a DM. If yes, modify the structure to be more tweet-like.
     isDM = false;
     if (status.direct_message) {
@@ -807,7 +807,7 @@ function getStatusHTML(status) {
     if (status.retweeted_status)
         user_object = status.retweeted_status.user;
     else if (isDM)
-        if (status.sender.screen_name == this_users_name) {
+        if (status.sender.screen_name == this_users_name[account_id]) {
             user_object = status.recipient;
             user_object.is_receiver = true;
         } else {
@@ -833,7 +833,7 @@ function getStatusHTML(status) {
     if(isDM && biggerThan(status.id, maxknowndmid))
         maxknowndmid = status.id;
 
-    if (!isDM && user==this_users_name && biggerThan(status.id, mylasttweetid))
+    if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid))
         mylasttweetid = status.id;
 
     var date = new Date(status.created_at);
@@ -850,7 +850,7 @@ function getStatusHTML(status) {
     else
         html += 'dm ';
     html += 'by_' + user + ' ';
-    if (user == this_users_name) html += "by_this_user ";
+    if (user == this_users_name[account_id]) html += "by_this_user ";
     if (!isDM && biggerThan(status.id, maxreadid))
         html += 'new ';
     var mentions = status.text.match(regexp_user);
@@ -858,7 +858,7 @@ function getStatusHTML(status) {
         for (var i=0; i<mentions.length; i++) {
             mention = String(mentions[i]).trim().substr(1);
             html += 'mentions_' + mention + ' ';
-            if (mention == this_users_name) html += "mentions_this_user ";
+            if (mention == this_users_name[account_id]) html += "mentions_this_user ";
         }
     }
     
@@ -872,7 +872,7 @@ function getStatusHTML(status) {
     var mentions = "";
     if (status.entities) for (var i in status.entities.user_mentions) {
         var mention = status.entities.user_mentions[i].screen_name
-        if (mention == this_users_name) continue;
+        if (mention == this_users_name[account_id]) continue;
         mentions += mention + " ";
     }
     html += 'data-mentions="' + mentions.trim() + '" ';
@@ -950,7 +950,7 @@ function getStatusHTML(status) {
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
     } else {
         var recipient = user;
-        if (user==this_users_name && status.entities.user_mentions && status.entities.user_mentions.length>0) {
+        if (user==this_users_name[account_id] && status.entities.user_mentions && status.entities.user_mentions.length>0) {
             recipient = status.entities.user_mentions[0].screen_name;
         }
         html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + recipient + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
@@ -965,7 +965,7 @@ function getStatusHTML(status) {
         html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a>';
         html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250" target="_blank"><img src="icons/world_add.png" title="All Geotags" /></a>';
     }
-    if ( user==this_users_name) {
+    if ( user==this_users_name[account_id]) {
         html += '<a href="#" onClick="delete_tweet(\'' + status.id + '\'); return false;"><img src="icons/cross.png" title="Delete Tweet" /></a>';
     } else {
         html += '<a href="#" onClick="report_spam(\'' + user + '\'); return false;"><img src="icons/exclamation.png" title="Block and report as spam" /></a>';
