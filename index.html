@@ -23,13 +23,13 @@
 
 <body>
 <div id="top">
-<div id="status"></div>
 <div id="infoarea">
     <h3 id="infoarea_title"></h3>
     <div><a href="#" onClick="infoarea_close(); return false;">Close</a></div>
     <div id="infoarea_content"></div>
     <div><a href="#" onClick="infoarea_close(); return false;">Close</a></div>
 </div>
+<div id="users"></div>
 <div id="buttonbar">
     <a href="#" onClick="location.href='#'; location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
     <a href="#" onClick="markAllRead(); return false;"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
@@ -74,7 +74,6 @@
 </div>
 </div> <!-- #top -->
 
-<div id="content"></div>
-<!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
+<div id="content_template" class="content" style="display: none;"></div>
 </body>
 </html>
