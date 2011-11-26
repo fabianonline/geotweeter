@@ -222,7 +222,7 @@ function validateCredentials() {
                     new_area.attr('id', 'content_' + i);
                     $('body').append(new_area);
                     
-                    $('#users').append('<div class="user" id="user_' + i + '"><a href="#" onClick="change_account(' + i + '); return false;"><img src="' + data.profile_image_url + '" /></a></div>');
+                    $('#users').append('<div class="user" id="user_' + i + '"><img src="icons/spinner.gif" class="spinner" /><a href="#" onClick="change_account(' + i + '); return false;"><img src="' + data.profile_image_url + '" /> <span class="count"></span></a></div>');
                 } else {
                     addHTML("Unknown error in validateCredentials. Exiting. " + data);
                 }
@@ -337,12 +337,16 @@ function get_time_since_last_tweet(account_id) {
 function fillList(account_id) {
     log_message("fillList", "Starting");
     setStatus("Filling List...", "yellow");
+    $('#user_'+account_id+' a').hide();
+    $('#user_'+account_id+' .spinner').show();
     
     threadsRunning[account_id] = 5;
     threadsErrored[account_id] = 0;
     temp_responses[account_id] = new Array();
     
     var after_run = function(account_id) {
+        $('#user_'+account_id+' a').show();
+        $('#user_'+account_id+' .spinner').hide();
         if (threadsErrored[account_id]==0) {
             // everything was successfull. Great.
             startRequest(account_id);

@@ -252,6 +252,10 @@ textarea, input, select {
     height: 16px;
 }
 
+#users .spinner {
+    display: none;
+}
+
 #users .user {
     display: inline-block;
     padding: 1px;
