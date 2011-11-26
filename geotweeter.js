@@ -1181,6 +1181,13 @@ function _sendTweet(text, async) {
     var content_type = 'application/x-www-form-urlencoded';
 
     $('#form').fadeTo(500, 0).delay(500);
+    
+    var keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret,
+        token: settings.twitter.users[current_account].token,
+        tokenSecret: settings.twitter.users[current_account].tokenSecret
+    };
 
     if ($('#file')[0].files[0] && !sending_dm_to) {
         // Es ist ein Bild vorhanden, das hochgeladen werden soll.
@@ -1189,10 +1196,14 @@ function _sendTweet(text, async) {
             action: "https://upload.twitter.com/1/statuses/update_with_media.json",
             method: "POST"
         }
+        
+        var twitter = {
+            
+        };
 
         OAuth.setTimestampAndNonce(message);
-        OAuth.completeRequest(message, settings.twitter);
-        OAuth.SignatureMethod.sign(message, settings.twitter);
+        OAuth.completeRequest(message, keys);
+        OAuth.SignatureMethod.sign(message, keys);
 
         url = 'proxy/upload/statuses/update_with_media.json?' + OAuth.formEncode(message.parameters);
         content_type = false;
@@ -1221,8 +1232,8 @@ function _sendTweet(text, async) {
         }
 
         OAuth.setTimestampAndNonce(message);
-        OAuth.completeRequest(message, settings.twitter);
-        OAuth.SignatureMethod.sign(message, settings.twitter);
+        OAuth.completeRequest(message, keys);
+        OAuth.SignatureMethod.sign(message, keys);
 
         data = OAuth.formEncode(message.parameters);
     }
