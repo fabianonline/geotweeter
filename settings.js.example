@@ -1,14 +1,23 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 11,
+    version: 12,
 
     // Twitter Access Keys
     twitter: {
-        token: "",
-        tokenSecret: "",
         consumerKey: "",
-        consumerSecret: ""
+        consumerSecret: "",
+        users: [
+            { // user 1
+                token: "",
+                tokenSecret: "",
+                stream: true
+            },
+            { // user 2
+                token: "",
+                tokenSecret: ""
+            }
+        ]
     },
     
     //Array for blacklisted words
