@@ -221,8 +221,28 @@ function validateCredentials() {
                     var new_area = $('#content_template').clone();
                     new_area.attr('id', 'content_' + i);
                     $('body').append(new_area);
-                    
-                    $('#users').append('<div class="user" id="user_' + i + '"><img src="icons/spinner.gif" class="spinner" /><a href="#" onClick="change_account(' + i + '); return false;"><img src="' + data.profile_image_url + '" /> <span class="count"></span></a></div>');
+                    var html = '';
+                    html+= '<div class="user" id="user_' + i + '" data-username="' + data.screen_name + '" data-stream="' + !!settings.twitter.users[i].stream + '">';
+                    html+= '<a href="#" onClick="change_account(' + i + '); return false;">';
+                    html+= '<img src="' + data.profile_image_url + '" /> ';
+                    html+= '<span class="count"></span>';
+                    html+= '</a>';
+                    html+= '</div>';
+                    $('#users').append(html);
+                            
+                    $('#user_'+i).tooltip({
+                        bodyHandler: function() {
+                            var html = '<strong>@' + $(this).data('username') + '</strong>';
+                            if ($(this).data('status').length>0) {
+                                html += '<br />';
+                                html += $(this).data('status');
+                            }
+                            return html;
+                        },
+                        track: true,
+                        showURL: false,
+                        left: 5
+                    });
                 } else {
                     addHTML("Unknown error in validateCredentials. Exiting. " + data);
                 }
@@ -235,8 +255,6 @@ function validateCredentials() {
 
 /** Get twitter configuration */
 function get_twitter_configuration() {
-    setStatus("Getting Twitter Configuration...", "yellow");
-
     simple_twitter_request('help/configuration.json', {
         silent: true,
         async: false,
@@ -336,17 +354,13 @@ function get_time_since_last_tweet(account_id) {
  */
 function fillList(account_id) {
     log_message("fillList", "Starting");
-    setStatus("Filling List...", "yellow");
-    $('#user_'+account_id+' a').hide();
-    $('#user_'+account_id+' .spinner').show();
+    setStatus("Filling List...", "yellow", account_id);
     
     threadsRunning[account_id] = 5;
     threadsErrored[account_id] = 0;
     temp_responses[account_id] = new Array();
     
     var after_run = function(account_id) {
-        $('#user_'+account_id+' a').show();
-        $('#user_'+account_id+' .spinner').hide();
         if (threadsErrored[account_id]==0) {
             // everything was successfull. Great.
             startRequest(account_id);
@@ -357,6 +371,7 @@ function fillList(account_id) {
             window.setTimeout('fillList()', 30000);
         }
         update_user_counter(account_id);
+        setStatus("", null, account_id);
     }
     
     var success = function(element, data, req, additional_info) {
@@ -481,7 +496,7 @@ function startRequest(account_id) {
     OAuth.SignatureMethod.sign(message, keys);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
 
-    setStatus("Connecting to stream...", "orange");
+    setStatus("Connecting to stream...", "orange", account_id);
 
     disconnectBecauseOfTimeout[account_id] = false;
     
@@ -505,7 +520,7 @@ function parseResponse(account_id) {
     if (this.readyState == 1) {
         connectionStartedAt[acct] = new Date();
     } else if (this.readyState == 4) {
-        setStatus("Disconnected.", "red");
+        setStatus("Disconnected.", "red", account_id);
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt[acct].getTime() > 10000)
             delay = settings.timings.mindelay;
@@ -523,7 +538,7 @@ function parseResponse(account_id) {
         if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
     } else if (this.readyState == 3) {
-        setStatus("Connected to stream.", "green");
+        setStatus("Connected to stream.", "green", acct);
         lastDataReceivedAt[acct] = new Date();
     }
     if (this) {
@@ -1678,8 +1693,9 @@ function scroll_to(tweet_id) {
 }
 
 /** Sets a status message. The colors are actually class names. */
-function setStatus(message, color) {
-    $("#status").text(message).removeClass().addClass(color);
+function setStatus(message, color, account_id) {
+    $('#user_'+account_id).removeClass('red green yellow orange').addClass(color);
+    $('#user_'+account_id).data('status', message);
 }
 
 /** Scrolls down to the last read tweet. */

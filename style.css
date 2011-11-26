@@ -218,22 +218,6 @@ textarea, input, select {
     color: #333;
 }
 
-#status.green {
-    background-color: #0f0;
-}
-
-#status.orange {
-    background-color: #fc0;
-}
-
-#status.yellow {
-    background-color: #ff0;
-}
-
-#status.red {
-    background-color: #f00;
-}
-
 #infoarea {
     display: none;
     z-index: 105;
@@ -252,31 +236,43 @@ textarea, input, select {
     height: 16px;
 }
 
-#users .spinner {
-    display: none;
-}
-
 #users .user {
     display: inline-block;
     padding: 2px;
-    background-image: linear-gradient(top, #fff 70%, #aaa 100%);
-    background-image: -webkit-linear-gradient(top, #fff 70%, #aaa 100%);
-    background-image: -moz-linear-gradient(top, #fff 70%, #aaa 100%);
-    background-image: -o-linear-gradient(top, #fff 70%, #aaa 100%);
+    background-image: linear-gradient(top, rgba(255,255,255,0) 70%, #aaa 100%);
+    background-image: -webkit-linear-gradient(top, rgba(255,255,255,0) 70%, #aaa 100%);
+    background-image: -moz-linear-gradient(top, rgba(255,255,255,0) 70%, #aaa 100%);
+    background-image: -o-linear-gradient(top, rgba(255,255,255,0) 70%, #aaa 100%);
     margin: 0px 1px;
 }
 
 #users .user.active {
-    background-image: linear-gradient(top, #aaa 0%, #fff 30%);
-    background-image: -webkit-linear-gradient(top, #aaa 0%, #fff 30%);
-    background-image: -moz-linear-gradient(top, #aaa 0%, #fff 30%);
-    background-image: -o-linear-gradient(top, #aaa 0%, #fff 30%);
+    background-image: linear-gradient(top, #aaa 0%, rgba(255,255,255,0) 30%);
+    background-image: -webkit-linear-gradient(top, #aaa 0%, rgba(255,255,255,0) 30%);
+    background-image: -moz-linear-gradient(top, #aaa 0%, rgba(255,255,255,0) 30%);
+    background-image: -o-linear-gradient(top, #aaa 0%, rgba(255,255,255,0) 30%);
 }
 
 #users a {
     text-decoration: none !important;
     vertical-align: middle;
     color: #000;
+}
+
+#users .user.green {
+    background-color: #0f0;
+}
+
+#users .user.orange {
+    background-color: #fc0;
+}
+
+#users .user.yellow {
+    background-color: #ff0;
+}
+
+#users .user.red {
+    background-color: #f00;
 }
 
 #tooltip {
