@@ -16,15 +16,15 @@ var reply_to_user = null;
 var reply_to_id = null;
 
 /** ID of last "marked as read" tweet. Any tweet with an ID bigger than this is considered new. */
-var maxreadid = 0;
+var maxreadid = new Array();
 
 /** IDs of newest and oldest known tweets. */
-var maxknownid = {};
-var minknownid = {};
-var maxknowndmid = {};
+var maxknownid = new Array();
+var minknownid = new Array();
+var maxknowndmid = new Array();
 
 /** ID of the newest tweet belonging to "this" user. */
-var mylasttweetid = {};
+var mylasttweetid = new Array();
 
 /** delay to use the next time the stream gets disconnected. */
 var delay;
@@ -131,6 +131,7 @@ function start() {
 
     maxreadid = getMaxReadID();
     for(var i=0; i<settings.twitter.users.length; i++){
+        if (!maxreadid[i]) maxreadid[i]="0";
         fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
     }
 
@@ -409,7 +410,7 @@ function fillList(account_id) {
     });
     
     var parameters = {count: 100};
-    if (maxknowndmid!="0") parameters.since_id = maxknowndmid;
+    if (maxknowndmid[account_id] && maxknowndmid[account_id]!="0") parameters.since_id = maxknowndmid[account_id];
     log_message("fillList", "DMs...");
     var received_dms = simple_twitter_request('direct_messages.json', {
         method: "GET",
@@ -825,16 +826,16 @@ function getStatusHTML(status, account_id) {
 	
     addToAutoCompletion("@" + user);
 
-    if (!isDM && biggerThan(status.id, maxknownid))
-        maxknownid = status.id;
-    if (!isDM && (minknownid==0 || status.id < minknownid))
-        minknownid = status.id;
+    if (!isDM && biggerThan(status.id, maxknownid[account_id]))
+        maxknownid[account_id] = status.id;
+    if (!isDM && (minknownid[account_id]==0 || biggerThan(minknownid[account_id], status.id)))
+        minknownid[account_id] = status.id;
 
-    if(isDM && biggerThan(status.id, maxknowndmid))
-        maxknowndmid = status.id;
+    if(isDM && biggerThan(status.id, maxknowndmid[account_id]))
+        maxknowndmid[account_id] = status.id;
 
-    if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid))
-        mylasttweetid = status.id;
+    if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid[account_id]))
+        mylasttweetid[account_id] = status.id;
 
     var date = new Date(status.created_at);
     if (last_event_times.length==0 || date > last_event_times[0]) {
@@ -851,7 +852,7 @@ function getStatusHTML(status, account_id) {
         html += 'dm ';
     html += 'by_' + user + ' ';
     if (user == this_users_name[account_id]) html += "by_this_user ";
-    if (!isDM && biggerThan(status.id, maxreadid))
+    if (!isDM && biggerThan(status.id, maxreadid[account_id]))
         html += 'new ';
     var mentions = status.text.match(regexp_user);
     if (mentions) {
@@ -1585,17 +1586,18 @@ function getMaxReadID() {
         dataType: 'text'
     }).responseText;
     log_message("getMaxReadID", "result: " + value);
-    return value;
+    
+    return $.parseJSON(value);
 }
 
 /** Sets the max read ID on the server. */
-function setMaxReadID(id) {
+function setMaxReadID(id, account_id) {
     $.ajax({
         method: 'GET',
         url: settings.set_maxreadid_url || 'maxreadid/set.php',
         async: false,
         dataType: 'text',
-        data: {id: id},
+        data: {id: id, account_id: account_id},
         error: function(req) {
             var html = '<div class="status"><b>Fehler in setMaxReadID():</b><br />';
             html += 'Error ' + req.status + ' (' + req.responseText + ')';
@@ -1618,9 +1620,9 @@ function markAllRead() {
             break;
         }
     }
-    if (id && biggerThan(id,maxreadid)) {
-        setMaxReadID(id);
-        maxreadid = id;
+    if (id && biggerThan(id,maxreadid[current_account])) {
+        setMaxReadID(id, current_account);
+        maxreadid[current_account] = id;
         var elm = $('.new');
         for(var i=0; i<elm.length; i++) {
             if (!biggerThan($(elm[i]).attr('data-id'), id)) {
@@ -1632,8 +1634,8 @@ function markAllRead() {
 
 /** Scrolls to the last tweet written by the current user. */
 function goToMyLastTweet() {
-    if (mylasttweetid > 0)
-        scroll_to(mylasttweetid);
+    if (mylasttweetid[current_account] > 0)
+        scroll_to(mylasttweetid[current_account]);
 }
 
 /** Scrolls to a tweet specified by it's id. */
@@ -1655,7 +1657,7 @@ function setStatus(message, color) {
 
 /** Scrolls down to the last read tweet. */
 function goToLastRead(){
-    scroll_to(maxreadid);
+    scroll_to(maxreadid[current_account]);
 }
 
 /** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
