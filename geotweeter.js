@@ -362,8 +362,8 @@ function fillList(account_id) {
         }
         html += "</div>";
         addHTML(html, account_id);
-        if (threadsRunning==0) {
-            after_run();
+        if (threadsRunning[additional_info.account_id]==0) {
+            after_run(additional_info.account_id);
         }
     }
 
@@ -1675,8 +1675,8 @@ function checkEnter(event) {
 
 /** Compares two number-strings. True, if a is bigger than b. Else returns false. */
 function biggerThan(a, b) {
-    var l1 = a.length;
-    var l2 = b.length;
+    var l1 = a? a.length : 0;
+    var l2 = b? b.length : 0;
     if (l1>l2) return true;
     if (l1<l2) return false;
     return a>b;
