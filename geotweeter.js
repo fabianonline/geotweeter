@@ -3,13 +3,16 @@
 /****************************************/
 
 /** Keeps track of how much of the server stream has already been processed. */
-var responseOffset = 0;
+var responseOffset = new Array();
+
+/** Request object containing the Streams. */
+var req = new Array();
 
 /** Contains "new" parts of the stream for processing. */
-var buffer = "";
+var buffer = new Array();
 
 /** isProcessing is true while parseData is running. */
-var isProcessing = false;
+var isProcessing = new Array();
 
 /** Keeps track of a user and his tweet's id if we're replying to a tweet. */
 var reply_to_user = null;
@@ -31,10 +34,10 @@ var delay;
 
 /** Time the connection to the streaming API was established / got the last data. */
 var connectionStartedAt = new Date();
-var lastDataReceivedAt = null;
+var lastDataReceivedAt = new Array();
 
 /** true, if the streaming connection was terminated because of a timeout. */
-var disconnectBecauseOfTimeout = false;
+var disconnectBecauseOfTimeout = new Array();
 
 /** Keeps track of all tweets being replied to. */
 var repliesData = new Array();
@@ -132,8 +135,17 @@ function start() {
     maxreadid = getMaxReadID();
     for(var i=0; i<settings.twitter.users.length; i++){
         if (!maxreadid[i]) maxreadid[i]="0";
-        if (!last_event_times[i]) last_event_times[i]=new Array();
+        last_event_times[i]=new Array();
+        responseOffset[i] = 0;
+        buffer[i] = "";
+        isProcessing[i] = false;
         fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
+        if (settings.twitter.users[i].stream) {
+            window.setInterval("checkForTimeout(" + i + ")", 30000);
+            if (window.opera) window.setInterval("parseResponse(" + i + ")", 5000);
+        } else {
+            window.setInterval("fillList(" + i + ")", 300000);
+        }
     }
 
     updateCounter();
@@ -161,8 +173,7 @@ function start() {
         }
     });
 
-    window.setInterval("checkForTimeout()", 30000);
-    if (window.opera) window.setInterval("parseResponse()", 5000);
+    
 }
 
 /** Checks the selected file for compatibility with twitter. That is
@@ -271,21 +282,21 @@ function change_account(to_id) {
  *
  * This code also checks for long pauses within the stream and restarts the geotweeter if necessary.
  */
-function checkForTimeout() {
+function checkForTimeout(account_id) {
     var jetzt = new Date();
-    if (lastDataReceivedAt && jetzt.getTime() - lastDataReceivedAt.getTime() > 30000) {
-        log_message("checkForTimeout", "Timeout: No data received for the last " + (jetzt.getTime() - lastDataReceivedAt.getTime())/1000 + "seconds");
-        disconnectBecauseOfTimeout = true;
-        req.abort();
+    if (lastDataReceivedAt[account_id] && jetzt.getTime() - lastDataReceivedAt[account_id].getTime() > 30000) {
+        log_message("checkForTimeout", "Timeout: No data received for the last " + (jetzt.getTime() - lastDataReceivedAt[account_id].getTime())/1000 + "seconds");
+        disconnectBecauseOfTimeout[account_id] = true;
+        req[account_id].abort();
         return;
     }
-    if (get_time_since_last_tweet() > get_timeout_difference() && $('#text').val()=='') {
+    if (get_time_since_last_tweet(account_id) > get_timeout_difference(account_id) && $('#text').val()=='') {
         log_message("checkForTimeout", "Timeout: Lack of tweets");
         log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time()/1000);
         log_message("checkForTimeout", "Timeout after: " + get_timeout_difference()/1000);
         log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweet()/1000);
-        disconnectBecauseOfTimeout = true;
-        req.abort();
+        disconnectBecauseOfTimeout[account_id] = true;
+        req[account_id].abort();
     }
 }
 
@@ -293,8 +304,8 @@ function checkForTimeout() {
  * Returns the max allowed time between two tweets in seconds. Used to reconnect if
  * the stream didn't send tweets in the last time.
  */
-function get_timeout_difference() {
-    var delay = get_average_tweet_time()*settings.timeout_detect_factor;
+function get_timeout_difference(account_id) {
+    var delay = get_average_tweet_time(account_id)*settings.timeout_detect_factor;
     if (settings.timeout_minimum_delay*1000 > delay) return settings.timeout_minimum_delay*1000;
     if (settings.timeout_maximum_delay*1000 < delay) return settings.timeout_maximum_delay*1000;
     return delay;
@@ -303,16 +314,16 @@ function get_timeout_difference() {
 /**
  * Returns the average time between the last x tweets.
  **/
-function get_average_tweet_time() {
-    if (last_event_times[current_account].length<2) return NaN;
-    return (last_event_times[current_account][0] - last_event_times[current_account][last_event_times[current_account].length-1]) / (last_event_times[current_account].length-1);
+function get_average_tweet_time(account_id) {
+    if (last_event_times[account_id].length<2) return NaN;
+    return (last_event_times[account_id][0] - last_event_times[account_id][last_event_times[account_id].length-1]) / (last_event_times[account_id].length-1);
 }
 
 /**
  * Returns the time since the last received tweet in milliseconds.
  */
-function get_time_since_last_tweet() {
-    return (Date.now() - last_event_times[current_account][0]);
+function get_time_since_last_tweet(account_id) {
+    return (Date.now() - last_event_times[account_id][0]);
 }
 
 /**
@@ -453,21 +464,30 @@ function startRequest(account_id) {
         method: "GET",
         parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
     }
-
+    
+    var keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret,
+        token: settings.twitter.users[account_id].token,
+        tokenSecret: settings.twitter.users[account_id].tokenSecret
+    };
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, settings.twitter);
-    OAuth.SignatureMethod.sign(message, settings.twitter);
+    OAuth.completeRequest(message, keys);
+    OAuth.SignatureMethod.sign(message, keys);
     var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
 
     setStatus("Connecting to stream...", "orange");
 
-    disconnectBecauseOfTimeout = false;
-
-    req = new XMLHttpRequest();
-    req.open('GET', url, true);
-    req.onreadystatechange = parseResponse;
-    req.send(null);
-    lastDataReceivedAt = new Date();
+    disconnectBecauseOfTimeout[account_id] = false;
+    
+    var r;
+    r = new XMLHttpRequest();
+    r.open('GET', url, true);
+    r.onreadystatechange = parseResponse;
+    r.send(null);
+    r.account_id = account_id;
+    req[account_id] = r;
+    lastDataReceivedAt[account_id] = new Date();
 }
 
 
@@ -475,54 +495,53 @@ function startRequest(account_id) {
  * Gets run by onreadystatechange of the XHR object of the streaming connection.
  * (On Opera, this doesn't work, so here we use a timer to call it every 5 seconds.
  */
-function parseResponse() {
-    if (!req) return;
-
-    if (req.readyState == 1) {
-        connectionStartedAt = new Date();
-    } else if (req.readyState == 4) {
+function parseResponse(account_id) {
+    var acct = (account_id && typeof account_id == 'number' ? account_id : this.account_id);
+    if (this.readyState == 1) {
+        connectionStartedAt[acct] = new Date();
+    } else if (this.readyState == 4) {
         setStatus("Disconnected.", "red");
         var jetzt = new Date();
-        if (jetzt.getTime() - connectionStartedAt.getTime() > 10000)
+        if (jetzt.getTime() - connectionStartedAt[acct].getTime() > 10000)
             delay = settings.timings.mindelay;
         var html = '<div class="status">Disconnect. ';
-        if (disconnectBecauseOfTimeout) {
+        if (disconnectBecauseOfTimeout[acct]) {
             html += 'Grund: Timeout. ';
         }
-        if (req.status != 200 && !disconnectBecauseOfTimeout) {
-            html += 'Status: ' + req.status + ' (' + req.statusText + '). ';
+        if (this.status != 200 && !disconnectBecauseOfTimeout[acct]) {
+            html += 'Status: ' + this.status + ' (' + this.statusText + '). ';
             delay = settings.timings.maxdelay;
         }
-        addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>');
+        addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>', acct);
         window.setTimeout('fillList()', delay*1000);
-        req = null;
+        this = null;
         if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
-    } else if (req.readyState == 3) {
+    } else if (this.readyState == 3) {
         setStatus("Connected to stream.", "green");
-        lastDataReceivedAt = new Date();
+        lastDataReceivedAt[acct] = new Date();
     }
-    if (req) {
-        buffer += req.responseText.substr(responseOffset);
-        responseOffset = req.responseText.length;
+    if (this) {
+        buffer[acct] += this.responseText.substr(responseOffset[acct]);
+        responseOffset[acct] = this.responseText.length;
     }
-    if (!isProcessing) processBuffer();
+    if (!isProcessing[acct]) processBuffer(acct);
 }
 
 
 /**
  * Processes the stream buffer. Gets new data from the end of the stream data and gives it to parseData().
  */
-function processBuffer() {
-    isProcessing = true;
+function processBuffer(account_id) {
+    isProcessing[account_id] = true;
     reg = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
-    while(res = buffer.match(reg)) {
+    while(res = buffer[account_id].match(reg)) {
         len = parseInt(res[1]);
         if (res[2].length >= len) {
-            parseableText = res[2].substr(0, len);
-            buffer = res[2].substr(len);
+            var parseableText = res[2].substr(0, len);
+            buffer[account_id] = res[2].substr(len);
             try {
-                parseData(parseableText);
+                parseData(parseableText, account_id);
             } catch (e) {
                 // do nothing
             }
@@ -530,7 +549,7 @@ function processBuffer() {
             break;
         }
     }
-    isProcessing = false;
+    isProcessing[account_id] = false;
 }
 
 
@@ -657,7 +676,7 @@ function display_event(element, return_html, account_id) {
  * adding the HTML directly to the DOM.
  */
 function addHTML(text, account_id) {
-    if (!account_id) {
+    if (typeof account_id != 'number') {
         account_id = current_account;
     }
     if(text == "") return;
@@ -1096,9 +1115,9 @@ function toggle_file(force_hide) {
 function show_stats() {
     var html = "";
     html += "<strong>Anzahl Tweets:</strong>        " + $('.tweet').length + "<br />";
-    html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt + "<br />";
+    html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt[current_account] + "<br />";
     html += "<strong>Bekannte Follower:</strong>    " + followers_ids.length + "<br />";
-    html += "<strong>Buffer-Größe:</strong>         " + responseOffset + "<br />";
+    html += "<strong>Buffer-Größe:</strong>         " + responseOffset[current_account] + "<br />";
 
     html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
     html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference()/1000 + " Sekunden<br />";
