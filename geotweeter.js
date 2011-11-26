@@ -518,10 +518,12 @@ function startRequest(account_id) {
  * (On Opera, this doesn't work, so here we use a timer to call it every 5 seconds.
  */
 function parseResponse(account_id) {
-    var acct = (account_id && typeof account_id == 'number' ? account_id : this.account_id);
-    if (this.readyState == 1) {
+    var acct = (typeof account_id == 'number' ? account_id : this.account_id);
+    var request = req[acct];
+    if (!request) return;
+    if (request.readyState == 1) {
         connectionStartedAt[acct] = new Date();
-    } else if (this.readyState == 4) {
+    } else if (request.readyState == 4) {
         setStatus("Disconnected.", "red", account_id);
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt[acct].getTime() > 10000)
@@ -530,22 +532,22 @@ function parseResponse(account_id) {
         if (disconnectBecauseOfTimeout[acct]) {
             html += 'Grund: Timeout. ';
         }
-        if (this.status != 200 && !disconnectBecauseOfTimeout[acct]) {
-            html += 'Status: ' + this.status + ' (' + this.statusText + '). ';
+        if (request.status != 200 && !disconnectBecauseOfTimeout[acct]) {
+            html += 'Status: ' + request.status + ' (' + request.statusText + '). ';
             delay = settings.timings.maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>', acct);
         window.setTimeout('fillList()', delay*1000);
-        this = null;
+        request = null;
         if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
-    } else if (this.readyState == 3) {
+    } else if (request.readyState == 3) {
         setStatus("Connected to stream.", "green", acct);
         lastDataReceivedAt[acct] = new Date();
     }
-    if (this) {
-        buffer[acct] += this.responseText.substr(responseOffset[acct]);
-        responseOffset[acct] = this.responseText.length;
+    if (request) {
+        buffer[acct] += request.responseText.substr(responseOffset[acct]);
+        responseOffset[acct] = request.responseText.length;
     }
     if (!isProcessing[acct]) processBuffer(acct);
 }
