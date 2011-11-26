@@ -356,6 +356,7 @@ function fillList(account_id) {
             addHTML(html, account_id);
             window.setTimeout('fillList()', 30000);
         }
+        update_user_counter(account_id);
     }
     
     var success = function(element, data, req, additional_info) {
@@ -629,6 +630,7 @@ function parseData(string_data, account_id) {
         last_id = this_id;
     }
     addHTML(html, account_id);
+    update_user_counter(account_id);
 }
 
 /**
@@ -1654,6 +1656,7 @@ function markAllRead() {
             }
         }
     }
+    update_user_counter(current_account);
 }
 
 /** Scrolls to the last tweet written by the current user. */
@@ -1766,4 +1769,10 @@ function log_message(place, s) {
         str += " ] " + s;
         console.log(str);
      }
+}
+
+function update_user_counter(account_id) {
+    var count = $('#content_' + account_id + ' .tweet.new').length;
+    var str = count>0? '('+count+')' : '';
+    $('#user_' + account_id + ' .count').html(str);
 }
