@@ -129,8 +129,9 @@ function start() {
     get_twitter_configuration();
     if (!this_users_name) return;
 
-
-    getFollowers();
+    for (var i=0; i<settings.twitter.users.length; i++){
+        getFollowers(i);
+    }
 
     maxreadid = getMaxReadID();
     for(var i=0; i<settings.twitter.users.length; i++){
@@ -274,12 +275,13 @@ function get_twitter_configuration() {
 }
 
 /** Asynchronously gets the IDs of all followers of the current user. */
-function getFollowers() {
+function getFollowers(account_id) {
     simple_twitter_request('followers/ids.json', {
         silent: true,
         method: "GET",
+        account: account_id,
         success: function(element, data) {
-            followers_ids = data.ids;
+            followers_ids[account_id] = data.ids;
         }
     });
 }
@@ -710,7 +712,7 @@ function addHTML(text, account_id) {
             var obj = par.find('.tooltip_info');
             var html = obj.html();
             var id = parseInt(par.attr("data-user-id"));
-            if (followers_ids.indexOf(id)>=0) {
+            if (followers_ids[account_id].indexOf(id)>=0) {
                 html = html.replace(/%s/, 'folgt dir.');
             } else {
                 html = html.replace(/%s/, 'folgt dir nicht.');
@@ -770,7 +772,7 @@ function getFollowEventHTML(event, account_id) {
     html += '<span class="poster">';
     html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a> (' + event.source.name + ')';
     html += '</span>';
-    followers_ids.push(event.source.id);
+    followers_ids[account_id].push(event.source.id);
     return getEventHTML(event, html);
 }
 
@@ -1137,7 +1139,7 @@ function show_stats() {
     var html = "";
     html += "<strong>Anzahl Tweets:</strong>        " + $('.tweet').length + "<br />";
     html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt[current_account] + "<br />";
-    html += "<strong>Bekannte Follower:</strong>    " + followers_ids.length + "<br />";
+    html += "<strong>Bekannte Follower:</strong>    " + followers_ids[account_id].length + "<br />";
     html += "<strong>Buffer-Größe:</strong>         " + responseOffset[current_account] + "<br />";
 
     html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
