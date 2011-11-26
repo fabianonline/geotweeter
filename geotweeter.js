@@ -132,6 +132,7 @@ function start() {
     maxreadid = getMaxReadID();
     for(var i=0; i<settings.twitter.users.length; i++){
         if (!maxreadid[i]) maxreadid[i]="0";
+        if (!last_event_times[i]) last_event_times[i]=new Array();
         fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
     }
 
@@ -303,15 +304,15 @@ function get_timeout_difference() {
  * Returns the average time between the last x tweets.
  **/
 function get_average_tweet_time() {
-    if (last_event_times.length<2) return NaN;
-    return (last_event_times[0] - last_event_times[last_event_times.length-1]) / (last_event_times.length-1);
+    if (last_event_times[current_account].length<2) return NaN;
+    return (last_event_times[current_account][0] - last_event_times[current_account][last_event_times[current_account].length-1]) / (last_event_times[current_account].length-1);
 }
 
 /**
  * Returns the time since the last received tweet in milliseconds.
  */
 function get_time_since_last_tweet() {
-    return (Date.now() - last_event_times[0]);
+    return (Date.now() - last_event_times[current_account][0]);
 }
 
 /**
@@ -838,12 +839,12 @@ function getStatusHTML(status, account_id) {
         mylasttweetid[account_id] = status.id;
 
     var date = new Date(status.created_at);
-    if (last_event_times.length==0 || date > last_event_times[0]) {
-        last_event_times.unshift(date);
-    } else if (date < last_event_times[last_event_times.length-1]) {
-        last_event_times.push(date);
+    if (last_event_times[account_id].length==0 || date > last_event_times[account_id][0]) {
+        last_event_times[account_id].unshift(date);
+    } else if (date < last_event_times[account_id][last_event_times[account_id].length-1]) {
+        last_event_times[account_id].push(date);
     }
-    if (last_event_times.length > (settings.timeout_detect_tweet_count+1)) last_event_times.pop();
+    if (last_event_times[account_id].length > (settings.timeout_detect_tweet_count+1)) last_event_times[account_id].pop();
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
     html += '<div class="';
     if (!isDM)
