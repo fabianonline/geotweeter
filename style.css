@@ -258,15 +258,25 @@ textarea, input, select {
 
 #users .user {
     display: inline-block;
-    padding: 1px;
-    background-color: #aaa;
-    border-color: #eee #666 #666 #eee;
-    border-width: 1px;
-    border-style: solid;
+    padding: 2px;
+    background-image: linear-gradient(top, #fff 70%, #aaa 100%);
+    background-image: -webkit-linear-gradient(top, #fff 70%, #aaa 100%);
+    background-image: -moz-linear-gradient(top, #fff 70%, #aaa 100%);
+    background-image: -o-linear-gradient(top, #fff 70%, #aaa 100%);
+    margin: 0px 1px;
 }
 
 #users .user.active {
-    border-color: #666 #eee #eee #666 !important;
+    background-image: linear-gradient(top, #aaa 0%, #fff 30%);
+    background-image: -webkit-linear-gradient(top, #aaa 0%, #fff 30%);
+    background-image: -moz-linear-gradient(top, #aaa 0%, #fff 30%);
+    background-image: -o-linear-gradient(top, #aaa 0%, #fff 30%);
+}
+
+#users a {
+    text-decoration: none !important;
+    vertical-align: middle;
+    color: #000;
 }
 
 #tooltip {
