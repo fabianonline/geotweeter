@@ -18,13 +18,13 @@ var reply_to_id = null;
 /** ID of last "marked as read" tweet. Any tweet with an ID bigger than this is considered new. */
 var maxreadid = 0;
 
-/** IDs of newest and oldest knwon tweets. */
-var maxknownid = "0";
-var minknownid = "0";
-var maxknowndmid = "0";
+/** IDs of newest and oldest known tweets. */
+var maxknownid = {};
+var minknownid = {};
+var maxknowndmid = {};
 
 /** ID of the newest tweet belonging to "this" user. */
-var mylasttweetid = 0;
+var mylasttweetid = {};
 
 /** delay to use the next time the stream gets disconnected. */
 var delay;
@@ -40,7 +40,7 @@ var disconnectBecauseOfTimeout = false;
 var repliesData = new Array();
 
 /** Gets filled by verify_credentials with the current user's name. */
-var this_users_name = null;
+var this_users_name = new Array();
 
 /** Gets filled with the IDs of all followers. */
 var followers_ids = new Array();
@@ -77,8 +77,8 @@ var last_event_times = new Array();
 
 /** Used in fillList. */
 var temp_responses = new Array();
-var threadsStarted = 0;
-var threadsErrored = 0;
+var threadsRunning = new Array();
+var threadsErrored = new Array();
 
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
@@ -203,7 +203,7 @@ function validateCredentials() {
             account: i,
             success: function(element, data) {
                 if (data.screen_name) {
-                    this_users_name = data.screen_name;
+                    this_users_name[i] = data.screen_name;
                     // Copy geotweeter content area
                     var new_area = $('#content_template').clone();
                     new_area.attr('id', 'content_' + i);
@@ -325,17 +325,14 @@ function fillList(account_id) {
     log_message("fillList", "Starting");
     setStatus("Filling List...", "yellow");
     
-    threadsRunning = 5;
-    threadsErrored = 0;
-    temp_responses = new Array();
+    threadsRunning[account_id] = 5;
+    threadsErrored[account_id] = 0;
+    temp_responses[account_id] = new Array();
     
     var after_run = function(account_id) {
-        if (threadsErrored==0) {
+        if (threadsErrored[account_id]==0) {
             // everything was successfull. Great.
-            // Connect to the stream, if wanted.
-            if (settings.twitter.users[account_id].stream) {
-                startRequest(account_id);
-            }
+            startRequest(account_id);
         } else {
             // oops... trigger the restart mechanism
             var html = '<div class="status">Retrying in 30 seconds...</div>';
@@ -345,16 +342,16 @@ function fillList(account_id) {
     }
     
     var success = function(element, data, req, additional_info) {
-        temp_responses.push(data);
-        threadsRunning-=1;
-        if (threadsRunning==0) {
+        temp_responses[additional_info.account_id].push(data);
+        threadsRunning[additional_info.account_id]-=1;
+        if (threadsRunning[additional_info.account_id]==0) {
             after_run(additional_info.account_id);
         }
     }
     
     var error = function(info_element, data, request, raw_response, exception, additional_info) {
-        threadsRunning-=1;
-        threadsErrored+=1;
+        threadsRunning[additional_info.account_id]-=1;
+        threadsErrored[additional_info.account_id]+=1;
         var html = '<div class="status"><b>Fehler in ' + additional_info.name + ":</b><br />";
         if (data && data.error) {
             html += data.error;
@@ -369,7 +366,7 @@ function fillList(account_id) {
     }
 
     var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
-    if (maxknownid!="0") parameters.since_id = maxknownid;
+    if (maxknownid[account_id] && maxknownid[account_id]!="0") parameters.since_id = maxknownid[account_id];
 
     log_message("fillList", "home_timeline 1...");
     simple_twitter_request('statuses/home_timeline.json', {
@@ -442,10 +439,12 @@ function fillList(account_id) {
 
 
 /** Starts a request to the streaming api. */
-function startRequest() {
-    parseData(temp_responses);
-    last_event_times.unshift(Date.now());
-    last_event_times.pop();
+function startRequest(account_id) {
+    parseData(temp_responses[account_id], account_id);
+    last_event_times[account_id].unshift(Date.now());
+    last_event_times[account_id].pop();
+    
+    if (!settings.twitter.users[account_id].stream) return;
     
     var message = {
         action: "https://userstream.twitter.com/2/user.json",
@@ -537,7 +536,7 @@ function processBuffer() {
  * Parses responses received from twitter.
  * Can take multiple bunches of data in an array; those are then merged before processing.
  */
-function parseData(string_data) {
+function parseData(string_data, account_id) {
     if (string_data.constructor!=Array) {
         string_data = new Array(string_data);
     }
@@ -559,7 +558,7 @@ function parseData(string_data) {
                 }
             }
         } catch (e) {
-            addHTML("Exception: " + e + '<br />' + string_data[i] + '<hr />');
+            addHTML("Exception: " + e + '<br />' + string_data[i] + '<hr />', account_id);
         }
     }
 
@@ -604,7 +603,7 @@ function parseData(string_data) {
         }
         last_id = this_id;
     }
-    addHTML(html);
+    addHTML(html, account_id);
 }
 
 /**
