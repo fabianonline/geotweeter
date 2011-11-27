@@ -931,6 +931,12 @@ function getStatusHTML(status, account_id) {
     html += 'data-id="' + status.id + '" ';
     html += '>';
     html += '<a name="status_' + status.id + '"></a>';
+    
+    if (status.entities && status.entities.media && status.entities.media[0]) {
+        var media = status.entities.media[0];
+        html += '<a href="'+media.expanded_url+'" target="_blank"><img class="media" src="' + media.media_url_https + ':thumb" /></a>';
+    }
+    
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 
     // Start Tooltip-Info
