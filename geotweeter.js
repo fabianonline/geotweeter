@@ -83,6 +83,9 @@ var temp_responses = new Array();
 var threadsRunning = new Array();
 var threadsErrored = new Array();
 
+/** Is the infoarea visible? */
+var infoarea_visible = false;
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -1102,11 +1105,13 @@ function infoarea_show(title, content) {
     $('#infoarea_title').html(title);
     $('#infoarea_content').html(content);
     $('#infoarea').show();
+    infoarea_visible = true;
 }
 
 /** Closes the infoarea view displayed by infoarea_show() */
 function infoarea_close() {
     $('#infoarea').hide();
+    infoarea_visible = false;
 }
 
 /** Shows the conversation leading to a given tweet. */
@@ -1118,13 +1123,38 @@ function show_replies(id) {
 
     while (repliesData[id]) {
         id = repliesData[id];
-        if($('#id_' + id).length>0)
+        if($('#id_' + id).length>0) {
+            // Tweet ist bekannt -> anzeigen.
             html += $('#id_' + id).fullhtml();
-        else
-            html += '<a href="http://twitter.com/#!/user/status/' + id + '" target="_blank">Show next status</a>';
+        } else {
+            // Unbekannter Tweet -> Spinner anzeigen und Schleife starten...
+            html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>';
+            fetch_reply(id);
+        }
     }
-
     infoarea_show("Replies", html);
+}
+
+/** Fetches replies while the infoarea is visible */
+function fetch_reply(id) {
+    simple_twitter_request('statuses/show.json', {
+        parameters: {id: id, include_entities: true},
+        silent: true,
+        method: 'GET',
+        success: function(foo, data) {
+            add_reply_to_infoarea(data);
+        }
+    });
+}
+
+/** Adds reply to the infoarea and fetches the next one */
+function add_reply_to_infoarea(data) {
+    $('#info_spinner').before(getStatusHTML(data, current_account));
+    if (infoarea_visible && data.in_reply_to_status_id) {
+        fetch_reply(data.in_reply_to_status_id_str);
+    } else {
+        $('#info_spinner').remove();
+    }
 }
 
 function toggle_file(force_hide) {

@@ -227,6 +227,11 @@ textarea, input, select {
     background-color: #fff;
 }
 
+#infoarea #info_spinner {
+    text-align: center;
+    padding-top: 15px;
+}
+
 .tooltip_info {
     display: none;
 }
