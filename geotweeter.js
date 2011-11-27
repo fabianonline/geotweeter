@@ -932,9 +932,29 @@ function getStatusHTML(status, account_id) {
     html += '>';
     html += '<a name="status_' + status.id + '"></a>';
     
+    /* Search for usable entities to display thumbnails */
     if (status.entities && status.entities.media && status.entities.media[0]) {
         var media = status.entities.media[0];
         html += '<a href="'+media.expanded_url+'" target="_blank"><img class="media" src="' + media.media_url_https + ':thumb" /></a>';
+    } else if(status.entities && status.entities.urls) {
+        for (var i=0; i<status.entities.urls.length; i++) {
+            var entity = status.entities.urls[i];
+            if (entity.expanded_url==null) continue;
+            var res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/);
+            if (res) {
+                // Youtube video
+                var url = "http://img.youtube.com/vi/"+res[1]+"/1.jpg";
+                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
+                break;
+            }
+            var res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/);
+            if (res) {
+                // Twitpic image
+                var url = "http://twitpic.com/show/mini/"+res[1];
+                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
+                break;
+            }
+        }
     }
     
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
