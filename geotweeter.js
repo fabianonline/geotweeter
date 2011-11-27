@@ -1831,7 +1831,7 @@ function log_message(place, s) {
 }
 
 function update_user_counter(account_id) {
-    var count = $('#content_' + account_id + ' .tweet.new').length;
+    var count = $('#content_' + account_id + ' .tweet.new').not('.by_this_user').length;
     var str = count>0? '('+count+')' : '';
     $('#user_' + account_id + ' .count').html(str);
 }
