@@ -536,7 +536,7 @@ function parseResponse(account_id) {
             delay = settings.timings.maxdelay;
         }
         addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>', acct);
-        window.setTimeout('fillList()', delay*1000);
+        window.setTimeout('fillList(' + acct + ')', delay*1000);
         request = null;
         if (delay*2 <= settings.timings.maxdelay)
             delay = delay * 2;
