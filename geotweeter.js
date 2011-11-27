@@ -967,6 +967,12 @@ function getStatusHTML(status, account_id) {
                 html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
                 break;
             }
+            var res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/);
+            if (res) {
+                var url = "http://moby.to/"+res[1]+":square";
+                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
+                break;
+            }
         }
     }
     
