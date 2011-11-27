@@ -1869,7 +1869,7 @@ function addUser() {
         oauth_results[parts[0]] = parts[1];
     }
     
-    var url = "https://api.twitter.com/oauth/authorize?oauth_token="+oauth_results.oauth_token;
+    var url = "https://api.twitter.com/oauth/authorize?oauth_token="+oauth_results.oauth_token+"&force_login=true";
     var html = "Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />";
     html += '<a href="'+url+'" target="_blank">Geotweeter authorisieren</a><br /><br />';
     html += '<input type="text" name="pin" id="pin" />';
