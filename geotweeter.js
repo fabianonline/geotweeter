@@ -954,6 +954,13 @@ function getStatusHTML(status, account_id) {
                 html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
                 break;
             }
+            var res=entity.expanded_url.match(/yfrog.com\/([a-zA-Z0-9]+)/);
+            if (res) {
+                // YFrog image
+                var url = "http://yfrog.com/"+res[1]+".th.jpg";
+                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
+                break;
+            }
         }
     }
     
