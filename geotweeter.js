@@ -961,6 +961,12 @@ function getStatusHTML(status, account_id) {
                 html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
                 break;
             }
+            var res=entity.expanded_url.match(/lockerz.com\/s\/[0-9]+/);
+            if (res) {
+                var url = "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail";
+                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
+                break;
+            }
         }
     }
     
