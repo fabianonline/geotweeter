@@ -356,7 +356,7 @@ function get_time_since_last_tweet(account_id) {
  */
 function fillList(account_id) {
     log_message("fillList", "Starting");
-    setStatus("Filling List...", "yellow", account_id);
+    setStatus("Filling List...", "orange", account_id);
     
     threadsRunning[account_id] = 5;
     threadsErrored[account_id] = 0;
