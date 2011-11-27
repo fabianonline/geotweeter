@@ -86,6 +86,9 @@ var threadsErrored = new Array();
 /** Is the infoarea visible? */
 var infoarea_visible = false;
 
+/** Used by addUser() and addUser2() */
+var oauth_results;
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -1825,4 +1828,102 @@ function update_user_counter(account_id) {
     var count = $('#content_' + account_id + ' .tweet.new').length;
     var str = count>0? '('+count+')' : '';
     $('#user_' + account_id + ' .count').html(str);
+}
+
+function addUser() {
+    infoarea_show("Add User", '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>');
+    var parameters = {
+        oauth_callback: "oob"
+    }
+
+    var message = {
+        action: "https://api.twitter.com/oauth/request_token",
+        method: "POST",
+        parameters: parameters
+    }
+
+    var keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret
+    }
+
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, keys);
+    OAuth.SignatureMethod.sign(message, keys);
+    var url = 'proxy/oauth/request_token';
+    var data = OAuth.formEncode(message.parameters);
+
+    var request = $.ajax({
+        url: url,
+        data: data,
+        dataType: "text",
+        async: false,
+        type: "POST"
+    });
+    if (request.status!=200) throw new Exception("o_O");
+    var result = request.responseText;
+    oauth_results = {};
+    result = result.split("&");
+    for (var i=0; i<result.length; i++) {
+        var parts = result[i].split("=");
+        oauth_results[parts[0]] = parts[1];
+    }
+    
+    var url = "https://api.twitter.com/oauth/authorize?oauth_token="+oauth_results.oauth_token;
+    var html = "Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />";
+    html += '<a href="'+url+'" target="_blank">Geotweeter authorisieren</a><br /><br />';
+    html += '<input type="text" name="pin" id="pin" />';
+    html += '<input type="button" value="OK" onClick="addUser2(); return false;" />';
+    $('#info_spinner').before(html);
+    $('#info_spinner').hide();
+}
+
+function addUser2() {
+    var pin = $('#pin').val();
+    infoarea_show("Add User", '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>');
+    var parameters = {
+        oauth_token: oauth_results.oauth_token,
+        oauth_verifier: pin
+    }
+    var message = {
+        action: "https://api.twitter.com/oauth/access_token",
+        method: "POST",
+        parameters: parameters
+    }
+
+    var keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret
+    }
+
+    OAuth.setTimestampAndNonce(message);
+    OAuth.completeRequest(message, keys);
+    OAuth.SignatureMethod.sign(message, keys);
+    var url = 'proxy/oauth/access_token';
+    var data = OAuth.formEncode(message.parameters);
+
+    var request = $.ajax({
+        url: url,
+        data: data,
+        dataType: "text",
+        async: false,
+        type: "POST"
+    });
+    if (request.status!=200) throw new Exception("o_O");
+    var result = request.responseText;
+    oauth_results = {};
+    result = result.split("&");
+    for (var i=0; i<result.length; i++) {
+        var parts = result[i].split("=");
+        oauth_results[parts[0]] = parts[1];
+    }
+    var code = "{ // " + oauth_results.screen_name + "\n";
+    code += "    token: \"" + oauth_results.oauth_token + "\",\n";
+    code += "    tokenSecret: \"" + oauth_results.oauth_token_secret + "\"\n";
+    code += "}";
+    var html = "Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />";
+    html += '<textarea cols="100" rows="4">'+code+'</textarea><br />';
+    html += "Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden.";
+    $('#info_spinner').before(html);
+    $('#info_spinner').hide();
 }

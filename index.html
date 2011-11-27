@@ -29,8 +29,10 @@
     <div id="infoarea_content"></div>
     <div><a href="#" onClick="infoarea_close(); return false;">Close</a></div>
 </div>
-<div id="users"></div>
-<div id="buttonbar">
+<div id="users">
+    <a href="#" onClick="addUser(); return false;" style="float: right;"><img src="icons/add.png" /></a>
+</div>
+<div id="buttonbar" style="clear: both;">
     <a href="#" onClick="location.href='#'; location.reload();"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
     <a href="#" onClick="markAllRead(); return false;"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
     <a href="#" onClick="goToLastRead(); return false;"><img src="icons/arrowdown.png" title="Zum letzten ungelesenen Tweet springen" /></a>
