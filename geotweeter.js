@@ -33,7 +33,7 @@ var mylasttweetid = new Array();
 var delay;
 
 /** Time the connection to the streaming API was established / got the last data. */
-var connectionStartedAt = new Date();
+var connectionStartedAt = new Array();
 var lastDataReceivedAt = new Array();
 
 /** true, if the streaming connection was terminated because of a timeout. */
@@ -509,6 +509,7 @@ function startRequest(account_id) {
     r.send(null);
     r.account_id = account_id;
     req[account_id] = r;
+    connectionStartedAt[account_id] = new Date();
     lastDataReceivedAt[account_id] = new Date();
 }
 
@@ -521,9 +522,7 @@ function parseResponse(account_id) {
     var acct = (typeof account_id == 'number' ? account_id : this.account_id);
     var request = req[acct];
     if (!request) return;
-    if (request.readyState == 1) {
-        connectionStartedAt[acct] = new Date();
-    } else if (request.readyState == 4) {
+    if (request.readyState == 4) {
         setStatus("Disconnected.", "red", account_id);
         var jetzt = new Date();
         if (jetzt.getTime() - connectionStartedAt[acct].getTime() > 10000)
