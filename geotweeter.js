@@ -882,6 +882,7 @@ function getStatusHTML(status, account_id) {
         mylasttweetid[account_id] = status.id;
 
     var date = new Date(status.created_at);
+    if (typeof last_event_times[account_id] != "array") last_event_times[account_id]=new Array();
     if (last_event_times[account_id].length==0 || date > last_event_times[account_id][0]) {
         last_event_times[account_id].unshift(date);
     } else if (date < last_event_times[account_id][last_event_times[account_id].length-1]) {
@@ -1140,12 +1141,12 @@ function show_stats() {
     var html = "";
     html += "<strong>Anzahl Tweets:</strong>        " + $('.tweet').length + "<br />";
     html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt[current_account] + "<br />";
-    html += "<strong>Bekannte Follower:</strong>    " + followers_ids[account_id].length + "<br />";
+    html += "<strong>Bekannte Follower:</strong>    " + followers_ids[current_account].length + "<br />";
     html += "<strong>Buffer-Größe:</strong>         " + responseOffset[current_account] + "<br />";
 
-    html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time()/1000 + " Sekunden<br />";
-    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference()/1000 + " Sekunden<br />";
-    html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet()/1000 + " Sekunden";
+    html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time(current_account)/1000 + " Sekunden<br />";
+    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference(current_account)/1000 + " Sekunden<br />";
+    html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet(current_account)/1000 + " Sekunden";
 
     infoarea_show("Stats", html);
 }
