@@ -201,6 +201,7 @@ textarea, input, select {
 
 #buttonbar {
     background-color: #ccc;
+    padding-right: 3px;
 }
 
 #reply_warning {
@@ -243,6 +244,11 @@ textarea, input, select {
 
 .tooltip_info {
     display: none;
+}
+
+#users {
+    padding-right: 3px;
+    vertical-align: center;
 }
 
 #users img {
