@@ -267,10 +267,6 @@ textarea, input, select {
     background-image: -o-linear-gradient(top, #aaa 0%, rgba(255,255,255,0) 30%);
 }
 
-#users .user.active .count {
-    display: none;
-}
-
 #users a {
     text-decoration: none !important;
     vertical-align: middle;
