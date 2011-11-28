@@ -888,7 +888,7 @@ function getStatusHTML(status, account_id) {
         mylasttweetid[account_id] = status.id;
 
     var date = new Date(status.created_at);
-    if (typeof last_event_times[account_id] != "array") last_event_times[account_id]=new Array();
+    if (typeof last_event_times[account_id] != "object") last_event_times[account_id]=new Array();
     if (last_event_times[account_id].length==0 || date > last_event_times[account_id][0]) {
         last_event_times[account_id].unshift(date);
     } else if (date < last_event_times[account_id][last_event_times[account_id].length-1]) {
