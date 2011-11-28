@@ -930,7 +930,7 @@ function getStatusHTML(status, account_id) {
     html += 'data-sender="' + user_object.screen_name + '" ';
     var mentions = "";
     if (status.entities) for (var i in status.entities.user_mentions) {
-        var mention = status.entities.user_mentions[i].screen_name
+        var mention = status.entities.user_mentions[i].screen_name;
         if (mention == this_users_name[account_id]) continue;
         mentions += mention + " ";
     }
@@ -1604,6 +1604,7 @@ function replyToTweet(tweet_id, user, isDM) {
             var filtered_mentions = new Array();
             for(var i in all_mentions) {
                 if (all_mentions[i] == user) continue;
+                if (all_mentions[i] == this_users_name[current_account]) continue;
                 filtered_mentions.push('@' + all_mentions[i]);
             }
             var mentions = filtered_mentions.join(' ');
