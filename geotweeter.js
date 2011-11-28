@@ -905,12 +905,19 @@ function getStatusHTML(status, account_id) {
     if (user == this_users_name[account_id]) html += "by_this_user ";
     if (!isDM && biggerThan(status.id, maxreadid[account_id]))
         html += 'new ';
-    var mentions = status.text.match(regexp_user);
-    if (mentions) {
-        for (var i=0; i<mentions.length; i++) {
-            mention = String(mentions[i]).trim().substr(1);
-            html += 'mentions_' + mention + ' ';
-            if (mention == this_users_name[account_id]) html += "mentions_this_user ";
+    if (status.entities && status.entities.user_mentions) {
+        for (var i=0; i<status.entities.user_mentions.length; i++) {
+            html += 'mentions_' + status.entities.user_mentions[i].screen_name + ' ';
+            if (status.entities.user_mentions[i].screen_name == this_users_name[account_id]) html += 'mentions_this_user ';
+        }
+    } else {
+        var mentions = status.text.match(regexp_user);
+        if (mentions) {
+            for (var i=0; i<mentions.length; i++) {
+                mention = String(mentions[i]).trim().substr(1);
+                html += 'mentions_' + mention + ' ';
+                if (mention == this_users_name[account_id]) html += "mentions_this_user ";
+            }
         }
     }
     
