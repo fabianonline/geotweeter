@@ -1747,7 +1747,7 @@ function setMaxReadID(id, account_id) {
 /** Sets the max read ID by using setmaxReadID and marks all tweets as read. */
 function markAllRead() {
     // get the id of the first visible tweet
-    var elms = $('.tweet.new');
+    var elms = $('#content_'+current_account+' .tweet.new');
     var id = null;
     var offset = $(document).scrollTop() + $('#top').height();
     for (var i=0; i<elms.length; i++) {
