@@ -41,6 +41,8 @@ textarea, input, select {
     padding-left: 5px;
     padding-top: 5px;
     padding-bottom: 5px;
+    float: left;
+    width: 100%;
 }
 
 .tweet {
