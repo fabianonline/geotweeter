@@ -1778,14 +1778,12 @@ function goToMyLastTweet() {
 
 /** Scrolls to a tweet specified by it's id. */
 function scroll_to(tweet_id) {
-    // Jump to the tweet's anchor
-    self.location = '#status_' + tweet_id;
-
-    // The selected tweet is now behind the form-overlay, so we need to scroll back up a little bit.
-    // The padding-top of the content-area equals the height of the overlay, so we use that.
-    var top = $(document).scrollTop();
-    var topheight = parseInt($('#content').css("padding-top"));
-    $(document).scrollTop(top - topheight);
+    var element_top = $('#id_'+tweet_id).offset().top;
+    // Just scrolling to a tweet doesn't show it because it will be hidden behind
+    // the form on the top. So we use this as an offset.
+    var topheight = parseInt($('#content_template').css("padding-top"));
+    $(document).scrollTop(element_top-topheight);
+    return;
 }
 
 /** Sets a status message. The colors are actually class names. */
