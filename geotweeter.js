@@ -980,7 +980,7 @@ function getStatusHTML(status, account_id) {
                 html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
                 break;
             }
-            var res=entity.expanded_url.match(/ragefac\.es/([0-9]+)/);
+            var res=entity.expanded_url.match(/ragefac\.es\/([0-9]+)/);
             if (res) {
                 var url = "http://ragefac.es/"+res[1]+"/i";
                 html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
