@@ -966,6 +966,10 @@ function getStatusHTML(status, account_id) {
                 thumbs.push({thumbnail: "http://moby.to/"+res[1]+":square", link: entity.expanded_url});
             } else if (res=entity.expanded_url.match(/ragefac\.es\/([0-9]+)/)) {
                 thumbs.push({thumbnail: "http://ragefac.es/"+res[1]+"/i", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/lauerfac\.es\/([0-9]+)/)) {
+                thumbs.push({thumbnail: "http://lauerfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/ponyfac\.es\/([0-9]+)/)) {
+                thumbs.push({thumbnail: "http://ponyfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
             }
         }
     }
