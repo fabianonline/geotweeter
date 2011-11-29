@@ -940,54 +940,47 @@ function getStatusHTML(status, account_id) {
     html += '<a name="status_' + status.id + '"></a>';
     
     /* Search for usable entities to display thumbnails */
-    if (status.entities && status.entities.media && status.entities.media[0]) {
-        var media = status.entities.media[0];
-        html += '<a href="'+media.expanded_url+'" target="_blank"><img class="media" src="' + media.media_url_https + ':thumb" /></a>';
-    } else if(status.entities && status.entities.urls) {
-        for (var i=0; i<status.entities.urls.length; i++) {
+    var thumbs = new Array();
+    if (status.entities && status.entities.media) {
+        for (var i in status.entities.media) {
+            var media = status.entities.media[i];
+            thumbs.push({thumbnail: media.media_url_https+':thumb', link: media.expanded_url});
+        }
+    }
+    
+    if(status.entities && status.entities.urls) {
+        for (var i in status.entities.urls) {
             var entity = status.entities.urls[i];
             if (entity.expanded_url==null) continue;
-            var res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/);
-            if (res) {
-                // Youtube video
-                var url = "http://img.youtube.com/vi/"+res[1]+"/1.jpg";
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
-            }
-            var res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/);
-            if (res) {
-                // Twitpic image
-                var url = "http://twitpic.com/show/mini/"+res[1];
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
-            }
-            var res=entity.expanded_url.match(/yfrog.com\/([a-zA-Z0-9]+)/);
-            if (res) {
-                // YFrog image
-                var url = "http://yfrog.com/"+res[1]+".th.jpg";
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
-            }
-            var res=entity.expanded_url.match(/lockerz.com\/s\/[0-9]+/);
-            if (res) {
-                var url = "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail";
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
-            }
-            var res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/);
-            if (res) {
-                var url = "http://moby.to/"+res[1]+":square";
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
-            }
-            var res=entity.expanded_url.match(/ragefac\.es\/([0-9]+)/);
-            if (res) {
-                var url = "http://ragefac.es/"+res[1]+"/i";
-                html += '<a href="'+entity.expanded_url+'" target="_blank"><img src="'+url+'" class="media" /></a>';
-                break;
+            
+            var res;
+            if (res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/)) {
+                thumbs.push({thumbnail: "http://img.youtube.com/vi/"+res[1]+"/1.jpg", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) {
+                thumbs.push({thumbnail: "http://twitpic.com/show/mini/"+res[1], link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) {
+                thumbs.push({thumbnail: "http://yfrog.com/"+res[1]+".th.jpg", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/lockerz.com\/s\/[0-9]+/)) {
+                thumbs.push({thumbnail: "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/)) {
+                thumbs.push({thumbnail: "http://moby.to/"+res[1]+":square", link: entity.expanded_url});
+            } else if (res=entity.expanded_url.match(/ragefac\.es\/([0-9]+)/)) {
+                thumbs.push({thumbnail: "http://ragefac.es/"+res[1]+"/i", link: entity.expanded_url});
             }
         }
     }
+    
+    if (thumbs.length == 1) {
+        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
+    } else if (thumbs.length > 1) {
+        html += '<div class="media multiple"><img class="media_overlay" src="icons/images.png" /><a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
+        html += '<span class="media additional">';
+        for (var i=1; i<thumbs.length; i++) {
+            html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" class="media" /></a>';
+        }
+        html += '</span></div>';
+    }
+    
     
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 

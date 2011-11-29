@@ -139,13 +139,53 @@ textarea, input, select {
     color: #000;
 }
 
-.media {
+img.media {
     float: right;
+}
+
+.media img, img.media {
     width: 50px;
     padding: 1px;
     margin-right: 5px;
     margin-left: 5px;
     border: 1px solid #aaa;
+}
+
+.media .media_overlay {
+    width: auto !important;
+    position: absolute;
+    z-index: 1000;
+    bottom: 5px;
+    right: 5px;
+    background-color: #fff;
+    border: none;
+}
+
+.media.additional {
+    display: none;
+    margin-left: 20px;
+}
+
+.media.multiple {
+    position: absolute;
+    top: 5px;
+    right: 0px;
+}
+
+.media.multiple:hover {
+    position: absolute;
+    top: 5px;
+    right: 0px;
+    background-color: #fff;
+}
+
+.media.multiple:hover .media_overlay {
+    display: none;
+}
+
+.media.multiple:hover .media.additional {
+    display: inline-block;
+    float: right;
 }
 
 #chars {
