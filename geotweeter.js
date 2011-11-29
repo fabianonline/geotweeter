@@ -973,7 +973,7 @@ function getStatusHTML(status, account_id) {
     if (thumbs.length == 1) {
         html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
     } else if (thumbs.length > 1) {
-        html += '<div class="media multiple"><img class="media_overlay" src="icons/images.png" /><a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
+        html += '<div class="media multiple"><a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
         html += '<span class="media additional">';
         for (var i=1; i<thumbs.length; i++) {
             html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" class="media" /></a>';
