@@ -974,17 +974,9 @@ function getStatusHTML(status, account_id) {
         }
     }
     
-    if (thumbs.length == 1) {
-        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
-    } else if (thumbs.length > 1) {
-        html += '<div class="media multiple"><a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" /></a>';
-        html += '<span class="media additional">';
-        for (var i=1; i<thumbs.length; i++) {
-            html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" class="media" /></a>';
-        }
-        html += '</span></div>';
+    if (thumbs.length==1) {
+       html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
     }
-    
     
     html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 
@@ -1023,15 +1015,21 @@ function getStatusHTML(status, account_id) {
         else if(check_troll(temp_text,user)) //Check for trolling users
 		return "";		
 	    html += temp_text;
-	
-	
-
-		
-
-	
-
 
     html += '</span>';
+    
+    
+    if (thumbs.length>1) {
+        html += '<div class="media">';
+       for (var i=0; i<thumbs.length; i++) {
+           html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" /></a>';
+       }
+       html += '</div>';
+    }
+        
+        
+        
+            
     if (status.retweeted_status)
         html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
     if (status.place)
@@ -1080,6 +1078,7 @@ function getStatusHTML(status, account_id) {
 
     html += '</div>'; // Links
     html += '</div>'; // overlay
+    html += '<div style="clear: both;"></div>';
     html += '</div>'; // tweet
 
     return html;

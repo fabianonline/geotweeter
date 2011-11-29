@@ -39,10 +39,9 @@ textarea, input, select {
     clear: both;
     min-height: 30px;
     padding-left: 5px;
+    padding-right: 5px;
     padding-top: 5px;
     padding-bottom: 5px;
-    float: left;
-    width: 100%;
 }
 
 .tweet {
@@ -139,8 +138,9 @@ textarea, input, select {
     color: #000;
 }
 
-img.media {
-    float: right;
+.media {
+    vertical-align: middle;
+    text-align: right;
 }
 
 .media img, img.media {
@@ -149,42 +149,7 @@ img.media {
     margin-right: 5px;
     margin-left: 5px;
     border: 1px solid #aaa;
-}
-
-.media .media_overlay {
-    width: auto !important;
-    position: absolute;
-    z-index: 1000;
-    bottom: 5px;
-    right: 5px;
     background-color: #fff;
-    border: none;
-}
-
-.media.additional {
-    display: none;
-    margin-left: 20px;
-}
-
-.media.multiple {
-    top: 5px;
-    right: 0px;
-}
-
-.media.multiple:hover {
-    position: absolute;
-    top: 5px;
-    right: 0px;
-    background-color: #fff;
-}
-
-.media.multiple:hover .media_overlay {
-    display: none;
-}
-
-.media.multiple:hover .media.additional {
-    display: inline-block;
-    float: right;
 }
 
 #chars {
@@ -357,4 +322,3 @@ img.media {
 #dm_info_text {
     font-size: 18px;
 }
-
