@@ -318,9 +318,9 @@ function checkForTimeout(account_id) {
     }
     if (get_time_since_last_tweet(account_id) > get_timeout_difference(account_id) && $('#text').val()=='') {
         log_message("checkForTimeout", "Timeout: Lack of tweets");
-        log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time()/1000);
-        log_message("checkForTimeout", "Timeout after: " + get_timeout_difference()/1000);
-        log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweet()/1000);
+        log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time(account_id)/1000);
+        log_message("checkForTimeout", "Timeout after: " + get_timeout_difference(account_id)/1000);
+        log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweet(account_id)/1000);
         disconnectBecauseOfTimeout[account_id] = true;
         req[account_id].abort();
     }
