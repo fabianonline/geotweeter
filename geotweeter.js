@@ -408,8 +408,10 @@ function fillList(account_id) {
 
     var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
     if (maxknownid[account_id] && maxknownid[account_id]!="0") parameters.since_id = maxknownid[account_id];
+    
+    log_message("fillList", "since_id: "+parameters.since_id, account_id);
 
-    log_message("fillList", "home_timeline 1...");
+    log_message("fillList", "home_timeline 1...", account_id);
     simple_twitter_request('statuses/home_timeline.json', {
         method: "GET",
         parameters: parameters,
@@ -1747,13 +1749,14 @@ function markAllRead() {
     var id = null;
     var offset = $(document).scrollTop() + $('#top').height();
     for (var i=0; i<elms.length; i++) {
-        log_message('markAllRead', id);
         if ($(elms[i]).offset().top >= offset) {
             id = $(elms[i]).attr('data-id');
             break;
         }
     }
+    log_message('markAllAsRead', 'Gefundene ID: '+id);
     if (id && biggerThan(id,maxreadid[current_account])) {
+        log_message('markAllRead', 'Updating.');
         setMaxReadID(id, current_account);
         maxreadid[current_account] = id;
         var elm = $('.new');
@@ -1868,9 +1871,11 @@ function addToAutoCompletion(term) {
 }
 
 /** Adds an entry to the debug log if enabled in settings.js. */
-function log_message(place, s) {
-    if (settings.debug && console && console.log) {
-        var str = "[ " + place;
+function log_message(place, s, account_id) {
+    if (settings.debug && typeof console != "undefined" && console.log) {
+        if (account_id==null) account_id=" ";
+        var str = "[ " + account_id + " ] ";
+        str += "[ " + place;
         for(var i=0; i<(20-place.length); i++) str += " ";
         str += " ] " + s;
         console.log(str);
