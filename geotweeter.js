@@ -964,7 +964,7 @@ function getStatusHTML(status, account_id) {
                 thumbs.push({thumbnail: "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail", link: entity.expanded_url});
             } else if (res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/)) {
                 thumbs.push({thumbnail: "http://moby.to/"+res[1]+":square", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/ragefac\.es\/([0-9]+)/)) {
+            } else if (res=entity.expanded_url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/)) {
                 thumbs.push({thumbnail: "http://ragefac.es/"+res[1]+"/i", link: entity.expanded_url});
             } else if (res=entity.expanded_url.match(/lauerfac\.es\/([0-9]+)/)) {
                 thumbs.push({thumbnail: "http://lauerfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
