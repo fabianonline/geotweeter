@@ -376,7 +376,7 @@ function fillList(account_id) {
             // oops... trigger the restart mechanism
             var html = '<div class="status">Retrying in 30 seconds...</div>';
             addHTML(html, account_id);
-            window.setTimeout('fillList()', 30000);
+            window.setTimeout('fillList(' + account_id + ')', 30000);
         }
         update_user_counter(account_id);
         setStatus("", null, account_id);
