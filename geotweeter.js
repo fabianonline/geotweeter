@@ -1417,7 +1417,12 @@ function _sendTweet(text, async) {
             }
         },
         error: function(req, testStatus, exc) {
-            $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
+            var info = 'Error ' + req.status + ' (' + req.statusText + ')';
+            try {
+                var additional = $.parseJSON(req.responseText);
+                if (additional.error) info += '<br /><strong>' + additional.error + '</strong>';
+            } catch(e) {}
+            $('#failure_info').html(info);
             $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
                 $('#form').fadeTo(500, 1);
             });
