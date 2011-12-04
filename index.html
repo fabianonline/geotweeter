@@ -39,7 +39,8 @@
     <a href="#" onClick="$('#chars').toggle(500); updateCounter(); return false;"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
     <a href="#" onClick="$('#text').val($('#text').val() + '<Nelson>Ha, ha!</Nelson>'); updateCounter(); return false;"><img src="icons/bug.png" title="Nelson" /></a>
     <a href="#" onClick="show_stats(); return false;"><img src="icons/calculator.png" title="Statistiken" /></a>
-    <a href="#" onClick="location.href='#'; location.reload();" style="float: right;"><img src="icons/arrow_refresh_small.png" title="Neu laden." /></a>
+    <a href="#" onClick="reload_current_account(); return false;" style="float: right;"><img src="icons/arrow_refresh_small.png" title="Aktuellen Account neu laden" /></a>
+    <a href="#" onClick="location.href='#'; location.reload();" style="float: right;"><img src="icons/arrow_refresh.png" title="Neu laden." /></a>
 </div>
 <div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->

@@ -1990,3 +1990,11 @@ function addUser2() {
     $('#info_spinner').before(html);
     $('#info_spinner').hide();
 }
+
+function reload_current_account() {
+    if (settings.twitter.users[current_account].stream) {
+        req[current_account].abort();
+    } else {
+        fillList(current_account);
+    }
+}
