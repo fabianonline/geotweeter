@@ -89,6 +89,10 @@ var infoarea_visible = false;
 /** Used by addUser() and addUser2() */
 var oauth_results;
 
+/** Holds all Tweet and TwitterEvent objects */
+var tweets = {};
+var events = [];
+
 regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
 regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
@@ -671,6 +675,7 @@ function display_event(element, return_html, account_id) {
 
     if (element.text) {
         html = getStatusHTML(element, account_id);
+		new Tweet(element);
     } else if (element.friends) {
         twitter_friends = element.friends;
     } else if ("delete" in element) {
