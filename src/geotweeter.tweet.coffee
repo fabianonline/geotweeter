@@ -19,9 +19,9 @@ class window.Tweet extends TwitterMessage
 		@get_buttons_html() +
 		"</div>"
 	
-	get_info_html: -> // TODO
+	get_info_html: -> # TODO
 	
-	get_buttons_html: -> // TODO
+	get_buttons_html: -> # TODO
 	
 	linkify: ->
 		if @data.entities?

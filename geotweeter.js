@@ -1,6 +1,31 @@
 (function() {
-  var Sender, TwitterMessage;
-  var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+  var Account, Sender, TwitterMessage, User, tweets, users,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+  Account = (function() {
+
+    function Account(settings_id) {
+      this.id = settings_id;
+    }
+
+    Account.prototype.my_element = $('#content_' + Account.id());
+
+    Account.prototype.set_maxread_id = function() {};
+
+    Account.prototype.get_maxread_id = function() {};
+
+    Account.prototype.mark_as_read = function() {};
+
+    Account.prototype.twitter_request = function() {};
+
+    return Account;
+
+  })();
+
+  tweets = {};
+
+  users = {};
 
   Sender = (function() {
 
@@ -20,27 +45,16 @@
 
   })();
 
-  TwitterMessage = (function() {
+  window.Tweet = (function(_super) {
 
-    function TwitterMessage(data) {
-      this.data = data;
-      this.sender = new Sender(this.data.sender);
-    }
-
-    return TwitterMessage;
-
-  })();
-
-  window.Tweet = (function() {
-
-    __extends(Tweet, TwitterMessage);
+    __extends(Tweet, _super);
 
     Tweet.mentions = [];
 
     function Tweet(data) {
       Tweet.__super__.constructor.call(this, data);
-      this.sender = new Sender(data.user);
-      window.tweets[this.id()] = this;
+      this.sender = new User(data.user);
+      tweets[this.id()] = this;
       this.text = data.status;
       this.linkify();
     }
@@ -54,8 +68,12 @@
     };
 
     Tweet.prototype.get_html = function() {
-      return ("<div id='" + (this.id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + this.text + "</div>";
+      return ("<div id='" + (this.id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + this.text + this.get_info_html() + this.get_buttons_html() + "</div>";
     };
+
+    Tweet.prototype.get_info_html = function() {};
+
+    Tweet.prototype.get_buttons_html = function() {};
 
     Tweet.prototype.linkify = function() {
       var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref, _results;
@@ -105,6 +123,40 @@
     };
 
     return Tweet;
+
+  })(TwitterMessage);
+
+  TwitterMessage = (function() {
+
+    function TwitterMessage(data) {
+      this.data = data;
+      this.sender = new Sender(this.data.sender);
+    }
+
+    return TwitterMessage;
+
+  })();
+
+  User = (function() {
+
+    function User(data) {
+      this.data = data;
+      users[this.data.id()] = this;
+    }
+
+    User.prototype.id = function() {
+      return this.data.id_str;
+    };
+
+    User.prototype.get_avatar_html = function() {
+      return "<span class='avatar'><img class='user_avatar' src='" + this.data.profile_image_url + "' /></span>";
+    };
+
+    User.prototype.get_link_html = function() {
+      return "<span class='poster'><a href='https://twitter.com/" + this.data.screen_name + "' target='_blank'>" + this.data.screen_name + "</a></span>";
+    };
+
+    return User;
 
   })();
 
