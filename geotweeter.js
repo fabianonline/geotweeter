@@ -1,5 +1,5 @@
 (function() {
-  var Account, Hooks, Sender, TwitterMessage, User, tweets, users,
+  var Account, Hooks, TwitterMessage, User, tweets, users,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -15,6 +15,12 @@
 
     function Account(settings_id) {
       this.id = settings_id;
+      this.keys = {
+        consumerKey: settings.twitter.consumerKey,
+        consumerSecret: settings.twitter.consumerSecret,
+        token: settings.twitter.users[settings_id].token,
+        tokenSecret: settings.twitter.users[settings_id].tokenSecret
+      };
       validate_credentials();
     }
 
@@ -38,13 +44,71 @@
       return l2 > l1;
     };
 
+    Account.prototype.twitter_request = function(url, options) {
+      var data, message, result, verbose, _ref, _ref2, _ref3, _ref4;
+      message = {
+        action: "https://api.twitter.com/1/" + url,
+        method: (_ref = options.method) != null ? _ref : "POST",
+        parameters: options.parameters
+      };
+      verbose = !(!!options.silent && true);
+      if (verbose) $('#form').fadeTo(500, 0).delay(500);
+      OAuth.setTimestampAndNonce(message);
+      OAuth.completeRequest(message, this.keys);
+      OAuth.signatureMethod.sign(message, this.keys);
+      url = "proxy/api/" + url;
+      data = OAuth.formEncode(message.parameters);
+      result = $.ajax({
+        url: url,
+        data: data,
+        dataType: (_ref2 = options.dataType) != null ? _ref2 : "json",
+        async: (_ref3 = options.async) != null ? _ref3 : true,
+        type: (_ref4 = options.method) != null ? _ref4 : "POST",
+        success: function(data, textStatus, req) {
+          if (req.status === "200") {
+            if (options.success_string != null) {
+              $('#success_info').html(options.success_string);
+            }
+            if (options.success != null) {
+              options.success($('#success_info'), data, req, options.additional_info);
+            }
+            if (verbose) {
+              return $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+                return $('#form').fadeTo(500, 1);
+              });
+            }
+          } else {
+            if (options.error != null) {
+              options.error($('#failure_info'), data, req, "", null, options.additional_info);
+            } else {
+              $('#failure_info').html(data.error);
+            }
+            if (verbose) {
+              return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+                return $('#form').fadeTo(500, 1);
+              });
+            }
+          }
+        },
+        error: function(req, textStatus, exc) {
+          if (options.error != null) {
+            options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info);
+          } else {
+            $('#failure_info').html("Error " + req.status + " (" + req.statusText + ")");
+          }
+          if (verbose) {
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
+        }
+      });
+      if (options.return_response) return result.responseText;
+    };
+
     return Account;
 
   })();
-
-  tweets = {};
-
-  users = {};
 
   Hooks = (function() {
     var _this = this;
@@ -58,24 +122,6 @@
     return Hooks;
 
   }).call(this);
-
-  Sender = (function() {
-
-    function Sender(data) {
-      this.data = data;
-    }
-
-    Sender.prototype.get_avatar_html = function() {
-      return "<span class='avatar'><img class='user_avatar' src='" + this.profile_image_url + "' /></span>";
-    };
-
-    Sender.prototype.get_link_html = function() {
-      return "<span class='poster'><a href='https://twitter.com/" + this.screen_name + "' target='_blank'>" + this.screen_name + "</a></span>";
-    };
-
-    return Sender;
-
-  })();
 
   window.Tweet = (function(_super) {
     var account, mentions;
@@ -206,5 +252,9 @@
     return User;
 
   })();
+
+  tweets = {};
+
+  users = {};
 
 }).call(this);
