@@ -1,18 +1,3 @@
-tweets = {}
-users = {}
-
-
-class User
-	constructor: (@data) ->
-		users[@data.id()] = this
-		
-	id: -> @data.id_str
-	get_avatar_html: -> "<span class='avatar'><img class='user_avatar' src='#{@data.profile_image_url}' /></span>"
-	get_link_html: -> "<span class='poster'><a href='https://twitter.com/#{@data.screen_name}' target='_blank'>#{@data.screen_name}</a></span>"
-
-class TwitterMessage
-	constructor: (@data) -> @sender = new Sender(@data.sender)
-
 class window.Tweet extends TwitterMessage
 	@mentions = []
 	
@@ -61,14 +46,3 @@ class window.Tweet extends TwitterMessage
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
 
-class Account
-	constructor: (settings_id) -> @id=settings_id
-	my_element: $('#content_'+@id())
-	
-	set_maxread_id: -> // TODO
-	
-	get_maxread_id: -> // TODO
-	
-	mark_as_read: -> // TODO
-	
-	twitter_request: () -> // TODO
