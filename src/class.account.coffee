@@ -2,6 +2,7 @@ class Account
 	screen_name = null
 	max_read_id = "0"
 	max_known_id = "0"
+	tweets = {}
 	
 	constructor: (settings_id) ->
 		@id=settings_id
@@ -18,8 +19,9 @@ class Account
 	set_max_read_id: -> # TODO
 	get_max_read_id: -> # TODO
 	mark_as_read: -> # TODO
-	twitter_request: () -> # TODO
 	validate_credentials: -> # TODO
+	get_tweet: (id) -> @tweets[id]
+	get_id: -> @id
 	
 	is_unread_tweet: (tweet_id) -> 
 		l1 = max_read_id.length

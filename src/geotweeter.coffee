@@ -1,2 +1,1 @@
-tweets = {}
 users = {}

@@ -1,21 +1,23 @@
 class window.Tweet extends TwitterMessage
 	mentions = []
 	account = null
+	thumbs = []
 	
 	constructor: (data, @account) ->
 		super(data)
-		@sender = new User(data.user)
-		tweets[@id()] = this
+		@sender = new User(data.retweeted_status ? data.user)
+		@account.tweets[@get_id()] = this
 		@text = data.status
 		@linkify_text()
+		@thumbs = @get_thumbnails()
 	
-	id: -> @data.id_str
-	div_id: -> "#tweet_#{@id()}"
+	get_id: -> @data.id_str
+	div_id: -> "#tweet_#{@get_id()}"
 	get_html: ->
-		"<div id='#{@id()}' class='#{@get_classes().join(" ")}'>" +
+		"<div id='#{@get_id()}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@get_id()}' data-account-id='#{@account.get_id()}'>" +
 		@sender.get_avatar_html() +
 		@sender.get_link_html() +
-		@text +
+		"<span class='text'>#{@text}</span>" +
 		@get_info_html() +
 		@get_buttons_html() +
 		"</div>"
@@ -53,9 +55,32 @@ class window.Tweet extends TwitterMessage
 		classes = [
 			@get_type()
 			"by_#{@data.user.screen_name}"
-			"new" if @account.is_unread_tweet(@data.id_str)
+			"new" if @account.is_unread_tweet(@get_id())
 			"mentions_this_user" if @account.screen_name in @mentions
 			"by_this_user" if @account.screen_name == @data.user.screen_name
 		]
 		classes.push("mentions_#{mention}") for mention in @mentions
 		classes
+	
+	retweet: ->
+		return unless confirm("Wirklich retweeten?")
+		@account.twitter_request("statuses/retweet/#{get_id()}.json", {success_string: "Retweet erfolgreich"})
+	
+	delete: ->
+		return unless confirm("Wirklich diesen Tweet löschen?")
+		@account.twitter_request("statuses/destroy/#{get_id()}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
+	
+	get_thumbnails: ->
+		for media in @data.entities?.media?
+			@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))
+		for entity in @data.entities?.urls?
+			url = entity.expanded_url
+			thumbs.push(new Thumbnail("http://img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/)) 
+			thumbs.push(new Thumbnail("http://twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
+			thumbs.push(new Thumbnail("http://yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
+			thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
+			thumbs.push(new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
+			thumbs.push(new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
+			thumbs.push(new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
+			thumbs.push(new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/)) 
+		return
