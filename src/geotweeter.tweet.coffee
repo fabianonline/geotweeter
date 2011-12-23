@@ -7,7 +7,7 @@ class window.Tweet extends TwitterMessage
 		@sender = new User(data.user)
 		tweets[@id()] = this
 		@text = data.status
-		@linkify()
+		@linkify_text()
 	
 	id: -> @data.id_str
 	div_id: -> "#tweet_#{@id()}"
@@ -24,7 +24,7 @@ class window.Tweet extends TwitterMessage
 	
 	get_buttons_html: -> # TODO
 	
-	linkify: ->
+	linkify_text: ->
 		if @data.entities?
 			all_entities = []
 			for entity_type, entities of @data.entities
@@ -44,6 +44,7 @@ class window.Tweet extends TwitterMessage
 							@replace_entity(entity, "<a href='#{entity.url}' class='external' target='_blank'>#{entity.url}</a>")
 					when "hashtags"
 						@replace_entity(entity, "<a href='https://twitter.com/search?q=##{entity.text}' target='_blank'>##{entity.text}</a>")
+		@text = @text.replace(/\n/g, "<br />\n")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
 	get_type: -> "tweet"

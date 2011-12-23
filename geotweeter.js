@@ -92,7 +92,7 @@
       this.sender = new User(data.user);
       tweets[this.id()] = this;
       this.text = data.status;
-      this.linkify();
+      this.linkify_text();
     }
 
     Tweet.prototype.id = function() {
@@ -111,8 +111,8 @@
 
     Tweet.prototype.get_buttons_html = function() {};
 
-    Tweet.prototype.linkify = function() {
-      var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref, _results;
+    Tweet.prototype.linkify_text = function() {
+      var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
       if (this.data.entities != null) {
         all_entities = [];
         _ref = this.data.entities;
@@ -127,31 +127,27 @@
         all_entities = all_entities.sort(function(a, b) {
           return a.indices[0] - b.indices[0];
         }).reverse();
-        _results = [];
         for (_j = 0, _len2 = all_entities.length; _j < _len2; _j++) {
           entity = all_entities[_j];
           switch (entity.type) {
             case "user_mentions":
               this.mentions.push(entity.screen_name);
-              _results.push(this.replace_entity(entity, "<a href='https://twitter.com/" + entity.screen_name + "' target='_blank'>@" + entity.screen_name + "</a>"));
+              this.replace_entity(entity, "<a href='https://twitter.com/" + entity.screen_name + "' target='_blank'>@" + entity.screen_name + "</a>");
               break;
             case "urls":
             case "media":
               if (entity.expanded_url != null) {
-                _results.push(this.replace_entity(entity, "<a href='" + entity.expanded_url + "' class='external' target='_blank'>" + entity.display_url + "</a>"));
+                this.replace_entity(entity, "<a href='" + entity.expanded_url + "' class='external' target='_blank'>" + entity.display_url + "</a>");
               } else {
-                _results.push(this.replace_entity(entity, "<a href='" + entity.url + "' class='external' target='_blank'>" + entity.url + "</a>"));
+                this.replace_entity(entity, "<a href='" + entity.url + "' class='external' target='_blank'>" + entity.url + "</a>");
               }
               break;
             case "hashtags":
-              _results.push(this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank'>#" + entity.text + "</a>"));
-              break;
-            default:
-              _results.push(void 0);
+              this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank'>#" + entity.text + "</a>");
           }
         }
-        return _results;
       }
+      return this.text = this.text.replace(/\n/g, "<br />\n");
     };
 
     Tweet.prototype.replace_entity = function(entity_object, text) {

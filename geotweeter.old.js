@@ -903,36 +903,7 @@ function getStatusHTML(status, account_id) {
     }
     if (last_event_times[account_id].length > (settings.timeout_detect_tweet_count+1)) last_event_times[account_id].pop();
     var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
-    html += '<div class="';
-    if (!isDM)
-        html += 'tweet ';
-    else
-        html += 'dm ';
-    html += 'by_' + user + ' ';
-    if (user == this_users_name[account_id]) html += "by_this_user ";
-    if (!isDM && biggerThan(status.id, maxreadid[account_id]))
-        html += 'new ';
-    if (status.entities && status.entities.user_mentions) {
-        for (var i=0; i<status.entities.user_mentions.length; i++) {
-            html += 'mentions_' + status.entities.user_mentions[i].screen_name + ' ';
-            if (status.entities.user_mentions[i].screen_name == this_users_name[account_id]) html += 'mentions_this_user ';
-        }
-    } else {
-        var mentions = status.text.match(regexp_user);
-        if (mentions) {
-            for (var i=0; i<mentions.length; i++) {
-                mention = String(mentions[i]).trim().substr(1);
-                html += 'mentions_' + mention + ' ';
-                if (mention == this_users_name[account_id]) html += "mentions_this_user ";
-            }
-        }
-    }
-    
-   // Checks Tweet for words to be highlighted 
-   if (check_highlight(temp_text))
-    html += "highlight";
-
-    html += '" ';
+    html += '<div class="...SNIP..." ';
     html += 'id="id_' + status.id + '" ';
     html += 'data-sender="' + user_object.screen_name + '" ';
     var mentions = "";
@@ -1011,7 +982,7 @@ function getStatusHTML(status, account_id) {
     if (user_object.is_receiver) extra = "to ";
     html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
     if (user_object.protected) {
-        html += '🔒';
+        html += '';
     }
     html += '</span> ';
     html += '<span class="text">';
@@ -1098,71 +1069,7 @@ function addnull(number) {
     return number;
 }
 
-/** Sort funtion for an array containing entities */
-function entity_sort(a, b) {
-    return a.indices[0] - b.indices[0];
-}
 
-/** Offset-based string replacement function for use with entity indices */
-function replace_entity(str, replace, entity) {
-    var result = str.slice(0, entity.indices[0]) + replace + str.slice(entity.indices[1]);
-    return result;
-}
-
-/** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
-function linkify(text, entities) {
-    if (entities) {
-        var all_entities = new Array();
-        for (var entity_type in entities) {
-            for (var i=0; i<entities[entity_type].length; i++) {
-                var entity = entities[entity_type][i];
-                entity.type = entity_type;
-                all_entities.push(entity);
-            }
-        }
-        var all_entities_sort = all_entities.sort(entity_sort).reverse();
-        for (var i=0; i<all_entities_sort.length; i++) {
-            entity = all_entities_sort[i];
-            if (entity.type=="user_mentions") {
-                text = replace_entity(text, '<a href="https://twitter.com/' + entity.screen_name + '" target="_blank">@' + entity.screen_name + '</a>', entity);
-                addToAutoCompletion('@' + entity.screen_name);
-            } else if (entity.type=="urls") {
-                if (entity.expanded_url) {
-                    text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
-                } else {
-                    text = replace_entity(text, '<a href="' + entity.url + '" class="external" target="_blank">' + entity.url + '</a>', entity);
-                }
-            } else if (entity.type=="hashtags") {
-                text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
-                addToAutoCompletion('#' + entity.text);
-            } else if (entity.type=="media") {
-                text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
-            }
-        }
-
-    } else {
-        // We got no entities. This can happen with status messages and so on.
-        // In that case we use the old regexp-based replacement method.
-        var matches = text.match(regexp_user);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            addToAutoCompletion(matches[i].trim());
-        }
-
-        var matches = text.match(regexp_hash);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            addToAutoCompletion(matches[i].trim());
-        }
-
-        text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
-        text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
-        text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
-    }
-
-    // Add Links to geocaching.com and "properly" display linebreaks.
-    text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
-    text = text.replace(/\n/g, '<br />\n');
-    return text;
-}
 
 /** Shows a "fullscreen" element with defined title and content. */
 function infoarea_show(title, content) {
@@ -1816,15 +1723,6 @@ function checkEnter(event) {
     }
     textBeforeEnter = $('#text').val();
     timeOfLastEnter = d.getTime();
-}
-
-/** Compares two number-strings. True, if a is bigger than b. Else returns false. */
-function biggerThan(a, b) {
-    var l1 = a? a.length : 0;
-    var l2 = b? b.length : 0;
-    if (l1>l2) return true;
-    if (l1<l2) return false;
-    return a>b;
 }
 
 /** Checks for blacklisted words. */
