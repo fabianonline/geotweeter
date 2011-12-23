@@ -1,23 +1,42 @@
 (function() {
-  var Account, Sender, TwitterMessage, User, tweets, users,
+  var Account, Hooks, Sender, TwitterMessage, User, tweets, users,
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Account = (function() {
+    var max_known_id, max_read_id, screen_name;
+
+    screen_name = null;
+
+    max_read_id = "0";
+
+    max_known_id = "0";
 
     function Account(settings_id) {
       this.id = settings_id;
+      validate_credentials();
     }
 
     Account.prototype.my_element = $('#content_' + Account.id());
 
-    Account.prototype.set_maxread_id = function() {};
+    Account.prototype.set_max_read_id = function() {};
 
-    Account.prototype.get_maxread_id = function() {};
+    Account.prototype.get_max_read_id = function() {};
 
     Account.prototype.mark_as_read = function() {};
 
     Account.prototype.twitter_request = function() {};
+
+    Account.prototype.validate_credentials = function() {};
+
+    Account.prototype.is_unread_tweet = function(tweet_id) {
+      var l1, l2;
+      l1 = max_read_id.length;
+      l2 = tweet_id.length;
+      if (l1 === l2) return tweet_id > max_read_id;
+      return l2 > l1;
+    };
 
     return Account;
 
@@ -26,6 +45,19 @@
   tweets = {};
 
   users = {};
+
+  Hooks = (function() {
+    var _this = this;
+
+    function Hooks() {}
+
+    Hooks.get_tweet(function() {});
+
+    Hooks.reply(function() {});
+
+    return Hooks;
+
+  }).call(this);
 
   Sender = (function() {
 
@@ -46,12 +78,16 @@
   })();
 
   window.Tweet = (function(_super) {
+    var account, mentions;
 
     __extends(Tweet, _super);
 
-    Tweet.mentions = [];
+    mentions = [];
 
-    function Tweet(data) {
+    account = null;
+
+    function Tweet(data, account) {
+      this.account = account;
       Tweet.__super__.constructor.call(this, data);
       this.sender = new User(data.user);
       tweets[this.id()] = this;
@@ -68,7 +104,7 @@
     };
 
     Tweet.prototype.get_html = function() {
-      return ("<div id='" + (this.id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + this.text + this.get_info_html() + this.get_buttons_html() + "</div>";
+      return ("<div id='" + (this.id()) + "' class='" + (this.get_classes().join(" ")) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + this.text + this.get_info_html() + this.get_buttons_html() + "</div>";
     };
 
     Tweet.prototype.get_info_html = function() {};
@@ -120,6 +156,21 @@
 
     Tweet.prototype.replace_entity = function(entity_object, text) {
       return this.text = this.text.slice(0, entity_object.indices[0]) + text + this.text.slice(entity_object.indices[1]);
+    };
+
+    Tweet.prototype.get_type = function() {
+      return "tweet";
+    };
+
+    Tweet.prototype.get_classes = function() {
+      var classes, mention, _i, _len, _ref, _ref2;
+      classes = [this.get_type(), "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.data.id_str) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.data.user.screen_name ? "by_this_user" : void 0];
+      _ref2 = this.mentions;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        mention = _ref2[_i];
+        classes.push("mentions_" + mention);
+      }
+      return classes;
     };
 
     return Tweet;

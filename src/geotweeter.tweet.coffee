@@ -1,7 +1,8 @@
 class window.Tweet extends TwitterMessage
-	@mentions = []
+	mentions = []
+	account = null
 	
-	constructor: (data) ->
+	constructor: (data, @account) ->
 		super(data)
 		@sender = new User(data.user)
 		tweets[@id()] = this
@@ -11,7 +12,7 @@ class window.Tweet extends TwitterMessage
 	id: -> @data.id_str
 	div_id: -> "#tweet_#{@id()}"
 	get_html: ->
-		"<div id='#{@id()}'>" +
+		"<div id='#{@id()}' class='#{@get_classes().join(" ")}'>" +
 		@sender.get_avatar_html() +
 		@sender.get_link_html() +
 		@text +
@@ -45,4 +46,15 @@ class window.Tweet extends TwitterMessage
 						@replace_entity(entity, "<a href='https://twitter.com/search?q=##{entity.text}' target='_blank'>##{entity.text}</a>")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
-
+	get_type: -> "tweet"
+	
+	get_classes: ->
+		classes = [
+			@get_type()
+			"by_#{@data.user.screen_name}"
+			"new" if @account.is_unread_tweet(@data.id_str)
+			"mentions_this_user" if @account.screen_name in @mentions
+			"by_this_user" if @account.screen_name == @data.user.screen_name
+		]
+		classes.push("mentions_#{mention}") for mention in @mentions
+		classes
