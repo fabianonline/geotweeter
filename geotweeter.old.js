@@ -103,37 +103,6 @@ $(document).ready(start);
 
 /** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
 function start() {
-    if (!checkSettings()) {
-        alert("settings.js veraltet. Bitte mit settings.js.example abgleichen und DANACH die Version auf " + expected_settings_version + " setzen. Breche ab.");
-        return;
-    }
-
-    delay = settings.timings.mindelay;
-
-    // Fill Places
-    if (settings.places.length==0) {
-        // If there are no places defined in settings.js, we don't even show the dropdown field
-        $("#place").remove();
-    } else {
-        // otherwise, the first (default) entry is an empty entry
-        document.tweet_form.place.options[document.tweet_form.place.length] = new Option("-- leer --", 0);
-        for(var i=0; i<settings.places.length; i++) {
-            document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i+1);
-        }
-
-        if ($.cookie('last_place')) $("#place option[value='" + $.cookie('last_place') + "']").attr('selected', true);
-    }
-
-    $('#place').change(function(){
-        $.cookie('last_place', $('#place option:selected').val(), {expires: 365});
-    });
-
-    $('#file').change(check_file);
-
-    for(var i=0; i<settings.chars.length; i++) {
-        $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
-    }
-
     // check the credentials and exit if not okay.
     validateCredentials();
     get_twitter_configuration();

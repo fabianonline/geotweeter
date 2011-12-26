@@ -1,5 +1,5 @@
 (function() {
-  var Account, Hooks, TwitterMessage, User, users,
+  var Account, Hooks, Thumbnail, TwitterMessage, User, accounts, users,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -140,6 +140,25 @@
     return Hooks;
 
   }).call(this);
+
+  Thumbnail = (function() {
+
+    function Thumbnail(thumbnail, link) {
+      this.thumbnail = thumbnail;
+      this.link = link;
+    }
+
+    Thumbnail.prototype.get_single_thumb_html = function() {
+      return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+    };
+
+    Thumbnail.prototype.get_multi_thumb_html = function() {
+      return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' />		</a>";
+    };
+
+    return Thumbnail;
+
+  })();
 
   window.Tweet = (function(_super) {
     var account, mentions, thumbs;
@@ -331,5 +350,60 @@
   })();
 
   users = {};
+
+  accounts = [];
+
+  ({
+    expected_settings_version: 12,
+    start: function() {
+      if (!is_settings_version_okay()) return;
+      fill_places();
+      attach_hooks();
+      return initialize_accounts();
+    },
+    is_settings_version_okay: function() {
+      if (settings.version !== expected_settings_version) {
+        alert("settings.js veraltet.\nErwartet: " + expected_settings_version + "\nGegeben: " + settings.version);
+        return false;
+      }
+      return true;
+    },
+    fill_places: function() {
+      var id, place, _len, _ref;
+      if (settings.places.length === 0) {
+        return $('#place').remove();
+      } else {
+        $('#place').options[0] = new Option("-- leer --", 0);
+        _ref = settings.places;
+        for (id = 0, _len = _ref.length; id < _len; id++) {
+          place = _ref[id];
+          $('#place').options[$('#place').options.length] = new Option(place.name, id + 1);
+        }
+        if ($.cookie('last_place')) {
+          return $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
+        }
+      }
+    },
+    attach_hooks: function() {
+      $('#place').change(function() {
+        return $.cookie('last_place', $('#place option:selected').val(), {
+          expires: 365
+        });
+      });
+      return $('#file').change(check_file);
+    },
+    check_file: function() {},
+    initialize_accounts: function() {
+      var acct, data, id, _len, _ref, _results;
+      _ref = settings.twitter.users;
+      _results = [];
+      for (id = 0, _len = _ref.length; id < _len; id++) {
+        data = _ref[id];
+        acct = new Account(id);
+        _results.push(accounts[id] = acct);
+      }
+      return _results;
+    }
+  });
 
 }).call(this);
