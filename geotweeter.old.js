@@ -917,85 +917,13 @@ function getStatusHTML(status, account_id) {
     html += '>';
     html += '<a name="status_' + status.id + '"></a>';
     
-    /* Search for usable entities to display thumbnails */
-    var thumbs = new Array();
-    if (status.entities && status.entities.media) {
-        for (var i in status.entities.media) {
-            var media = status.entities.media[i];
-            thumbs.push({thumbnail: media.media_url_https+':thumb', link: media.expanded_url});
-        }
-    }
     
-    if(status.entities && status.entities.urls) {
-        for (var i in status.entities.urls) {
-            var entity = status.entities.urls[i];
-            if (entity.expanded_url==null) continue;
-            
-            var res;
-            if (res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/)) {
-                thumbs.push({thumbnail: "http://img.youtube.com/vi/"+res[1]+"/1.jpg", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) {
-                thumbs.push({thumbnail: "http://twitpic.com/show/mini/"+res[1], link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) {
-                thumbs.push({thumbnail: "http://yfrog.com/"+res[1]+".th.jpg", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/lockerz.com\/s\/[0-9]+/)) {
-                thumbs.push({thumbnail: "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/)) {
-                thumbs.push({thumbnail: "http://moby.to/"+res[1]+":square", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://ragefac.es/"+res[1]+"/i", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/lauerfac\.es\/([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://lauerfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/ponyfac\.es\/([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://ponyfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
-            }
-        }
-    }
     
     if (thumbs.length==1) {
        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
     }
     
-    html += '<span class="avatar" data-user-id="' + user_object.id + '">';
 
-    // Start Tooltip-Info
-    html += '<span class="tooltip_info">';
-    html += '<strong>' + user_object.name + '</strong><br /><br />';
-    html += user_object.followers_count + ' Follower<br />';
-    html += user_object.friends_count + ' Friends<br />';
-    html += user_object.statuses_count + ' Tweets<br /><br />';
-    html += "@" + user + " %s";
-    html += '</span>';
-    // Ende Tooltip-Info
-
-    html += '<a href="http://twitter.com/account/profile_image/' + user + '" target="_blank"><img class="user_avatar" src="';
-    if (status.retweeted_status)
-        html += status.retweeted_status.user.profile_image_url;
-    else if (isDM)
-        html += status.sender.profile_image_url;
-    else
-        html += status.user.profile_image_url;
-    html += '" /></a>';
-    html += '</span>';
-    html += '<span class="poster">';
-    var extra="";
-    if (user_object.is_receiver) extra = "to ";
-    html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
-    if (user_object.protected) {
-        html += '';
-    }
-    html += '</span> ';
-    html += '<span class="text">';
-    
-     // Check if tweet contains blacklisted words
-        if(check_blacklist(temp_text))
-              return "";    
-        else if(check_troll(temp_text,user)) //Check for trolling users
-		return "";		
-	    html += temp_text;
-
-    html += '</span>';
-    
     
     if (thumbs.length>1) {
         html += '<div class="media">';
@@ -1368,29 +1296,6 @@ function splitTweet(text) {
         if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
     }
     return parts;
-}
-
-/** Natively retweets a given tweet. */
-function retweet(id) {
-    if (!confirm('Wirklich direkt retweeten?'))
-        return false;
-
-    simple_twitter_request('statuses/retweet/' + id + '.json', {
-        success_string: "Retweet successfull"
-    });
-}
-
-/** Delete one of your own tweets. */
-function delete_tweet(id) {
-    if (!confirm('Wirklich diesen Tweet löschen?'))
-        return false;
-
-    simple_twitter_request('statuses/destroy/' + id + '.json', {
-        success_string: 'Tweet deleted',
-        success: function() {
-            $('#id_' + id).remove();
-        }
-    });
 }
 
 /** Report user as spamming. */
