@@ -1,4 +1,4 @@
-class window.Tweet extends TwitterMessage
+class Tweet #extends TwitterMessage
 	mentions = []
 	account = null
 	thumbs = []
