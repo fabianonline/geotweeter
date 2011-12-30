@@ -2,6 +2,9 @@ Fabians Geotweeter
 ==================
 
 Fabians Geotweeter ist mein kleiner, fast komplett in Javascript geschriebener, "privater" Twitter-Client.
+Diese Version ist der Coffeescript-basierende Rewrite mit Klassen, Objekten und so.
+
+Die Source-Files liegen in src/, zum Kompilieren nutze man `coffee --bare --join geotweeter.js --compile src/*.coffee`.
 
 Geschichte
 ----------
