@@ -1,4 +1,6 @@
 var Account, Application, Hooks, Thumbnail, Tweet, TwitterMessage, User,
+  __hasProp = Object.prototype.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 Account = (function() {
@@ -208,8 +210,21 @@ Thumbnail = (function() {
 
 })();
 
-Tweet = (function() {
+TwitterMessage = (function() {
+
+  function TwitterMessage(data) {
+    this.data = data;
+    this.sender = new Sender(this.data.sender);
+  }
+
+  return TwitterMessage;
+
+})();
+
+Tweet = (function(_super) {
   var account, mentions, thumbs;
+
+  __extends(Tweet, _super);
 
   mentions = [];
 
@@ -359,18 +374,7 @@ Tweet = (function() {
 
   return Tweet;
 
-})();
-
-TwitterMessage = (function() {
-
-  function TwitterMessage(data) {
-    this.data = data;
-    this.sender = new Sender(this.data.sender);
-  }
-
-  return TwitterMessage;
-
-})();
+})(TwitterMessage);
 
 User = (function() {
 
