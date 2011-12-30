@@ -101,26 +101,32 @@ Account = (function() {
     });
   };
 
-  Account.prototype.twitter_request = function(url, options) {
-    var data, message, result, verbose, _ref, _ref2, _ref3, _ref4;
+  Account.prototype.sign_request = function(url, method, parameters) {
+    var message;
     message = {
-      action: "https://api.twitter.com/1/" + url,
-      method: (_ref = options.method) != null ? _ref : "POST",
-      parameters: options.parameters
+      action: url,
+      method: method,
+      parameters: parameters
     };
-    verbose = !(!!options.silent && true);
-    if (verbose) $('#form').fadeTo(500, 0).delay(500);
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, this.keys);
     OAuth.SignatureMethod.sign(message, this.keys);
+    return OAuth.formEncode(message.parameters);
+  };
+
+  Account.prototype.twitter_request = function(url, options) {
+    var data, method, result, verbose, _ref, _ref2, _ref3;
+    method = (_ref = options.method) != null ? _ref : "POST";
+    verbose = !(!!options.silent && true);
+    if (verbose) $('#form').fadeTo(500, 0).delay(500);
+    data = this.sign_request("https://api.twitter.com/1/" + url, method, options.parameters);
     url = "proxy/api/" + url;
-    data = OAuth.formEncode(message.parameters);
     result = $.ajax({
       url: url,
       data: data,
       dataType: (_ref2 = options.dataType) != null ? _ref2 : "json",
       async: (_ref3 = options.async) != null ? _ref3 : true,
-      type: (_ref4 = options.method) != null ? _ref4 : "POST",
+      type: method,
       success: function(data, textStatus, req) {
         if (req.status === "200" || req.status === 200) {
           if (options.success_string != null) {
@@ -222,15 +228,14 @@ TwitterMessage = (function() {
 })();
 
 Tweet = (function(_super) {
-  var account, mentions, thumbs;
 
   __extends(Tweet, _super);
 
-  mentions = [];
+  Tweet.prototype.mentions = [];
 
-  account = null;
+  Tweet.prototype.account = null;
 
-  thumbs = [];
+  Tweet.prototype.thumbs = [];
 
   function Tweet(data, account) {
     var _ref;

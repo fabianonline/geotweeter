@@ -1,7 +1,7 @@
 class Tweet extends TwitterMessage
-	mentions = []
-	account = null
-	thumbs = []
+	mentions: []
+	account: null
+	thumbs: []
 	
 	constructor: (data, @account) ->
 		super(data)

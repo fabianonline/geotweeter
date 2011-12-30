@@ -69,26 +69,30 @@ class Account
 			success: (element, data) -> Application.twitter_config = data
 		})
 	
-	twitter_request: (url, options) ->
+	sign_request: (url, method, parameters) ->
 		message = {
-			action: "https://api.twitter.com/1/#{url}"
-			method: options.method ? "POST"
-			parameters: options.parameters
+			action: url
+			method: method
+			parameters: parameters
 		}
-		verbose = !(!!options.silent && true)
-		$('#form').fadeTo(500, 0).delay(500) if verbose
 		OAuth.setTimestampAndNonce(message)
 		OAuth.completeRequest(message, @keys)
 		OAuth.SignatureMethod.sign(message, @keys)
+		return OAuth.formEncode(message.parameters)
+	
+	twitter_request: (url, options) ->
+		method = options.method ? "POST"
+		verbose = !(!!options.silent && true)
+		$('#form').fadeTo(500, 0).delay(500) if verbose
+		data = @sign_request("https://api.twitter.com/1/#{url}", method, options.parameters)
 		url = "proxy/api/#{url}"
-		data = OAuth.formEncode(message.parameters)
 		
 		result = $.ajax({
 			url: url
 			data: data
 			dataType: options.dataType ? "json"
 			async: options.async ? true
-			type: options.method ? "POST"
+			type: method
 			success: (data, textStatus, req) ->
 				if req.status=="200" || req.status==200
 					$('#success_info').html(options.success_string) if options.success_string?
