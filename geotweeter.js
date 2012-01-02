@@ -528,7 +528,7 @@ Tweet = (function(_super) {
     for (_j = 0, _len2 = _ref4.length; _j < _len2; _j++) {
       entity = _ref4[_j];
       url = entity.expanded_url;
-      if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/))) {
+      if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
         thumbs.push(new Thumbnail("http://img.youtube.com/" + res[1] + "/1.jpg", url));
       }
       if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
