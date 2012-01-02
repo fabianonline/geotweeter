@@ -4,14 +4,16 @@ class Tweet extends TwitterMessage
 	thumbs: []
 	
 	constructor: (data, @account) ->
-		super(data)
+		@data = data
 		@sender = new User(data.retweeted_status ? data.user)
 		@account.tweets[@get_id()] = this
-		@text = data.status
+		@text = data.text
 		@linkify_text()
 		@thumbs = @get_thumbnails()
+		@date = new Date(@data.created_at)
 	
 	get_id: -> @data.id_str
+	get_date: -> @date
 	div_id: -> "#tweet_#{@get_id()}"
 	get_html: ->
 		"<div id='#{@get_id()}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@get_id()}' data-account-id='#{@account.get_id()}'>" +

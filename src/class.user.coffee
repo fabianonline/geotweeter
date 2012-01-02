@@ -1,6 +1,6 @@
 class User
 	constructor: (@data) ->
-		users[@data.id()] = this
+		users[@data.id] = this
 		
 	id: -> @data.id_str
 	get_avatar_html: -> 

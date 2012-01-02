@@ -1,4 +1,4 @@
-var Account, Application, Hooks, Thumbnail, Tweet, TwitterMessage, User,
+var Account, Application, Hooks, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, User,
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -11,11 +11,17 @@ Account = (function() {
 
   Account.prototype.max_known_id = "0";
 
+  Account.prototype.max_known_dm_id = "0";
+
   Account.prototype.tweets = {};
 
   Account.prototype.id = null;
 
   Account.prototype.user_data = null;
+
+  Account.prototype.request = null;
+
+  Account.prototype.keys = {};
 
   function Account(settings_id) {
     this.id = settings_id;
@@ -26,6 +32,8 @@ Account = (function() {
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
     this.validate_credentials();
+    this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
+    this.fill_list();
   }
 
   Account.prototype.my_element = function() {
@@ -82,6 +90,8 @@ Account = (function() {
   };
 
   Account.prototype.add_html = function() {};
+
+  Account.prototype.update_user_counter = function() {};
 
   Account.prototype.is_unread_tweet = function(tweet_id) {
     var l1, l2;
@@ -169,6 +179,122 @@ Account = (function() {
     if (options.return_response) return result.responseText;
   };
 
+  Account.prototype.fill_list = function() {
+    var after_run, default_parameters, error, key, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _results,
+      _this = this;
+    threads_running = 5;
+    threads_errored = 0;
+    responses = [];
+    after_run = function() {
+      if (threads_errored === 0) {
+        _this.parse_data(responses);
+        _this.request.start_request();
+      } else {
+        setTimeout(_this.fill_list, 30000);
+      }
+      return _this.update_user_counter;
+    };
+    success = function(element, data) {
+      responses.push(data);
+      threads_running -= 1;
+      if (threads_running === 0) return after_run();
+    };
+    error = function(element, data) {
+      threads_running -= 1;
+      threads_errored += 1;
+      if (threads_running === 0) return after_run();
+    };
+    default_parameters = {
+      include_rts: true,
+      count: 200,
+      include_entities: true,
+      page: 1,
+      since_id: this.max_known_id !== "0" ? this.max_known_id : void 0
+    };
+    requests = [
+      {
+        url: "statuses/home_timeline.json",
+        name: "home_timeline 1"
+      }, {
+        url: "statuses/home_timeline.json",
+        name: "home_timeline 2",
+        extra_parameters: {
+          page: 2
+        }
+      }, {
+        url: "statuses/mentions.json",
+        name: "mentions"
+      }, {
+        url: "direct_messages.json",
+        name: "Received DMs",
+        extra_parameters: {
+          count: 100,
+          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
+        }
+      }, {
+        url: "direct_messages/sent.json",
+        name: "Sent DMs",
+        extra_parameters: {
+          count: 100,
+          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
+        }
+      }
+    ];
+    _results = [];
+    for (_i = 0, _len = requests.length; _i < _len; _i++) {
+      request = requests[_i];
+      parameters = {};
+      for (key in default_parameters) {
+        value = default_parameters[key];
+        if (value) parameters[key] = value;
+      }
+      _ref = request.extra_parameters;
+      for (key in _ref) {
+        value = _ref[key];
+        if (value) parameters[key] = value;
+      }
+      _results.push(this.twitter_request(request.url, {
+        method: "GET",
+        parameters: parameters,
+        dataType: "text",
+        silent: true,
+        additional_info: {
+          name: request.name
+        },
+        success: success,
+        error: error
+      }));
+    }
+    return _results;
+  };
+
+  Account.prototype.parse_data = function(json) {
+    var data, json_data, responses, temp, temp_elements, _i, _j, _len, _len2;
+    if (json.constructor !== Array) json = [json];
+    responses = [];
+    for (_i = 0, _len = json.length; _i < _len; _i++) {
+      json_data = json[_i];
+      try {
+        temp = $.parseJSON(json_data);
+      } catch (_error) {}
+      if (temp == null) continue;
+      if (temp.constructor === Array) {
+        if (temp.length > 0) {
+          temp_elements = [];
+          for (_j = 0, _len2 = temp.length; _j < _len2; _j++) {
+            data = temp[_j];
+            temp_elements.push(TwitterMessage.get_object(data, this));
+          }
+          responses.push(temp_elements);
+        }
+      } else {
+        responses.push([TwitterMessage.get_object(temp, this)]);
+      }
+    }
+    if (responses.length === 0) return;
+    debugger;
+  };
+
   return Account;
 
 })();
@@ -220,8 +346,22 @@ TwitterMessage = (function() {
 
   function TwitterMessage(data) {
     this.data = data;
-    this.sender = new Sender(this.data.sender);
+    this.sender = new User(this.data.sender);
   }
+
+  TwitterMessage.prototype.get_date = function() {
+    return this.date;
+  };
+
+  TwitterMessage.prototype.get_id = function() {
+    return this.object_id;
+  };
+
+  TwitterMessage.get_object = function(data, account) {
+    if (data == null) return;
+    if ((data.text != null) && (data.recipient != null)) return;
+    if (data.text != null) return new Tweet(data, account);
+  };
 
   return TwitterMessage;
 
@@ -240,16 +380,21 @@ Tweet = (function(_super) {
   function Tweet(data, account) {
     var _ref;
     this.account = account;
-    Tweet.__super__.constructor.call(this, data);
+    this.data = data;
     this.sender = new User((_ref = data.retweeted_status) != null ? _ref : data.user);
     this.account.tweets[this.get_id()] = this;
-    this.text = data.status;
+    this.text = data.text;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
+    this.date = new Date(this.data.created_at);
   }
 
   Tweet.prototype.get_id = function() {
     return this.data.id_str;
+  };
+
+  Tweet.prototype.get_date = function() {
+    return this.date;
   };
 
   Tweet.prototype.div_id = function() {
@@ -385,7 +530,7 @@ User = (function() {
 
   function User(data) {
     this.data = data;
-    users[this.data.id()] = this;
+    users[this.data.id] = this;
   }
 
   User.prototype.id = function() {
@@ -403,6 +548,115 @@ User = (function() {
   return User;
 
 })();
+
+Request = (function() {
+
+  Request.prototype.account = null;
+
+  Request.prototype.last_data_received_at = null;
+
+  function Request(account) {
+    this.account = account;
+  }
+
+  return Request;
+
+})();
+
+StreamRequest = (function(_super) {
+
+  __extends(StreamRequest, _super);
+
+  StreamRequest.prototype.connected = false;
+
+  StreamRequest.prototype.buffer = "";
+
+  StreamRequest.prototype.response_offset = 0;
+
+  StreamRequest.prototype.request = null;
+
+  StreamRequest.prototype.processing = false;
+
+  StreamRequest.prototype.connection_started_at = null;
+
+  StreamRequest.prototype.last_data_received_at = null;
+
+  function StreamRequest(account) {
+    StreamRequest.__super__.constructor.call(this, account);
+  }
+
+  StreamRequest.prototype.start_request = function() {
+    var data, url,
+      _this = this;
+    this.processing = false;
+    this.buffer = "";
+    this.response_offset = 0;
+    this.connected = false;
+    this.connection_started_at = new Date();
+    this.last_data_received_at = new Date();
+    data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
+      delimited: "length",
+      include_entities: "1",
+      include_rts: "1"
+    });
+    url = "user_proxy?" + data;
+    this.request = new XMLHttpRequest();
+    this.request.open("GET", url, true);
+    this.request.onreadystatechange = function() {
+      _this.last_data_received_at = new Date();
+      switch (_this.request.readyState) {
+        case 3:
+          _this.connected = true;
+          break;
+        case 4:
+          _this.connected = false;
+          if ((new Date()).getTime() - _this.connection_started_at.getTime() > 10000) {
+            _this.delay = settings.timings.mindelay;
+          }
+          window.setTimeout(_this.account.fill_list, _this.delay * 1000);
+          _this.delay = _this.delay * 2;
+      }
+      _this.buffer += _this.request.responseText.substr(_this.response_offset);
+      _this.response_offset = _this.request.responseText.length;
+      return _this.process_buffer();
+    };
+    return this.request.send(null);
+  };
+
+  StreamRequest.prototype.process_buffer = function() {
+    var len, parseable_text, regex, res;
+    if (this.processing) return;
+    this.processing = true;
+    regex = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
+    while (res = this.buffer.match(regex)) {
+      len = parseInt(res[1]);
+      if (res[2].length < len) break;
+      parseable_text = res[2].substr(0, len);
+      this.buffer = res[2].substr(len);
+      try {
+        this.account.parse_data(parseable_text);
+      } catch (_error) {}
+    }
+    return this.processing = false;
+  };
+
+  return StreamRequest;
+
+})(Request);
+
+PullRequest = (function(_super) {
+
+  __extends(PullRequest, _super);
+
+  function PullRequest() {
+    PullRequest.__super__.constructor.apply(this, arguments);
+  }
+
+  PullRequest.prototype.start_request = function() {};
+
+  return PullRequest;
+
+})(Request);
 
 Application = (function() {
 

@@ -2,9 +2,12 @@ class Account
 	screen_name: null
 	max_read_id: "0"
 	max_known_id: "0"
+	max_known_dm_id: "0"
 	tweets: {}
 	id: null
 	user_data: null
+	request: null
+	keys: {}
 	
 	constructor: (settings_id) ->
 		@id=settings_id
@@ -15,6 +18,8 @@ class Account
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
 		@validate_credentials()
+		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
+		@fill_list()
 		
 	my_element: -> $("#content_#{@id()}")
 	
@@ -55,6 +60,7 @@ class Account
 	get_tweet: (id) -> @tweets[id]
 	get_id: -> @id
 	add_html: -> # TODO
+	update_user_counter: -> # TODO
 	
 	is_unread_tweet: (tweet_id) -> 
 		l1 = max_read_id.length
@@ -112,3 +118,100 @@ class Account
 				$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1)) if verbose
 		})
 		return result.responseText if options.return_response
+	
+	fill_list: ->
+		threads_running = 5
+		threads_errored = 0
+		responses = []
+		
+		after_run = =>
+			if threads_errored == 0
+				@parse_data(responses)
+				@request.start_request() 
+			else
+				setTimeout(@fill_list, 30000)
+				# TODO Dokumentation
+			@update_user_counter
+		
+		success = (element, data) ->
+			responses.push(data)
+			threads_running -= 1
+			after_run() if threads_running == 0
+		
+		error = (element, data) ->
+			threads_running -= 1
+			threads_errored += 1
+			# TODO: Dokumentation
+			after_run() if threads_running == 0
+		
+		default_parameters = {
+			include_rts: true
+			count: 200
+			include_entities: true
+			page: 1
+			since_id: @max_known_id unless @max_known_id=="0"
+		}
+		
+		requests = [
+			{
+				url: "statuses/home_timeline.json"
+				name: "home_timeline 1"
+			}
+			{
+				url: "statuses/home_timeline.json"
+				name: "home_timeline 2"
+				extra_parameters: {page: 2}
+			}
+			{
+				url: "statuses/mentions.json"
+				name: "mentions"
+			}
+			{
+				url: "direct_messages.json"
+				name: "Received DMs"
+				extra_parameters: {
+					count: 100
+					since_id: @max_known_dm_id if @max_known_dm_id?
+				}
+			}
+			{
+				url: "direct_messages/sent.json"
+				name: "Sent DMs"
+				extra_parameters: {
+					count: 100
+					since_id: @max_known_dm_id if @max_known_dm_id?
+				}
+			}
+		]
+		
+		for request in requests
+			parameters = {}
+			parameters[key] = value for key, value of default_parameters when value
+			parameters[key] = value for key, value of request.extra_parameters when value
+			@twitter_request(request.url, {
+				method: "GET"
+				parameters: parameters
+				dataType: "text"
+				silent: true
+				additional_info: {name: request.name}
+				success: success
+				error: error
+			})
+	
+	parse_data: (json) -> #TODO
+		json = [json] unless json.constructor==Array
+		responses = []
+		for json_data in json
+			try temp = $.parseJSON(json_data)
+			continue unless temp?
+			if temp.constructor == Array
+				if temp.length>0
+					temp_elements = []
+					temp_elements.push(TwitterMessage.get_object(data, this)) for data in temp
+					responses.push(temp_elements)
+			else
+				responses.push([TwitterMessage.get_object(temp, this)])
+		return if responses.length==0
+		debugger
+		
+			
