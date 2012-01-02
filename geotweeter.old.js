@@ -603,25 +603,6 @@ function getStatusHTML(status, account_id) {
         
         
             
-    if (status.retweeted_status)
-        html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
-    if (status.place)
-        html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '" target="_blank">' + status.place.full_name + '</a></div>';
-    html += '<div class="overlay">';
-    html += '<div class="info">';
-    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank">' + datum + '</a> ';
-    if(status.in_reply_to_status_id) {
-        html += '<a href="#" onClick="show_replies(\'' + status.id + '\'); return false;">in reply to...</a> ';
-    }
-    if (status.source) {
-        var obj = $(status.source);
-        if (obj.attr('href')) {
-            html += 'from <a href="' + obj.attr('href') + '" target="_blank">' + obj.html() + '</a> ';
-        } else {
-            html += 'from ' + status.source + ' ';
-        }
-    }
-    html += '</div>';
 
     html += '<div class="links">';
     if (isDM) {

@@ -11,6 +11,8 @@ class Tweet extends TwitterMessage
 		@linkify_text()
 		@thumbs = @get_thumbnails()
 		@date = new Date(@data.created_at)
+		format = Application.add_null
+		@nice_date = "#{format(@date.getDate())}.#{format(@date.getMonth()+1)}.#{@date.getYear()+1900} #{format(@date.getHours())}:#{format(@date.getMinutes())}";
 	
 	get_user_data: -> @data.retweeted_status?.user ? @data.user
 	get_id: -> @data.id_str
@@ -21,11 +23,47 @@ class Tweet extends TwitterMessage
 		@sender.get_avatar_html() +
 		@sender.get_link_html() +
 		"<span class='text'>#{@text}</span>" +
-		@get_info_html() +
+		@get_permanent_info_html() +
+		@get_overlay_html() +
+		"</div>"
+		
+	get_permanent_info_html: ->
+		@get_retweet_html() +
+		@get_place_html()
+	
+	get_overlay_html: -> 
+		"<div class='overlay'>" +
+		@get_temporary_info_html() +
 		@get_buttons_html() +
 		"</div>"
 	
-	get_info_html: -> # TODO
+	get_temporary_info_html: ->
+		"<div class='info'>" +
+		"<a href='http://twitter.com/#!/#{@sender.get_screen_name()}/status/#{@get_id()}' target='_blank'>#{@nice_date}</a>" +
+		@get_reply_to_info_html() +
+		@get_source_html() + 
+		"</div>"
+			
+	get_buttons_html: ->
+		"" # TODO
+		
+	get_source_html: ->
+		return "" unless status.source?
+		obj = $(@data.source)
+		return "from <a href='#{obj.attr('href')}' target='_blank'>#{obj.html()}</a>" if obj.attr('href')
+		return "from #{@data.source}"
+		
+	get_retweet_html: -> 
+		return "" unless @data.retweeted_status?
+		"<div class='retweet_info'>Retweeted by <a href='http://twitter.com/#{@data.retweeted_status.user.screen_name}' target='_blank'>#{@data.retweeted_status.user.screen_name}</a></div>"
+	
+	get_place_html: ->
+		return "" unless @data.place?
+		"<div class='place'>from <a href='http://twitter.com/#!/places/#{@data.place.id}' target='_blank'>#{@data.place.full_name}</a></div>"
+	
+	get_reply_to_info_html: ->
+		return "" unless @data.in_reply_to_status_id?
+		"<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> "
 	
 	get_buttons_html: -> # TODO
 	

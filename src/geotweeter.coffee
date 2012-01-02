@@ -48,6 +48,8 @@ class Application
 		$('#users .user').removeClass('active')
 		$("#user_#{id}").addClass('active')
 		@current_account = id
-
-#$(document).ready(-> Application.start() )
-#Application.start()
+	
+	@add_null: (number) ->
+		return number if number>10
+		return "0#{number}"
+		

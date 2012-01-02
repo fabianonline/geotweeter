@@ -410,6 +410,7 @@ Tweet = (function(_super) {
   Tweet.prototype.thumbs = [];
 
   function Tweet(data, account) {
+    var format;
     this.account = account;
     this.data = data;
     this.sender = new User(this.get_user_data());
@@ -418,6 +419,8 @@ Tweet = (function(_super) {
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
     this.date = new Date(this.data.created_at);
+    format = Application.add_null;
+    this.nice_date = "" + (format(this.date.getDate())) + "." + (format(this.date.getMonth() + 1)) + "." + (this.date.getYear() + 1900) + " " + (format(this.date.getHours())) + ":" + (format(this.date.getMinutes()));
   }
 
   Tweet.prototype.get_user_data = function() {
@@ -438,10 +441,49 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + (this.get_id()) + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + (this.get_id()) + "' data-account-id='" + (this.account.get_id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_info_html() + this.get_buttons_html() + "</div>";
+    return ("<div id='" + (this.get_id()) + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + (this.get_id()) + "' data-account-id='" + (this.account.get_id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "</div>";
   };
 
-  Tweet.prototype.get_info_html = function() {};
+  Tweet.prototype.get_permanent_info_html = function() {
+    return this.get_retweet_html() + this.get_place_html();
+  };
+
+  Tweet.prototype.get_overlay_html = function() {
+    return "<div class='overlay'>" + this.get_temporary_info_html() + this.get_buttons_html() + "</div>";
+  };
+
+  Tweet.prototype.get_temporary_info_html = function() {
+    return "<div class='info'>" + ("<a href='http://twitter.com/#!/" + (this.sender.get_screen_name()) + "/status/" + (this.get_id()) + "' target='_blank'>" + this.nice_date + "</a>") + this.get_reply_to_info_html() + this.get_source_html() + "</div>";
+  };
+
+  Tweet.prototype.get_buttons_html = function() {
+    return "";
+  };
+
+  Tweet.prototype.get_source_html = function() {
+    var obj;
+    if (status.source == null) return "";
+    obj = $(this.data.source);
+    if (obj.attr('href')) {
+      return "from <a href='" + (obj.attr('href')) + "' target='_blank'>" + (obj.html()) + "</a>";
+    }
+    return "from " + this.data.source;
+  };
+
+  Tweet.prototype.get_retweet_html = function() {
+    if (this.data.retweeted_status == null) return "";
+    return "<div class='retweet_info'>Retweeted by <a href='http://twitter.com/" + this.data.retweeted_status.user.screen_name + "' target='_blank'>" + this.data.retweeted_status.user.screen_name + "</a></div>";
+  };
+
+  Tweet.prototype.get_place_html = function() {
+    if (this.data.place == null) return "";
+    return "<div class='place'>from <a href='http://twitter.com/#!/places/" + this.data.place.id + "' target='_blank'>" + this.data.place.full_name + "</a></div>";
+  };
+
+  Tweet.prototype.get_reply_to_info_html = function() {
+    if (this.data.in_reply_to_status_id == null) return "";
+    return "<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> ";
+  };
 
   Tweet.prototype.get_buttons_html = function() {};
 
@@ -795,6 +837,11 @@ Application = (function() {
     $('#users .user').removeClass('active');
     $("#user_" + id).addClass('active');
     return this.current_account = id;
+  };
+
+  Application.add_null = function(number) {
+    if (number > 10) return number;
+    return "0" + number;
   };
 
   return Application;
