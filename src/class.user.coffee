@@ -17,3 +17,4 @@ class User
 		</span>"
 	
 	get_link_html: -> "<span class='poster'><a href='https://twitter.com/#{@data.screen_name}' target='_blank'>#{@data.screen_name}</a></span>"
+	get_screen_name: -> @data.screen_name

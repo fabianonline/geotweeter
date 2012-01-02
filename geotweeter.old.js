@@ -389,56 +389,6 @@ function fillList(account_id) {
 
 
 /**
- * Parses responses received from twitter.
- * Can take multiple bunches of data in an array; those are then merged before processing.
- */
-function parseData(string_data, account_id) {
-  // DONE SO FAR
-
-    // responses now contains one or more Arrays containing one or more Events ordered "date DESC".
-
-    var html = "";
-    var last_id = "";
-    while (responses.length > 0) {
-        // Go through all responses and get the newest entry
-        var newest_date = null;
-        var newest_index = null;
-        for (var i in responses) {
-            var date;
-            try {
-                date = new Date(responses[i][0].created_at || responses[i][0].direct_message.created_at);
-            } catch(e) {
-                date = new Date();
-            }
-            if (newest_date==null || date>newest_date) {
-                newest_date = date;
-                newest_index = i;
-            }
-        }
-        // get the newest entry and remove it from the array
-        var array = responses[newest_index];
-        var element = array.shift();
-        if (array.length==0) {
-            // remove the whole array
-            responses.splice(newest_index, 1);
-        }
-        var this_id;
-        try {
-            this_id = element.id_str || element.direct_message.id_str;
-        } catch(e) {
-            this_id = element;
-        }
-        // Filter duplicate tweets
-        if (this_id != last_id) {
-            html += display_event(element, true, account_id);
-        }
-        last_id = this_id;
-    }
-    addHTML(html, account_id);
-    update_user_counter(account_id);
-}
-
-/**
  * Takes a single Twitter event and gets it's HTML code.
  * Optionally, the code is returned instead of adding it to the DOM.
  */
@@ -481,64 +431,6 @@ function display_event(element, return_html, account_id) {
     addHTML(html, account_id);
 }
 
-/**
- * Adds HTML to the DOM.
- *
- * Note: Adding the HTML to a new <div> and then append the <div> to the DOM is MUCH faster than
- * adding the HTML directly to the DOM.
- */
-function addHTML(text, account_id) {
-    if (typeof account_id != 'number') {
-        account_id = current_account;
-    }
-    if(text == "") return;
-
-    var elm = document.createElement("div");
-    elm.innerHTML = text;
-    $(elm).find('.user_avatar').tooltip({
-        bodyHandler: function() {
-            var par = $(this).parent().parent();
-            var obj = par.find('.tooltip_info');
-            var html = obj.html();
-            var id = parseInt(par.attr("data-user-id"));
-            if (followers_ids[account_id].indexOf(id)>=0) {
-                html = html.replace(/%s/, 'folgt dir.');
-            } else {
-                html = html.replace(/%s/, 'folgt dir nicht.');
-            }
-            return html;
-        },
-        track: true,
-        showURL: false,
-        left: 5
-    });
-    if (settings.unshorten_links) {
-        $(elm).find("a.external").tooltip({
-            bodyHandler: function() {
-                return unshortenLink(this.href).replace(/\//g, "<wbr>/");
-            },
-            track: true,
-            showURL: false,
-            delay: 750
-        });
-    }
-    document.getElementById('content_' + account_id).insertBefore(elm, document.getElementById('content_' + account_id).firstChild);
-}
-
-
-/** Uses unshorten.me to unshorten a given URL. */
-function unshortenLink(url) {
-    var result = null;
-    $.ajax({
-        url: "proxy/unshort.me/?r=" + encodeURIComponent(url) + "&t=json",
-        type: "GET",
-        async: false,
-        dataType: "json",
-        success: function(data) { result = data; }
-    });
-    if(result && result.success=="true") return result.resolvedURL;
-    return url;
-}
 
 
 /** Adds an event with custom text to the DOM. */

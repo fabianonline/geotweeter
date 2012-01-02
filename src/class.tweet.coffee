@@ -5,13 +5,14 @@ class Tweet extends TwitterMessage
 	
 	constructor: (data, @account) ->
 		@data = data
-		@sender = new User(data.retweeted_status ? data.user)
+		@sender = new User(@get_user_data())
 		@account.tweets[@get_id()] = this
 		@text = data.text
 		@linkify_text()
 		@thumbs = @get_thumbnails()
 		@date = new Date(@data.created_at)
 	
+	get_user_data: -> @data.retweeted_status?.user ? @data.user
 	get_id: -> @data.id_str
 	get_date: -> @date
 	div_id: -> "#tweet_#{@get_id()}"
@@ -29,6 +30,7 @@ class Tweet extends TwitterMessage
 	get_buttons_html: -> # TODO
 	
 	linkify_text: ->
+		@mentions = [] # hack to prevent semi-static array mentions from filling up
 		if @data.entities?
 			all_entities = []
 			for entity_type, entities of @data.entities
@@ -51,11 +53,10 @@ class Tweet extends TwitterMessage
 		@text = @text.replace(/\n/g, "<br />\n")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
-	get_type: -> "tweet"
 	
 	get_classes: ->
 		classes = [
-			@get_type()
+			"tweet"
 			"by_#{@data.user.screen_name}"
 			"new" if @account.is_unread_tweet(@get_id())
 			"mentions_this_user" if @account.screen_name in @mentions

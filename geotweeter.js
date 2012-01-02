@@ -1,4 +1,4 @@
-var Account, Application, Hooks, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, User,
+var Account, Application, DirectMessage, Hooks, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, User,
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -36,8 +36,8 @@ Account = (function() {
     this.fill_list();
   }
 
-  Account.prototype.my_element = function() {
-    return $("#content_" + (this.id()));
+  Account.prototype.get_my_element = function() {
+    return $("#content_" + (this.get_id()));
   };
 
   Account.prototype.set_max_read_id = function() {};
@@ -89,15 +89,20 @@ Account = (function() {
     return this.id;
   };
 
-  Account.prototype.add_html = function() {};
+  Account.prototype.add_html = function(html) {
+    var element;
+    element = document.createElement("div");
+    element.innerHTML = html;
+    return this.get_my_element().prepend(element);
+  };
 
   Account.prototype.update_user_counter = function() {};
 
   Account.prototype.is_unread_tweet = function(tweet_id) {
     var l1, l2;
-    l1 = max_read_id.length;
+    l1 = this.max_read_id.length;
     l2 = tweet_id.length;
-    if (l1 === l2) return tweet_id > max_read_id;
+    if (l1 === l2) return tweet_id > this.max_read_id;
     return l2 > l1;
   };
 
@@ -269,7 +274,7 @@ Account = (function() {
   };
 
   Account.prototype.parse_data = function(json) {
-    var data, json_data, responses, temp, temp_elements, _i, _j, _len, _len2;
+    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
     if (json.constructor !== Array) json = [json];
     responses = [];
     for (_i = 0, _len = json.length; _i < _len; _i++) {
@@ -292,7 +297,28 @@ Account = (function() {
       }
     }
     if (responses.length === 0) return;
-    debugger;
+    html = "";
+    last_id = "";
+    while (responses.length > 0) {
+      newest_date = null;
+      newest_index = null;
+      for (index in responses) {
+        array = responses[index];
+        object = array[0];
+        if (newest_date === null || object.get_date() > newest_date) {
+          newest_date = object.get_date();
+          newest_index = index;
+        }
+      }
+      array = responses[newest_index];
+      object = array.shift();
+      if (array.length === 0) responses.splice(newest_index, 1);
+      this_id = object.get_id();
+      if (this_id !== old_id) html += object.get_html();
+      old_id = this_id;
+    }
+    this.add_html(html);
+    return this.update_user_counter();
   };
 
   return Account;
@@ -346,8 +372,12 @@ TwitterMessage = (function() {
 
   function TwitterMessage(data) {
     this.data = data;
-    this.sender = new User(this.data.sender);
+    this.sender = new User(this.get_user_data);
   }
+
+  TwitterMessage.prototype.get_user_data = function() {
+    throw "Fehler!";
+  };
 
   TwitterMessage.prototype.get_date = function() {
     return this.date;
@@ -359,7 +389,9 @@ TwitterMessage = (function() {
 
   TwitterMessage.get_object = function(data, account) {
     if (data == null) return;
-    if ((data.text != null) && (data.recipient != null)) return;
+    if ((data.text != null) && (data.recipient != null)) {
+      return new DirectMessage(data, account);
+    }
     if (data.text != null) return new Tweet(data, account);
   };
 
@@ -378,16 +410,20 @@ Tweet = (function(_super) {
   Tweet.prototype.thumbs = [];
 
   function Tweet(data, account) {
-    var _ref;
     this.account = account;
     this.data = data;
-    this.sender = new User((_ref = data.retweeted_status) != null ? _ref : data.user);
+    this.sender = new User(this.get_user_data());
     this.account.tweets[this.get_id()] = this;
     this.text = data.text;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
     this.date = new Date(this.data.created_at);
   }
+
+  Tweet.prototype.get_user_data = function() {
+    var _ref, _ref2;
+    return (_ref = (_ref2 = this.data.retweeted_status) != null ? _ref2.user : void 0) != null ? _ref : this.data.user;
+  };
 
   Tweet.prototype.get_id = function() {
     return this.data.id_str;
@@ -411,6 +447,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.linkify_text = function() {
     var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
+    this.mentions = [];
     if (this.data.entities != null) {
       all_entities = [];
       _ref = this.data.entities;
@@ -452,13 +489,9 @@ Tweet = (function(_super) {
     return this.text = this.text.slice(0, entity_object.indices[0]) + text + this.text.slice(entity_object.indices[1]);
   };
 
-  Tweet.prototype.get_type = function() {
-    return "tweet";
-  };
-
   Tweet.prototype.get_classes = function() {
     var classes, mention, _i, _len, _ref, _ref2;
-    classes = [this.get_type(), "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.get_id()) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.data.user.screen_name ? "by_this_user" : void 0];
+    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.get_id()) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.data.user.screen_name ? "by_this_user" : void 0];
     _ref2 = this.mentions;
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       mention = _ref2[_i];
@@ -526,6 +559,26 @@ Tweet = (function(_super) {
 
 })(TwitterMessage);
 
+DirectMessage = (function(_super) {
+
+  __extends(DirectMessage, _super);
+
+  function DirectMessage() {
+    DirectMessage.__super__.constructor.apply(this, arguments);
+  }
+
+  DirectMessage.prototype.get_user_data = function() {
+    return this.data.sender;
+  };
+
+  DirectMessage.prototype.get_classes = function() {
+    return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
+
+  return DirectMessage;
+
+})(Tweet);
+
 User = (function() {
 
   function User(data) {
@@ -543,6 +596,10 @@ User = (function() {
 
   User.prototype.get_link_html = function() {
     return "<span class='poster'><a href='https://twitter.com/" + this.data.screen_name + "' target='_blank'>" + this.data.screen_name + "</a></span>";
+  };
+
+  User.prototype.get_screen_name = function() {
+    return this.data.screen_name;
   };
 
   return User;

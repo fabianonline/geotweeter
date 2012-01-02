@@ -21,7 +21,7 @@ class Account
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
 		
-	my_element: -> $("#content_#{@id()}")
+	get_my_element: -> $("#content_#{@get_id()}")
 	
 	set_max_read_id: -> # TODO
 	get_max_read_id: -> # TODO
@@ -59,13 +59,17 @@ class Account
 	
 	get_tweet: (id) -> @tweets[id]
 	get_id: -> @id
-	add_html: -> # TODO
+	add_html: (html) -> 
+		element = document.createElement("div")
+		element.innerHTML = html
+		@get_my_element().prepend(element)
+		
 	update_user_counter: -> # TODO
 	
 	is_unread_tweet: (tweet_id) -> 
-		l1 = max_read_id.length
+		l1 = @max_read_id.length
 		l2 = tweet_id.length
-		return tweet_id>max_read_id if l1 == l2
+		return tweet_id>@max_read_id if l1 == l2
 		return l2 > l1
 	
 	get_twitter_configuration: ->
@@ -212,6 +216,22 @@ class Account
 			else
 				responses.push([TwitterMessage.get_object(temp, this)])
 		return if responses.length==0
-		debugger
 		
-			
+		html = ""
+		last_id = ""
+		while responses.length > 0
+			newest_date = null
+			newest_index = null
+			for index, array of responses
+				object = array[0]
+				if newest_date==null || object.get_date()>newest_date
+					newest_date = object.get_date()
+					newest_index = index
+			array = responses[newest_index]
+			object = array.shift()
+			responses.splice(newest_index, 1) if array.length==0
+			this_id = object.get_id()
+			html += object.get_html() unless this_id==old_id
+			old_id = this_id
+		@add_html(html)
+		@update_user_counter()
