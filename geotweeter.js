@@ -956,7 +956,7 @@ function getStatusHTML(status, account_id) {
             if (entity.expanded_url==null) continue;
             
             var res;
-            if (res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z]+)/)) {
+            if (res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_\-]+)/)) {
                 thumbs.push({thumbnail: "http://img.youtube.com/vi/"+res[1]+"/1.jpg", link: entity.expanded_url});
             } else if (res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) {
                 thumbs.push({thumbnail: "http://twitpic.com/show/mini/"+res[1], link: entity.expanded_url});
