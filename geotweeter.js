@@ -37,7 +37,7 @@ Account = (function() {
   }
 
   Account.prototype.get_my_element = function() {
-    return $("#content_" + (this.get_id()));
+    return $("#content_" + this.id);
   };
 
   Account.prototype.set_max_read_id = function() {};
@@ -47,7 +47,7 @@ Account = (function() {
   Account.prototype.mark_as_read = function() {};
 
   Account.prototype.get_content_div_id = function() {
-    return "content_" + (this.get_id());
+    return "content_" + this.id;
   };
 
   Account.prototype.validate_credentials = function() {
@@ -68,8 +68,8 @@ Account = (function() {
         new_area.attr('id', _this.get_content_div_id());
         $('body').append(new_area);
         html = '';
-        $('#users').append("					<div class='user' id='user_" + (_this.get_id()) + "' data-account-id='" + (_this.get_id()) + "'>						<a href='#' onClick='change_account(); return false;'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
-        return $("#user_" + (_this.get_id())).tooltip({
+        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='change_account(); return false;'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
+        return $("#user_" + _this.id).tooltip({
           bodyHandler: function() {
             return "<strong>@" + _this.user_data.name + "</strong>";
           },
@@ -83,10 +83,6 @@ Account = (function() {
 
   Account.prototype.get_tweet = function(id) {
     return this.tweets[id];
-  };
-
-  Account.prototype.get_id = function() {
-    return this.id;
   };
 
   Account.prototype.add_html = function(html) {
@@ -313,7 +309,7 @@ Account = (function() {
       array = responses[newest_index];
       object = array.shift();
       if (array.length === 0) responses.splice(newest_index, 1);
-      this_id = object.get_id();
+      this_id = object.id;
       if (this_id !== old_id) html += object.get_html();
       old_id = this_id;
     }
@@ -383,10 +379,6 @@ TwitterMessage = (function() {
     return this.date;
   };
 
-  TwitterMessage.prototype.get_id = function() {
-    return this.object_id;
-  };
-
   TwitterMessage.get_object = function(data, account) {
     if (data == null) return;
     if ((data.text != null) && (data.recipient != null)) {
@@ -409,12 +401,18 @@ Tweet = (function(_super) {
 
   Tweet.prototype.thumbs = [];
 
+  Tweet.prototype.id = null;
+
+  Tweet.prototype.permalink = "";
+
   function Tweet(data, account) {
     var format;
     this.account = account;
     this.data = data;
+    this.id = data.id_str;
     this.sender = new User(this.get_user_data());
-    this.account.tweets[this.get_id()] = this;
+    this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
+    this.account.tweets[this.id] = this;
     this.text = data.text;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
@@ -428,20 +426,16 @@ Tweet = (function(_super) {
     return (_ref = (_ref2 = this.data.retweeted_status) != null ? _ref2.user : void 0) != null ? _ref : this.data.user;
   };
 
-  Tweet.prototype.get_id = function() {
-    return this.data.id_str;
-  };
-
   Tweet.prototype.get_date = function() {
     return this.date;
   };
 
   Tweet.prototype.div_id = function() {
-    return "#tweet_" + (this.get_id());
+    return "#tweet_" + this.id;
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + (this.get_id()) + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + (this.get_id()) + "' data-account-id='" + (this.account.get_id()) + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "</div>";
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "</div>";
   };
 
   Tweet.prototype.get_permanent_info_html = function() {
@@ -453,16 +447,16 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_temporary_info_html = function() {
-    return "<div class='info'>" + ("<a href='http://twitter.com/#!/" + (this.sender.get_screen_name()) + "/status/" + (this.get_id()) + "' target='_blank'>" + this.nice_date + "</a>") + this.get_reply_to_info_html() + this.get_source_html() + "</div>";
+    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + this.nice_date + "</a>") + this.get_reply_to_info_html() + this.get_source_html() + "</div>";
   };
 
   Tweet.prototype.get_buttons_html = function() {
-    return "";
+    return "<a href='#' onClick='Hooks.reply();'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='Hooks.retweet();'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='Hooks.quote();'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='Hooks.delete();'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='Hooks.report_spam();'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
   };
 
   Tweet.prototype.get_source_html = function() {
     var obj;
-    if (status.source == null) return "";
+    if (this.data.source == null) return "";
     obj = $(this.data.source);
     if (obj.attr('href')) {
       return "from <a href='" + (obj.attr('href')) + "' target='_blank'>" + (obj.html()) + "</a>";
@@ -484,8 +478,6 @@ Tweet = (function(_super) {
     if (this.data.in_reply_to_status_id == null) return "";
     return "<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> ";
   };
-
-  Tweet.prototype.get_buttons_html = function() {};
 
   Tweet.prototype.linkify_text = function() {
     var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
@@ -533,7 +525,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.get_classes = function() {
     var classes, mention, _i, _len, _ref, _ref2;
-    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.get_id()) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.data.user.screen_name ? "by_this_user" : void 0];
+    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.id) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.sender.screen_name ? "by_this_user" : void 0];
     _ref2 = this.mentions;
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       mention = _ref2[_i];
@@ -544,14 +536,14 @@ Tweet = (function(_super) {
 
   Tweet.prototype.retweet = function() {
     if (!confirm("Wirklich retweeten?")) return;
-    return this.account.twitter_request("statuses/retweet/" + (get_id()) + ".json", {
+    return this.account.twitter_request("statuses/retweet/" + this.id + ".json", {
       success_string: "Retweet erfolgreich"
     });
   };
 
   Tweet.prototype["delete"] = function() {
     if (!confirm("Wirklich diesen Tweet löschen?")) return;
-    return this.account.twitter_request("statuses/destroy/" + (get_id()) + ".json", {
+    return this.account.twitter_request("statuses/destroy/" + this.id + ".json", {
       success_string: "Tweet gelöscht",
       success: function() {
         return $(this.div_id()).remove();
@@ -626,6 +618,8 @@ User = (function() {
   function User(data) {
     this.data = data;
     users[this.data.id] = this;
+    this.screen_name = this.data.screen_name;
+    this.id = this.data.id_str;
   }
 
   User.prototype.id = function() {

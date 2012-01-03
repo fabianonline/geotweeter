@@ -58,7 +58,7 @@ class Tweet extends TwitterMessage
 		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='Hooks.report_spam();'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
 		
 	get_source_html: ->
-		return "" unless status.source?
+		return "" unless @data.source?
 		obj = $(@data.source)
 		return "from <a href='#{obj.attr('href')}' target='_blank'>#{obj.html()}</a>" if obj.attr('href')
 		return "from #{@data.source}"
@@ -106,7 +106,7 @@ class Tweet extends TwitterMessage
 			"by_#{@data.user.screen_name}"
 			"new" if @account.is_unread_tweet(@id)
 			"mentions_this_user" if @account.screen_name in @mentions
-			"by_this_user" if @account.screen_name == @data.user.screen_name
+			"by_this_user" if @account.screen_name == @sender.screen_name
 		]
 		classes.push("mentions_#{mention}") for mention in @mentions
 		classes
