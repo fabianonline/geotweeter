@@ -2,11 +2,13 @@ class Tweet extends TwitterMessage
 	mentions: []
 	account: null
 	thumbs: []
+	id: null
 	
 	constructor: (data, @account) ->
 		@data = data
+		@id = data.id_str
 		@sender = new User(@get_user_data())
-		@account.tweets[@get_id()] = this
+		@account.tweets[@id] = this
 		@text = data.text
 		@linkify_text()
 		@thumbs = @get_thumbnails()
@@ -15,11 +17,10 @@ class Tweet extends TwitterMessage
 		@nice_date = "#{format(@date.getDate())}.#{format(@date.getMonth()+1)}.#{@date.getYear()+1900} #{format(@date.getHours())}:#{format(@date.getMinutes())}";
 	
 	get_user_data: -> @data.retweeted_status?.user ? @data.user
-	get_id: -> @data.id_str
 	get_date: -> @date
-	div_id: -> "#tweet_#{@get_id()}"
+	div_id: -> "#tweet_#{@id}"
 	get_html: ->
-		"<div id='#{@get_id()}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@get_id()}' data-account-id='#{@account.get_id()}'>" +
+		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
 		@sender.get_avatar_html() +
 		@sender.get_link_html() +
 		"<span class='text'>#{@text}</span>" +
@@ -96,7 +97,7 @@ class Tweet extends TwitterMessage
 		classes = [
 			"tweet"
 			"by_#{@data.user.screen_name}"
-			"new" if @account.is_unread_tweet(@get_id())
+			"new" if @account.is_unread_tweet(@id)
 			"mentions_this_user" if @account.screen_name in @mentions
 			"by_this_user" if @account.screen_name == @data.user.screen_name
 		]
@@ -105,11 +106,11 @@ class Tweet extends TwitterMessage
 	
 	retweet: ->
 		return unless confirm("Wirklich retweeten?")
-		@account.twitter_request("statuses/retweet/#{get_id()}.json", {success_string: "Retweet erfolgreich"})
+		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
 	delete: ->
 		return unless confirm("Wirklich diesen Tweet löschen?")
-		@account.twitter_request("statuses/destroy/#{get_id()}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
+		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
 	
 	get_thumbnails: ->
 		for media in @data.entities?.media?

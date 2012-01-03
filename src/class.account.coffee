@@ -21,12 +21,12 @@ class Account
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
 		
-	get_my_element: -> $("#content_#{@get_id()}")
+	get_my_element: -> $("#content_#{@id}")
 	
 	set_max_read_id: -> # TODO
 	get_max_read_id: -> # TODO
 	mark_as_read: -> # TODO
-	get_content_div_id: -> "content_#{@get_id()}"
+	get_content_div_id: -> "content_#{@id}"
 	validate_credentials: ->
 		@twitter_request('account/verify_credentials.json', {
 			method: "GET"
@@ -43,13 +43,13 @@ class Account
 				$('body').append(new_area);
 				html = '';
 				$('#users').append("
-					<div class='user' id='user_#{@get_id()}' data-account-id='#{@get_id()}'>
+					<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
 						<a href='#' onClick='change_account(); return false;'>
 							<img src='#{data.profile_image_url}' />
 						</a>
 					</div>
 				")
-				$("#user_#{@get_id()}").tooltip({
+				$("#user_#{@id}").tooltip({
 					bodyHandler: => "<strong>@#{@user_data.name}</strong>"
 					track: true
 					showURL: false
@@ -58,7 +58,6 @@ class Account
 		})
 	
 	get_tweet: (id) -> @tweets[id]
-	get_id: -> @id
 	add_html: (html) -> 
 		element = document.createElement("div")
 		element.innerHTML = html
@@ -230,7 +229,7 @@ class Account
 			array = responses[newest_index]
 			object = array.shift()
 			responses.splice(newest_index, 1) if array.length==0
-			this_id = object.get_id()
+			this_id = object.id
 			html += object.get_html() unless this_id==old_id
 			old_id = this_id
 		@add_html(html)

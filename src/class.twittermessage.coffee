@@ -2,7 +2,6 @@ class TwitterMessage
 	constructor: (@data) -> @sender = new User(@get_user_data)
 	get_user_data: -> throw "Fehler!"
 	get_date: -> @date
-	get_id: -> @object_id
 	
 	@get_object: (data, account) ->
 		return unless data?
