@@ -3,11 +3,13 @@ class Tweet extends TwitterMessage
 	account: null
 	thumbs: []
 	id: null
+	permalink: ""
 	
 	constructor: (data, @account) ->
 		@data = data
 		@id = data.id_str
 		@sender = new User(@get_user_data())
+		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
 		@account.tweets[@id] = this
 		@text = data.text
 		@linkify_text()
@@ -40,7 +42,7 @@ class Tweet extends TwitterMessage
 	
 	get_temporary_info_html: ->
 		"<div class='info'>" +
-		"<a href='http://twitter.com/#!/#{@sender.get_screen_name()}/status/#{@get_id()}' target='_blank'>#{@nice_date}</a>" +
+		"<a href='#{@permalink}' target='_blank'>#{@nice_date}</a>" +
 		@get_reply_to_info_html() +
 		@get_source_html() + 
 		"</div>"
