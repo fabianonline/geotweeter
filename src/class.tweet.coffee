@@ -48,7 +48,14 @@ class Tweet extends TwitterMessage
 		"</div>"
 			
 	get_buttons_html: ->
-		"" # TODO
+		"<a href='#' onClick='Hooks.reply();'><img src='icons/comments.png' title='Reply' /></a>" +
+		"<a href='#' onClick='Hooks.retweet();'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" +
+		"<a href='#' onClick='Hooks.quote();'><img src='icons/tag.png' title='Quote' /></a>" +
+		"<a href='#{@permalink}' target='_blank'><img src='icons/link.png' title='Permalink' /></a>" +
+		(if @data.coordinates? then "<a href='http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" else "") +
+		(if @data.coordinates? then "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" else "") +
+		(if @account.screen_name==@sender.screen_name then "<a href='#' onClick='Hooks.delete();'><img src='icons/cross.png' title='Delete' /></a>" else "") +
+		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='Hooks.report_spam();'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
 		
 	get_source_html: ->
 		return "" unless status.source?
@@ -67,8 +74,6 @@ class Tweet extends TwitterMessage
 	get_reply_to_info_html: ->
 		return "" unless @data.in_reply_to_status_id?
 		"<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> "
-	
-	get_buttons_html: -> # TODO
 	
 	linkify_text: ->
 		@mentions = [] # hack to prevent semi-static array mentions from filling up
