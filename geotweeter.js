@@ -325,20 +325,6 @@ Hooks = (function() {
 
   function Hooks() {}
 
-  Hooks.get_tweet = function() {
-    var tweet_div;
-    tweet_div = $(Hooks).parents('.tweet');
-    return accounts[tweet_div.data('account-id')].get_tweet(tweet_div.data('tweet-id'));
-  };
-
-  Hooks.reply = function() {
-    return Hooks.get_tweet().reply();
-  };
-
-  Hooks.retweet = function() {
-    return Hooks.get_tweet().retweet();
-  };
-
   Hooks.check_file = function() {};
 
   return Hooks;
@@ -451,7 +437,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_buttons_html = function() {
-    return "<a href='#' onClick='Hooks.reply();'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='Hooks.retweet();'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='Hooks.quote();'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='Hooks.delete();'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='Hooks.report_spam();'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+    return "<a href='#' onClick='Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
   };
 
   Tweet.prototype.get_source_html = function() {
@@ -586,6 +572,34 @@ Tweet = (function(_super) {
       if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
         thumbs.push(new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url));
       }
+    }
+  };
+
+  Tweet.hooks = {
+    get_tweet: function(element) {
+      var tweet_div;
+      tweet_div = $(element).parents('.tweet');
+      return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
+    },
+    reply: function(elm) {
+      this.get_tweet(elm).reply();
+      return false;
+    },
+    retweet: function(elm) {
+      this.get_tweet(elm).retweet();
+      return false;
+    },
+    quote: function(elm) {
+      this.get_tweet(elm).quote();
+      return false;
+    },
+    "delete": function(elm) {
+      this.get_tweet(elm)["delete"]();
+      return false;
+    },
+    report_as_spam: function(elm) {
+      this.get_tweet(elm).report_as_spam();
+      return false;
     }
   };
 
