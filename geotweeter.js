@@ -433,7 +433,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_temporary_info_html = function() {
-    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + this.nice_date + "</a>") + this.get_reply_to_info_html() + this.get_source_html() + "</div>";
+    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + this.nice_date + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
   };
 
   Tweet.prototype.get_buttons_html = function() {
