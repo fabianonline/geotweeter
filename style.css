@@ -27,6 +27,10 @@ textarea, input, select {
     padding-top: 180px;
 }
 
+.poster {
+	margin-right: 4px;
+}
+
 .poster, .poster a {
     font-weight: bold;
     color: #000;
