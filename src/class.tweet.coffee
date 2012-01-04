@@ -11,7 +11,7 @@ class Tweet extends TwitterMessage
 	constructor: (data, @account) ->
 		@data = data
 		@id = data.id_str
-		@sender = new User(@get_user_data())
+		@fill_user_variables()
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
 		@account.tweets[@id] = this
 		Tweet.last = this
@@ -22,7 +22,13 @@ class Tweet extends TwitterMessage
 		format = Application.add_null
 		@nice_date = "#{format(@date.getDate())}.#{format(@date.getMonth()+1)}.#{@date.getYear()+1900} #{format(@date.getHours())}:#{format(@date.getMinutes())}";
 	
-	get_user_data: -> @data.retweeted_status?.user ? @data.user
+	fill_user_variables: -> 
+		if @data.retweeted_status?
+			@sender = new User(@data.retweeted_status.user)
+			@retweeted_by = new User(@data.user)
+		else
+			@sender = new User(@data.user)
+	
 	get_date: -> @date
 	div_id: -> "#tweet_#{@id}"
 	get_html: ->
@@ -66,8 +72,8 @@ class Tweet extends TwitterMessage
 		return "from #{@data.source}"
 		
 	get_retweet_html: -> 
-		return "" unless @data.retweeted_status?
-		"<div class='retweet_info'>Retweeted by <a href='http://twitter.com/#{@data.retweeted_status.user.screen_name}' target='_blank'>#{@data.retweeted_status.user.screen_name}</a></div>"
+		return "" unless @retweeted_by?
+		"<div class='retweet_info'>Retweeted by <a href='#{@retweeted_by.permalink}' target='_blank'>#{@retweeted_by.screen_name}</a></div>"
 	
 	get_place_html: ->
 		return "" unless @data.place?

@@ -398,7 +398,7 @@ Tweet = (function(_super) {
     this.account = account;
     this.data = data;
     this.id = data.id_str;
-    this.sender = new User(this.get_user_data());
+    this.fill_user_variables();
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
     this.account.tweets[this.id] = this;
     Tweet.last = this;
@@ -410,9 +410,13 @@ Tweet = (function(_super) {
     this.nice_date = "" + (format(this.date.getDate())) + "." + (format(this.date.getMonth() + 1)) + "." + (this.date.getYear() + 1900) + " " + (format(this.date.getHours())) + ":" + (format(this.date.getMinutes()));
   }
 
-  Tweet.prototype.get_user_data = function() {
-    var _ref, _ref2;
-    return (_ref = (_ref2 = this.data.retweeted_status) != null ? _ref2.user : void 0) != null ? _ref : this.data.user;
+  Tweet.prototype.fill_user_variables = function() {
+    if (this.data.retweeted_status != null) {
+      this.sender = new User(this.data.retweeted_status.user);
+      return this.retweeted_by = new User(this.data.user);
+    } else {
+      return this.sender = new User(this.data.user);
+    }
   };
 
   Tweet.prototype.get_date = function() {
@@ -454,8 +458,8 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_retweet_html = function() {
-    if (this.data.retweeted_status == null) return "";
-    return "<div class='retweet_info'>Retweeted by <a href='http://twitter.com/" + this.data.retweeted_status.user.screen_name + "' target='_blank'>" + this.data.retweeted_status.user.screen_name + "</a></div>";
+    if (this.retweeted_by == null) return "";
+    return "<div class='retweet_info'>Retweeted by <a href='" + this.retweeted_by.permalink + "' target='_blank'>" + this.retweeted_by.screen_name + "</a></div>";
   };
 
   Tweet.prototype.get_place_html = function() {
@@ -646,8 +650,8 @@ DirectMessage = (function(_super) {
     DirectMessage.__super__.constructor.apply(this, arguments);
   }
 
-  DirectMessage.prototype.get_user_data = function() {
-    return this.data.sender;
+  DirectMessage.prototype.fill_user_variables = function() {
+    return this.sender = new User(this.data.sender);
   };
 
   DirectMessage.prototype.get_classes = function() {
@@ -664,6 +668,7 @@ User = (function() {
     this.data = data;
     users[this.data.id] = this;
     this.screen_name = this.data.screen_name;
+    this.permalink = "https://twitter.com/" + this.screen_name;
     this.id = this.data.id_str;
   }
 
