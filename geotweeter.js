@@ -377,6 +377,26 @@ TwitterMessage = (function() {
 
 })();
 
+DirectMessage = (function(_super) {
+
+  __extends(DirectMessage, _super);
+
+  function DirectMessage() {
+    DirectMessage.__super__.constructor.apply(this, arguments);
+  }
+
+  DirectMessage.prototype.get_user_data = function() {
+    return this.data.sender;
+  };
+
+  DirectMessage.prototype.get_classes = function() {
+    return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
+
+  return DirectMessage;
+
+})(Tweet);
+
 Tweet = (function(_super) {
 
   __extends(Tweet, _super);
@@ -537,6 +557,10 @@ Tweet = (function(_super) {
     });
   };
 
+  Tweet.prototype.report_as_spam = function() {
+    return this.sender.report_as_spam(this.account);
+  };
+
   Tweet.prototype.get_thumbnails = function() {
     var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
     _ref2 = ((_ref = this.data.entities) != null ? _ref.media : void 0) != null;
@@ -607,26 +631,6 @@ Tweet = (function(_super) {
 
 })(TwitterMessage);
 
-DirectMessage = (function(_super) {
-
-  __extends(DirectMessage, _super);
-
-  function DirectMessage() {
-    DirectMessage.__super__.constructor.apply(this, arguments);
-  }
-
-  DirectMessage.prototype.get_user_data = function() {
-    return this.data.sender;
-  };
-
-  DirectMessage.prototype.get_classes = function() {
-    return ["dm", "by_" + (this.sender.get_screen_name())];
-  };
-
-  return DirectMessage;
-
-})(Tweet);
-
 User = (function() {
 
   function User(data) {
@@ -650,6 +654,19 @@ User = (function() {
 
   User.prototype.get_screen_name = function() {
     return this.data.screen_name;
+  };
+
+  User.prototype.report_as_spam = function(account) {
+    if (!confirm("Wirklich " + this.screen_name + " als Spammer melden?")) return;
+    return account.twitter_request("report_spam.json", {
+      parameters: {
+        screen_name: this.screen_name
+      },
+      success_string: "Als Spammer gemeldet.",
+      success: function() {
+        return $(".by_" + this.screen_name).remove;
+      }
+    });
   };
 
   return User;

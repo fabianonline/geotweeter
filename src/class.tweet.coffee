@@ -117,6 +117,8 @@ class Tweet extends TwitterMessage
 		return unless confirm("Wirklich diesen Tweet löschen?")
 		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
 	
+	report_as_spam: -> @sender.report_as_spam(@account)
+	
 	get_thumbnails: ->
 		for media in @data.entities?.media?
 			@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))
