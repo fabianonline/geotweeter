@@ -139,7 +139,6 @@ class Tweet extends TwitterMessage
 		$('#text')[0].selectionStart = sender.length
 		$('#text')[0].selectionEnd = sender.length + mentions.length
 		$('#text').focus()
-		
 	
 	get_thumbnails: ->
 		for media in @data.entities?.media?
@@ -166,4 +165,66 @@ class Tweet extends TwitterMessage
 		quote:          (elm) -> @get_tweet(elm).quote(); return false
 		delete:         (elm) -> @get_tweet(elm).delete(); return false
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
+		
+		# called by the tweet button
+		send: ->
+			# event is a global variable. preventDefault() prevents the form from being submitted after this function returned
+			event.preventDefault() if event?
+			parameters = {
+				status: $('#text').val()
+				wrap_links: true
+			}
+			if settings.places.length > 0 && (placeindex=document.tweet_form.place.value-1)>=0
+				place = settings.places[placeindex]
+				parameters.lat = place.lat + (((Math.random()*300)-15)*0.000001)
+				parameters.lon = place.lon + (((Math.random()*300)-15)*0.000001)
+				parameters.place_id = place.place_id if place.place_id?
+				parameters.display_coordinates = true
+			parameters.in_reply_to_status_id = Application.reply_to().id if Application.reply_to()?
+			
+			if $('#file')[0].files[0]
+				data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null)
+				url = "proxy/upload/statuses/update_with_media.json?#{data}"
+				content_type = false
+				data = new FormData()
+				data.append("media[]", $('#file')[0].files[0])
+				data.append(key, value) for key, value of parameters
+			else
+				data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters)
+				url = "proxy/api/statuses/update.json"
+				content_type = "application/x-www-form-urlencoded"
+			$('#form').fadeTo(500, 0);
+			
+			$.ajax({
+				url: url
+				data: data
+				processData: false
+				contentType: content_type
+				async: true
+				dataType: "json"
+				type: "POST"
+				success: (data) ->
+					if data.text
+						html = "
+							Tweet-ID: #{data.id_str}<br />
+							Mein Tweet Nummer: #{data.user.statuses_count}<br />
+							Follower: #{data.user.followers_count}<br />
+							Friends: #{data.user.friends_count}<br />"
+						$('#text').val('')
+						Application.reply_to(null)
+						Hooks.toggle_file(false)
+						$('#success_info').html(html)
+						$('#success').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
+					else
+						$('#failure_info').html(data.error);
+						$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
+				error: (req) ->
+					info = "Error #{req.status} (#{req.statusText})"
+					try additional = $.parseJSON(req.responseText)
+					info += "<br /><strong>#{additional.error}</strong>" if additional.error?
+					$('#failure_info').html(info)
+					$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
+			})
+			
+			return false
 	}

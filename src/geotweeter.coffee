@@ -2,7 +2,7 @@ class Application
 	@users: {}
 	@accounts: []
 	@expected_settings_version: 12
-	@current_account: 0
+	@current_account: null
 	@twitter_config: {}
 
 	@start: ->
@@ -47,11 +47,24 @@ class Application
 		$("#content_#{id}").show()
 		$('#users .user').removeClass('active')
 		$("#user_#{id}").addClass('active')
-		@current_account = id
+		@current_account = @accounts[id]
 	
 	@add_null: (number) ->
 		return number if number>10
 		return "0#{number}"
 	
-	@send_dm_to: (recipient_name) -> # TODO
-	@reply_to: (tweet) -> # TODO
+	@send_dm_to: (recipient_name) ->
+		return @sending_dm_to unless recipient_name?
+		@sending_dm_to = recipient_name
+		if recipient_name?
+			$("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();')
+		else
+			$("#tweet_button").attr('onClick', 'Tweet.hooks.send();')
+		# TODO
+	
+	@reply_to: (tweet) ->
+		return @reply_to_tweet unless tweet?
+		@reply_to_tweet = tweet
+		# TODO
+	
+	@is_sending_dm: -> @sending_dm_to?

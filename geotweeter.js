@@ -635,6 +635,82 @@ Tweet = (function(_super) {
     report_as_spam: function(elm) {
       this.get_tweet(elm).report_as_spam();
       return false;
+    },
+    send: function() {
+      var content_type, data, key, parameters, place, placeindex, url, value;
+      if (typeof event !== "undefined" && event !== null) event.preventDefault();
+      parameters = {
+        status: $('#text').val(),
+        wrap_links: true
+      };
+      if (settings.places.length > 0 && (placeindex = document.tweet_form.place.value - 1) >= 0) {
+        place = settings.places[placeindex];
+        parameters.lat = place.lat + (((Math.random() * 300) - 15) * 0.000001);
+        parameters.lon = place.lon + (((Math.random() * 300) - 15) * 0.000001);
+        if (place.place_id != null) parameters.place_id = place.place_id;
+        parameters.display_coordinates = true;
+      }
+      if (Application.reply_to() != null) {
+        parameters.in_reply_to_status_id = Application.reply_to().id;
+      }
+      if ($('#file')[0].files[0]) {
+        data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null);
+        url = "proxy/upload/statuses/update_with_media.json?" + data;
+        content_type = false;
+        data = new FormData();
+        data.append("media[]", $('#file')[0].files[0]);
+        for (key in parameters) {
+          value = parameters[key];
+          data.append(key, value);
+        }
+      } else {
+        data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters);
+        url = "proxy/api/statuses/update.json";
+        content_type = "application/x-www-form-urlencoded";
+      }
+      $('#form').fadeTo(500, 0);
+      $.ajax({
+        url: url,
+        data: data,
+        processData: false,
+        contentType: content_type,
+        async: true,
+        dataType: "json",
+        type: "POST",
+        success: function(data) {
+          var html;
+          if (data.text) {
+            html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";
+            $('#text').val('');
+            Application.reply_to(null);
+            Hooks.toggle_file(false);
+            $('#success_info').html(html);
+            return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          } else {
+            $('#failure_info').html(data.error);
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
+        },
+        error: function(req) {
+          var additional, info;
+          info = "Error " + req.status + " (" + req.statusText + ")";
+          try {
+            additional = $.parseJSON(req.responseText);
+          } catch (_error) {}
+          if (additional.error != null) {
+            info += "<br /><strong>" + additional.error + "</strong>";
+          }
+          $('#failure_info').html(info);
+          return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
+        }
+      });
+      return false;
     }
   };
 
@@ -656,6 +732,56 @@ DirectMessage = (function(_super) {
 
   DirectMessage.prototype.get_classes = function() {
     return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
+
+  DirectMessage.hooks.send = function() {
+    var data, parameters, url;
+    parameters = {
+      text: $('#text').val(),
+      wrap_links: true,
+      screen_name: Application.send_dm_to()
+    };
+    data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
+    url = "proxy/api/direct_messages/new.json";
+    $('#form').fadeTo(500, 0);
+    return $.ajax({
+      url: url,
+      data: data,
+      async: true,
+      dataType: "json",
+      type: "POST",
+      success: function(data) {
+        if (data.recipient) {
+          $('#text').val('');
+          Application.reply_to(null);
+          Application.send_dm_to(null);
+          Hooks.toggle_file(false);
+          $('#success_info').html("DM erfolgreich verschickt.");
+          return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
+        } else {
+          $('#failure_info').html(data.error);
+          return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
+        }
+      },
+      error: function(req) {
+        var additional, info;
+        info = "Error " + req.status + " (" + req.statusText + ")";
+        try {
+          additional = $.parseJSON(req.responseText);
+        } catch (_error) {}
+        if (additional.error != null) {
+          info += "<br /><strong>" + additional.error + "</strong>";
+        }
+        $('#failure_info').html(info);
+        return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+          return $('#form').fadeTo(500, 1);
+        });
+      }
+    });
   };
 
   return DirectMessage;
@@ -824,7 +950,7 @@ Application = (function() {
 
   Application.expected_settings_version = 12;
 
-  Application.current_account = 0;
+  Application.current_account = null;
 
   Application.twitter_config = {};
 
@@ -893,7 +1019,7 @@ Application = (function() {
     $("#content_" + id).show();
     $('#users .user').removeClass('active');
     $("#user_" + id).addClass('active');
-    return this.current_account = id;
+    return this.current_account = this.accounts[id];
   };
 
   Application.add_null = function(number) {
@@ -901,9 +1027,24 @@ Application = (function() {
     return "0" + number;
   };
 
-  Application.send_dm_to = function(recipient_name) {};
+  Application.send_dm_to = function(recipient_name) {
+    if (recipient_name == null) return this.sending_dm_to;
+    this.sending_dm_to = recipient_name;
+    if (recipient_name != null) {
+      return $("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();');
+    } else {
+      return $("#tweet_button").attr('onClick', 'Tweet.hooks.send();');
+    }
+  };
 
-  Application.reply_to = function(tweet) {};
+  Application.reply_to = function(tweet) {
+    if (tweet == null) return this.reply_to_tweet;
+    return this.reply_to_tweet = tweet;
+  };
+
+  Application.is_sending_dm = function() {
+    return this.sending_dm_to != null;
+  };
 
   return Application;
 

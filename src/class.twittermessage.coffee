@@ -8,4 +8,4 @@ class TwitterMessage
 		return new DirectMessage(data, account) if data.text? && data.recipient?
 		return new Tweet(data, account) if data.text?
 		return
-		
+	
