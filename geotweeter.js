@@ -561,6 +561,30 @@ Tweet = (function(_super) {
     return this.sender.report_as_spam(this.account);
   };
 
+  Tweet.prototype.reply = function() {
+    var mention, mentions, sender;
+    Application.send_dm_to(null);
+    $('#text').val('').focus();
+    Application.reply_to(this);
+    sender = this.sender.screen_name !== this.account.screen_name ? "@" + this.sender.screen_name + " " : "";
+    mentions = ((function() {
+      var _i, _len, _ref, _results;
+      _ref = this.mentions.reverse();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        mention = _ref[_i];
+        if (mention !== this.sender.screen_name && mention !== this.account.screen_name) {
+          _results.push("@" + mention + " ");
+        }
+      }
+      return _results;
+    }).call(this)).join("");
+    $('#text').val("" + sender + mentions);
+    $('#text')[0].selectionStart = sender.length;
+    $('#text')[0].selectionEnd = sender.length + mentions.length;
+    return $('#text').focus();
+  };
+
   Tweet.prototype.get_thumbnails = function() {
     var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
     _ref2 = ((_ref = this.data.entities) != null ? _ref.media : void 0) != null;
@@ -868,6 +892,10 @@ Application = (function() {
     if (number > 10) return number;
     return "0" + number;
   };
+
+  Application.send_dm_to = function(recipient_name) {};
+
+  Application.reply_to = function(tweet) {};
 
   return Application;
 

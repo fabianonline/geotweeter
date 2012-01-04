@@ -119,6 +119,18 @@ class Tweet extends TwitterMessage
 	
 	report_as_spam: -> @sender.report_as_spam(@account)
 	
+	reply: ->
+		Application.send_dm_to(null)
+		$('#text').val('').focus()
+		Application.reply_to(this)
+		sender = if @sender.screen_name!=@account.screen_name then "@#{@sender.screen_name} " else ""
+		mentions = ("@#{mention} " for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name).join("")
+		$('#text').val("#{sender}#{mentions}")
+		$('#text')[0].selectionStart = sender.length
+		$('#text')[0].selectionEnd = sender.length + mentions.length
+		$('#text').focus()
+		
+	
 	get_thumbnails: ->
 		for media in @data.entities?.media?
 			@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))

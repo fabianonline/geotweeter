@@ -259,136 +259,6 @@ function get_time_since_last_tweet(account_id) {
 }
 
 /**
- * Requests all tweets for the timeline (non-streaming).
- * If this is the first call since start of the geotweeter, as many tweets as possible are requested.
- * Otherwise it gets called after a disconnect. Then only missed tweets are fetched.
- *
- * Queries the home_timeline and then mentions, since home_timeline doesn't contain mentions from
- * people you don't follow.
- */
-function fillList(account_id) {
-    log_message("fillList", "Starting");
-    setStatus("Filling List...", "orange", account_id);
-    
-    threadsRunning[account_id] = 5;
-    threadsErrored[account_id] = 0;
-    temp_responses[account_id] = new Array();
-    
-    var after_run = function(account_id) {
-        if (threadsErrored[account_id]==0) {
-            // everything was successfull. Great.
-            startRequest(account_id);
-        } else {
-            // oops... trigger the restart mechanism
-            var html = '<div class="status">Retrying in 30 seconds...</div>';
-            addHTML(html, account_id);
-            window.setTimeout('fillList(' + account_id + ')', 30000);
-        }
-        update_user_counter(account_id);
-        setStatus("", null, account_id);
-    }
-    
-    var success = function(element, data, req, additional_info) {
-        temp_responses[additional_info.account_id].push(data);
-        threadsRunning[additional_info.account_id]-=1;
-        if (threadsRunning[additional_info.account_id]==0) {
-            after_run(additional_info.account_id);
-        }
-    }
-    
-    var error = function(info_element, data, request, raw_response, exception, additional_info) {
-        threadsRunning[additional_info.account_id]-=1;
-        threadsErrored[additional_info.account_id]+=1;
-        var html = '<div class="status"><b>Fehler in ' + additional_info.name + ":</b><br />";
-        if (data && data.error) {
-            html += data.error;
-        } else {
-            html += 'Error ' + request.status + ' (' + exception + ')';
-        }
-        html += "</div>";
-        addHTML(html, account_id);
-        if (threadsRunning[additional_info.account_id]==0) {
-            after_run(additional_info.account_id);
-        }
-    }
-
-    var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
-    if (maxknownid[account_id] && maxknownid[account_id]!="0") parameters.since_id = maxknownid[account_id];
-    
-    log_message("fillList", "since_id: "+parameters.since_id, account_id);
-
-    log_message("fillList", "home_timeline 1...", account_id);
-    simple_twitter_request('statuses/home_timeline.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'home_timeline 1', account_id: account_id},
-        success: success,
-        error: error
-    });
-    
-    log_message("fillList", "mentions...");
-    var returned_mentions = simple_twitter_request('statuses/mentions.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'mentions', account_id: account_id},
-        success: success,
-        error: error
-    });
-
-    parameters.page = 2;
-    log_message("fillList", "home_timeline 2...");
-    var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'home_timeline 2', account_id: account_id},
-        success: success,
-        error: error
-    });
-    
-    var parameters = {count: 100};
-    if (maxknowndmid[account_id] && maxknowndmid[account_id]!="0") parameters.since_id = maxknowndmid[account_id];
-    log_message("fillList", "DMs...");
-    var received_dms = simple_twitter_request('direct_messages.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'received dms', account_id: account_id},
-        success: success,
-        error: error
-    });
-
-    log_message("fillList", "Sent DMs...");
-    var sent_dms = simple_twitter_request('direct_messages/sent.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'sent dms', account_id: account_id},
-        success: success,
-        error: error
-    });
-}
-
-
-
-/**
  * Takes a single Twitter event and gets it's HTML code.
  * Optionally, the code is returned instead of adding it to the DOM.
  */
@@ -946,20 +816,6 @@ function splitTweet(text) {
     return parts;
 }
 
-/** Report user as spamming. */
-function report_spam(sender_name) {
-    if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
-        return false;
-
-    simple_twitter_request('report_spam.json', {
-        parameters: {screen_name: sender_name},
-        success_string: 'Spam reported',
-        success: function() {
-            $('.by_' + sender_name).remove();
-        }
-    });
-}
-
 /** Quotes a tweet (using the old "RT" syntax). */
 function quote(tweet_id, user, text) {
     text = 'RT @' + user + ': ' + unescape(text);
@@ -970,48 +826,6 @@ function quote(tweet_id, user, text) {
     updateCounter();
 }
 
-/**
- * Prepares the form to reply to a tweet.
- * Prefills the textarea with "@user ", sets in_reply_to_id and sets the focus to the textarea.
- */
-function replyToTweet(tweet_id, user, isDM) {
-    $('#reply_to_id').val('');
-    sending_dm_to = null;
-    reply_to_user = null;
-    reply_to_id = null;
-    $('#text').val('').focus();
-
-    if (isDM===true) {
-        sending_dm_to = user;
-    } else {
-        reply_to_user = user;
-        reply_to_id = tweet_id;
-        var elm = $('#id_' + tweet_id);
-        if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart!=undefined) {
-            var all_mentions = elm.data('mentions').split(' ');
-            var filtered_mentions = new Array();
-            for(var i in all_mentions) {
-                if (all_mentions[i] == user) continue;
-                if (all_mentions[i] == this_users_name[current_account]) continue;
-                filtered_mentions.push('@' + all_mentions[i]);
-            }
-            var mentions = filtered_mentions.join(' ');
-            var text = '@' + user + ' ' + mentions + ' ';
-            $('#text').val(text.trim() + ' ');
-            $('#text')[0].selectionStart = user.length+2;
-            $('#text')[0].selectionEnd = user.length+2+mentions.length+1;
-        } else {
-            $('#text').val('@' + user + ' ');
-        }
-        $('#text').focus();
-        //$('#text').val('@' + user + ' ').focus();
-        $('#reply_to_id').val(tweet_id);
-    }
-
-    $('#text').focus();
-    updateCounter();
-    update_form_display();
-}
 
 /** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
 function updateCounter() {

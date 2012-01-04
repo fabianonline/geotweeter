@@ -52,4 +52,6 @@ class Application
 	@add_null: (number) ->
 		return number if number>10
 		return "0#{number}"
-		
+	
+	@send_dm_to: (recipient_name) -> # TODO
+	@reply_to: (tweet) -> # TODO
