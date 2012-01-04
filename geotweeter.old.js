@@ -574,15 +574,6 @@ function add_reply_to_infoarea(data) {
     }
 }
 
-function toggle_file(force_hide) {
-    show_file_field = !show_file_field;
-    if (force_hide) show_file_field=false;
-    $('#file_div').toggle(show_file_field);
-    if (!show_file_field) {
-        $('#file').val('');
-    }
-}
-
 /** Shows some stats */
 function show_stats() {
     var html = "";
@@ -598,48 +589,6 @@ function show_stats() {
     infoarea_show("Stats", html);
 }
 
-/**
- * Get called when the user clicks the "Tweet" button. Does not actually send the tweet,
- * but calls _sendTweet(), which does.
- */
-function sendTweet(event) {
-    if (event) event.preventDefault();
-    if(settings.show_error_if_no_place_is_set && settings.places.length>0 && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
-        return;
-
-    var text = $('#text').val();
-
-    var parts = splitTweet(text);
-
-    if (parts.length==1) {
-        _sendTweet(parts[0], true);
-    } else {
-        for (var i=0; i<parts.length; i++) {
-            if (_sendTweet(parts[i])) {
-                /* Tweet wurde erfolgreich gesendet */
-                if (i == (parts.length-1)) {
-                    /* Es war der letzte oder einzige Teil des Tweets */
-                    $('#text').val('');
-                    reply_to_user = null;
-                    reply_to_id = null;
-                    sending_dm_to = null;
-                    update_form_display();
-                    updateCounter();
-                }
-            } else {
-                /* Tweet konnte nicht abgesendet werden */
-                /* Neuen String bauen... */
-                text = "";
-                for (var j=i; j<parts.length; j++) {
-                    text += parts[j] + ' ';
-                }
-                $('#text').val(text);
-                break;
-            }
-        }
-    }
-    return false;
-}
 
 /** Send a tweet. Depending on the parameter async, this happens asynchronously or synchronously.
  * Asynchronously is used, if there's just one tweet to send.

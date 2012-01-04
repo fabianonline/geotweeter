@@ -325,7 +325,22 @@ Hooks = (function() {
 
   function Hooks() {}
 
+  Hooks.display_file = false;
+
   Hooks.check_file = function() {};
+
+  Hooks.update_counter = function() {};
+
+  Hooks.toggle_file = function(new_value) {
+    if (new_value != null) {
+      this.display_file = new_value;
+    } else {
+      this.display_file = !this.display_file;
+    }
+    $('#file_div').toggle(this.display_file);
+    if (!this.display_file) $('#file').val('');
+    return false;
+  };
 
   return Hooks;
 
