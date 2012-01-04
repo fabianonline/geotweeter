@@ -377,29 +377,11 @@ TwitterMessage = (function() {
 
 })();
 
-DirectMessage = (function(_super) {
-
-  __extends(DirectMessage, _super);
-
-  function DirectMessage() {
-    DirectMessage.__super__.constructor.apply(this, arguments);
-  }
-
-  DirectMessage.prototype.get_user_data = function() {
-    return this.data.sender;
-  };
-
-  DirectMessage.prototype.get_classes = function() {
-    return ["dm", "by_" + (this.sender.get_screen_name())];
-  };
-
-  return DirectMessage;
-
-})(Tweet);
-
 Tweet = (function(_super) {
 
   __extends(Tweet, _super);
+
+  Tweet.last = null;
 
   Tweet.prototype.mentions = [];
 
@@ -419,6 +401,7 @@ Tweet = (function(_super) {
     this.sender = new User(this.get_user_data());
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
     this.account.tweets[this.id] = this;
+    Tweet.last = this;
     this.text = data.text;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
@@ -654,6 +637,26 @@ Tweet = (function(_super) {
   return Tweet;
 
 })(TwitterMessage);
+
+DirectMessage = (function(_super) {
+
+  __extends(DirectMessage, _super);
+
+  function DirectMessage() {
+    DirectMessage.__super__.constructor.apply(this, arguments);
+  }
+
+  DirectMessage.prototype.get_user_data = function() {
+    return this.data.sender;
+  };
+
+  DirectMessage.prototype.get_classes = function() {
+    return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
+
+  return DirectMessage;
+
+})(Tweet);
 
 User = (function() {
 

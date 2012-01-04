@@ -1,4 +1,7 @@
 class Tweet extends TwitterMessage
+	# static variables
+	@last: null
+	
 	mentions: []
 	account: null
 	thumbs: []
@@ -11,6 +14,7 @@ class Tweet extends TwitterMessage
 		@sender = new User(@get_user_data())
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
 		@account.tweets[@id] = this
+		Tweet.last = this
 		@text = data.text
 		@linkify_text()
 		@thumbs = @get_thumbnails()
