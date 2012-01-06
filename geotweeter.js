@@ -549,6 +549,11 @@ Tweet = (function(_super) {
     });
   };
 
+  Tweet.prototype.quote = function() {
+    $('#text').val("RT @" + this.sender.screen_name + ": " + this.text).focus();
+    return Application.reply_to(this);
+  };
+
   Tweet.prototype["delete"] = function() {
     if (!confirm("Wirklich diesen Tweet löschen?")) return;
     return this.account.twitter_request("statuses/destroy/" + this.id + ".json", {

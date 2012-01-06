@@ -123,6 +123,10 @@ class Tweet extends TwitterMessage
 		return unless confirm("Wirklich retweeten?")
 		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
+	quote: ->
+		$('#text').val("RT @#{@sender.screen_name}: #{@text}").focus()
+		Application.reply_to(this)
+	
 	delete: ->
 		return unless confirm("Wirklich diesen Tweet löschen?")
 		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
