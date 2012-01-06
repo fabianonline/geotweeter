@@ -768,6 +768,10 @@ DirectMessage = (function(_super) {
     return Application.send_dm_to(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
   };
 
+  DirectMessage.prototype.get_buttons_html = function() {
+    return "<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  };
+
   DirectMessage.hooks.get_tweet = function(element) {
     var tweet_div;
     tweet_div = $(element).parents('.dm');

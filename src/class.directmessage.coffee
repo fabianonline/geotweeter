@@ -10,6 +10,10 @@ class DirectMessage extends Tweet
 		$('#text').val('').focus()
 		Application.send_dm_to(if @sender.screen_name!=@account.screen_name then @sender.screen_name else @recipient.screen_name)
 	
+	get_buttons_html: ->
+		"<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
+		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
+	
 	@hooks.get_tweet = (element) ->
 		tweet_div = $(element).parents('.dm')
 		Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'))
