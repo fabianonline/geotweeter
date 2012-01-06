@@ -588,61 +588,6 @@ function show_stats() {
 
     infoarea_show("Stats", html);
 }
-
-
-/** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
-function updateCounter() {
-    var text = $('#text').val();
-
-    var dm_match = text.match(/^d @?(\w+) (.*)$/i);
-    if (!sending_dm_to && dm_match) {
-        sending_dm_to = dm_match[1];
-        reply_to_id = null;
-        reply_to_user = null;
-        text = dm_match[2];
-        $('#text').val(text);
-        update_form_display();
-    }
-
-    var parts = splitTweet(text);
-
-    var lengths = "";
-    var color = "#0b0";
-    if (parts.length==0)
-        lengths = "140+";
-    for (var i=0; i<parts.length; i++) {
-        var text = parts[i];
-        var len = 140 - text.length;
-        if ($('#file')[0].files[0]) len -= characters_reserved_per_media;
-        var matches = text.match(regexp_url);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            var m = matches[i].trim();
-            if (m.length < short_url_length) continue;
-            len += m.length;
-            if (m.slice(0, 5)=="https") len -= short_url_length_https;
-            else len -= short_url_length;
-        }
-        if (len<0) color="#f00";
-        lengths += len+'+';
-    }
-    lengths = lengths.substr(0, lengths.length-1);
-
-    $('#counter').html(lengths);
-    $('#counter').css("color", color);
-
-    if (reply_to_id != null) {
-        var re = new RegExp("(^| )@" + reply_to_user + "([\.:, ]|$)");
-        if (re.test(text)) {
-            $('#reply_warning').fadeOut();
-        } else {
-            $('#reply_warning').fadeIn();
-        }
-    } else {
-        $('#reply_to_id').val('');
-        $('#reply_warning').fadeOut();
-    }
-}
-
 /** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
 function cancel_dm() {
     $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
@@ -744,18 +689,6 @@ function setStatus(message, color, account_id) {
 /** Scrolls down to the last read tweet. */
 function goToLastRead(){
     scroll_to(maxreadid[current_account]);
-}
-
-/** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
-function checkEnter(event) {
-    var d = new Date();
-    if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) {
-        if (event) event.preventDefault();
-        $('#text').val(textBeforeEnter);
-        sendTweet();
-    }
-    textBeforeEnter = $('#text').val();
-    timeOfLastEnter = d.getTime();
 }
 
 /** Checks for blacklisted words. */

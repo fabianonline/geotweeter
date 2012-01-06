@@ -327,9 +327,55 @@ Hooks = (function() {
 
   Hooks.display_file = false;
 
+  Hooks.time_of_last_enter = new Date();
+
   Hooks.check_file = function() {};
 
-  Hooks.update_counter = function() {};
+  Hooks.update_counter = function() {
+    var color, length, now, parts, reply, text, url, urls, _i, _len, _ref;
+    if ((typeof event !== "undefined" && event !== null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
+      now = new Date();
+      if (now - this.time_of_last_enter <= settings.timings.max_double_enter_time) {
+        event.preventDefault();
+        $('#text').val(this.text_before_enter);
+        Hooks.send();
+        return;
+      }
+      this.text_before_enter = $('#text').val();
+      this.time_of_last_enter = now;
+    }
+    text = $('#text').val();
+    if (!(Application.get_dm_recipient_name() != null) && (parts = text.match(/^d @?(\w+) (.*)$/i))) {
+      Application.set_dm_recipient_name(parts[1]);
+      text = parts[2];
+      $('#text').val(text);
+    }
+    color = '#0b0';
+    text = text.trim();
+    length = text.length;
+    if ($('#file')[0].files[0]) length += characters_reserved_per_media + 1;
+    urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig);
+    _ref = urls != null ? urls : [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      url = _ref[_i];
+      length -= url.length;
+      length += url.slice(0, 5) === "https" ? Application.twitter_config.short_url_length_https : Application.twitter_config.short_url_length_http;
+    }
+    if (length > 140) color = '#f00';
+    $('#counter').html(140 - length);
+    $('#counter').css('color', color);
+    return reply = Application.get_reply_to_tweet();
+  };
+
+  Hooks.send = function() {
+    if (Application.get_dm_recipient_name() != null) {
+      return DirectMessage.hooks.send();
+    } else {
+      return Tweet.hooks.send();
+    }
+  };
+
+  Hooks.cancel_dm = function() {};
 
   Hooks.toggle_file = function(new_value) {
     if (new_value != null) {
