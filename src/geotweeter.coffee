@@ -58,9 +58,15 @@ class Application
 		@sending_dm_to = recipient_name
 		if recipient_name?
 			$("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();')
+			Hooks.toggle_file(false)
+			$('#dm_info_text').html("DM @#{recipient_name}")
+			$('#dm_info').show()
+			$('#place').hide()
 		else
 			$("#tweet_button").attr('onClick', 'Tweet.hooks.send();')
-		# TODO
+			Hooks.toggle_file(true)
+			$('#dm_info').hide()
+			$('#place').show()
 	
 	@reply_to: (tweet) ->
 		return @reply_to_tweet unless tweet?

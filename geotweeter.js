@@ -1084,9 +1084,16 @@ Application = (function() {
   Application.set_dm_recipient_name = function(recipient_name) {
     this.sending_dm_to = recipient_name;
     if (recipient_name != null) {
-      return $("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();');
+      $("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();');
+      Hooks.toggle_file(false);
+      $('#dm_info_text').html("DM @" + recipient_name);
+      $('#dm_info').show();
+      return $('#place').hide();
     } else {
-      return $("#tweet_button").attr('onClick', 'Tweet.hooks.send();');
+      $("#tweet_button").attr('onClick', 'Tweet.hooks.send();');
+      Hooks.toggle_file(true);
+      $('#dm_info').hide();
+      return $('#place').show();
     }
   };
 
