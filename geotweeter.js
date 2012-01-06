@@ -414,9 +414,9 @@ Tweet = (function(_super) {
     this.data = data;
     this.id = data.id_str;
     this.fill_user_variables();
+    this.save_as_last_message();
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
     this.account.tweets[this.id] = this;
-    Tweet.last = this;
     this.text = data.text;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
@@ -432,6 +432,10 @@ Tweet = (function(_super) {
     } else {
       return this.sender = new User(this.data.user);
     }
+  };
+
+  Tweet.prototype.save_as_last_message = function() {
+    return Tweet.last = this;
   };
 
   Tweet.prototype.get_date = function() {
@@ -748,6 +752,10 @@ DirectMessage = (function(_super) {
 
   DirectMessage.prototype.fill_user_variables = function() {
     return this.sender = new User(this.data.sender);
+  };
+
+  DirectMessage.prototype.save_as_last_message = function() {
+    return DirectMessage.last = this;
   };
 
   DirectMessage.prototype.get_classes = function() {

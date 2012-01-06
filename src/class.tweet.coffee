@@ -12,9 +12,9 @@ class Tweet extends TwitterMessage
 		@data = data
 		@id = data.id_str
 		@fill_user_variables()
+		@save_as_last_message()
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
 		@account.tweets[@id] = this
-		Tweet.last = this
 		@text = data.text
 		@linkify_text()
 		@thumbs = @get_thumbnails()
@@ -29,6 +29,7 @@ class Tweet extends TwitterMessage
 		else
 			@sender = new User(@data.user)
 	
+	save_as_last_message: -> Tweet.last = this
 	get_date: -> @date
 	div_id: -> "#tweet_#{@id}"
 	get_html: ->
