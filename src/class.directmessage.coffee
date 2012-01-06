@@ -50,7 +50,7 @@ class DirectMessage extends Tweet
 			error: (req) ->
 				info = "Error #{req.status} (#{req.statusText})"
 				try additional = $.parseJSON(req.responseText)
-				info += "<br /><strong>#{additional.error}</strong>" if additional.error?
+				info += "<br /><strong>#{additional.error}</strong>" if additional?.error?
 				$('#failure_info').html(info)
 				$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
 		})

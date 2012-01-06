@@ -725,7 +725,7 @@ Tweet = (function(_super) {
           try {
             additional = $.parseJSON(req.responseText);
           } catch (_error) {}
-          if (additional.error != null) {
+          if ((additional != null ? additional.error : void 0) != null) {
             info += "<br /><strong>" + additional.error + "</strong>";
           }
           $('#failure_info').html(info);
@@ -818,7 +818,7 @@ DirectMessage = (function(_super) {
         try {
           additional = $.parseJSON(req.responseText);
         } catch (_error) {}
-        if (additional.error != null) {
+        if ((additional != null ? additional.error : void 0) != null) {
           info += "<br /><strong>" + additional.error + "</strong>";
         }
         $('#failure_info').html(info);
