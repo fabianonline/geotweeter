@@ -780,6 +780,7 @@ DirectMessage = (function(_super) {
 
   DirectMessage.hooks.send = function() {
     var data, parameters, url;
+    if (typeof event !== "undefined" && event !== null) event.preventDefault();
     parameters = {
       text: $('#text').val(),
       wrap_links: true,

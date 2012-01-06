@@ -19,6 +19,8 @@ class DirectMessage extends Tweet
 		Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'))
 	
 	@hooks.send = ->
+		# event is a global variable. preventDefault() prevents the form from being submitted after this function returned
+		event.preventDefault() if event?
 		parameters = {
 			text: $('#text').val()
 			wrap_links: true
