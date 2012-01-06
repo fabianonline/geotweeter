@@ -50,12 +50,12 @@
     <select name="place" id="place"></select>
     <span id="dm_info">
         <span id="dm_info_text"></span>
-        <a href="#" onClick="cancel_dm(); return false;">Keine DM</a>
+        <a href="#" onClick="return Hooks.cancel_dm();">Keine DM</a>
     </span>
     <span style="float: right;">
         <span id="counter"></span>
         <a href="#" onClick="Hooks.toggle_file();" id="file_toggle"><img src="icons/image_add.png" title="Bild anhängen." class="button off" /></a>
-        <input type="submit" id="tweet_button" onClick="Tweet.hooks.send();" value="Tweet" />
+        <input type="submit" id="tweet_button" onClick="Hooks.send();" value="Tweet" />
     </span>
     <br style="clear: both;"/>
     <div id="file_div">

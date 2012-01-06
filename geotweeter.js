@@ -772,66 +772,66 @@ DirectMessage = (function(_super) {
     return "<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
   };
 
-  DirectMessage.hooks.get_tweet = function(element) {
-    var tweet_div;
-    tweet_div = $(element).parents('.dm');
-    return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
-  };
-
-  DirectMessage.hooks.send = function() {
-    var data, parameters, url;
-    if (typeof event !== "undefined" && event !== null) event.preventDefault();
-    parameters = {
-      text: $('#text').val().trim(),
-      wrap_links: true,
-      screen_name: Application.get_dm_recipient_name()
-    };
-    data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
-    url = "proxy/api/direct_messages/new.json";
-    $('#form').fadeTo(500, 0);
-    return $.ajax({
-      url: url,
-      data: data,
-      async: true,
-      dataType: "json",
-      type: "POST",
-      success: function(data) {
-        if (data.recipient) {
-          $('#text').val('');
-          Application.reply_to(null);
-          Application.set_dm_recipient_name(null);
-          Hooks.toggle_file(false);
-          $('#success_info').html("DM erfolgreich verschickt.");
-          return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
-            return $('#form').fadeTo(500, 1);
-          });
-        } else {
-          $('#failure_info').html(data.error);
+  DirectMessage.hooks = {
+    get_tweet: function(element) {
+      var tweet_div;
+      tweet_div = $(element).parents('.dm');
+      return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
+    },
+    send: function() {
+      var data, parameters, url;
+      if (typeof event !== "undefined" && event !== null) event.preventDefault();
+      parameters = {
+        text: $('#text').val().trim(),
+        wrap_links: true,
+        screen_name: Application.get_dm_recipient_name()
+      };
+      data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
+      url = "proxy/api/direct_messages/new.json";
+      $('#form').fadeTo(500, 0);
+      return $.ajax({
+        url: url,
+        data: data,
+        async: true,
+        dataType: "json",
+        type: "POST",
+        success: function(data) {
+          if (data.recipient) {
+            $('#text').val('');
+            Application.reply_to(null);
+            Application.set_dm_recipient_name(null);
+            Hooks.toggle_file(false);
+            $('#success_info').html("DM erfolgreich verschickt.");
+            return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          } else {
+            $('#failure_info').html(data.error);
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
+        },
+        error: function(req) {
+          var additional, info;
+          info = "Error " + req.status + " (" + req.statusText + ")";
+          try {
+            additional = $.parseJSON(req.responseText);
+          } catch (_error) {}
+          if ((additional != null ? additional.error : void 0) != null) {
+            info += "<br /><strong>" + additional.error + "</strong>";
+          }
+          $('#failure_info').html(info);
           return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
             return $('#form').fadeTo(500, 1);
           });
         }
-      },
-      error: function(req) {
-        var additional, info;
-        info = "Error " + req.status + " (" + req.statusText + ")";
-        try {
-          additional = $.parseJSON(req.responseText);
-        } catch (_error) {}
-        if ((additional != null ? additional.error : void 0) != null) {
-          info += "<br /><strong>" + additional.error + "</strong>";
-        }
-        $('#failure_info').html(info);
-        return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-          return $('#form').fadeTo(500, 1);
-        });
-      }
-    });
-  };
-
-  DirectMessage.hooks.reply = function(elm) {
-    this.get_tweet(elm).reply();
-    return false;
+      });
+    },
+    reply: function(elm) {
+      this.get_tweet(elm).reply();
+      return false;
+    }
   };
 
   return DirectMessage;
@@ -1084,14 +1084,12 @@ Application = (function() {
   Application.set_dm_recipient_name = function(recipient_name) {
     this.sending_dm_to = recipient_name;
     if (recipient_name != null) {
-      $("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();');
       Hooks.toggle_file(false);
       $('#dm_info_text').html("DM @" + recipient_name);
       $('#dm_info').show();
       $('#place').hide();
       return $('#file_choose').hide();
     } else {
-      $("#tweet_button").attr('onClick', 'Tweet.hooks.send();');
       Hooks.toggle_file(true);
       $('#dm_info').hide();
       $('#place').show();
