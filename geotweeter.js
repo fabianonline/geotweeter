@@ -751,7 +751,8 @@ DirectMessage = (function(_super) {
   }
 
   DirectMessage.prototype.fill_user_variables = function() {
-    return this.sender = new User(this.data.sender);
+    this.sender = new User(this.data.sender);
+    return this.recipient = new User(this.data.recipient);
   };
 
   DirectMessage.prototype.save_as_last_message = function() {
@@ -760,6 +761,17 @@ DirectMessage = (function(_super) {
 
   DirectMessage.prototype.get_classes = function() {
     return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
+
+  DirectMessage.prototype.reply = function() {
+    $('#text').val('').focus();
+    return Application.send_dm_to(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
+  };
+
+  DirectMessage.hooks.get_tweet = function(element) {
+    var tweet_div;
+    tweet_div = $(element).parents('.dm');
+    return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
   };
 
   DirectMessage.hooks.send = function() {
@@ -810,6 +822,11 @@ DirectMessage = (function(_super) {
         });
       }
     });
+  };
+
+  DirectMessage.hooks.reply = function(elm) {
+    this.get_tweet(elm).reply();
+    return false;
   };
 
   return DirectMessage;
