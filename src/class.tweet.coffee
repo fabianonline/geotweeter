@@ -105,7 +105,7 @@ class Tweet extends TwitterMessage
 							@replace_entity(entity, "<a href='#{entity.url}' class='external' target='_blank'>#{entity.url}</a>")
 					when "hashtags"
 						@replace_entity(entity, "<a href='https://twitter.com/search?q=##{entity.text}' target='_blank'>##{entity.text}</a>")
-		@text = @text.replace(/\n/g, "<br />\n")
+		@text = @text.trim().replace(/\n/g, "<br />")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
 	
@@ -176,7 +176,7 @@ class Tweet extends TwitterMessage
 			# event is a global variable. preventDefault() prevents the form from being submitted after this function returned
 			event.preventDefault() if event?
 			parameters = {
-				status: $('#text').val()
+				status: $('#text').val().trim()
 				wrap_links: true
 			}
 			if settings.places.length > 0 && (placeindex=document.tweet_form.place.value-1)>=0

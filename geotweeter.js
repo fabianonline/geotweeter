@@ -528,7 +528,7 @@ Tweet = (function(_super) {
         }
       }
     }
-    return this.text = this.text.replace(/\n/g, "<br />\n");
+    return this.text = this.text.trim().replace(/\n/g, "<br />");
   };
 
   Tweet.prototype.replace_entity = function(entity_object, text) {
@@ -664,7 +664,7 @@ Tweet = (function(_super) {
       var content_type, data, key, parameters, place, placeindex, url, value;
       if (typeof event !== "undefined" && event !== null) event.preventDefault();
       parameters = {
-        status: $('#text').val(),
+        status: $('#text').val().trim(),
         wrap_links: true
       };
       if (settings.places.length > 0 && (placeindex = document.tweet_form.place.value - 1) >= 0) {
@@ -782,7 +782,7 @@ DirectMessage = (function(_super) {
     var data, parameters, url;
     if (typeof event !== "undefined" && event !== null) event.preventDefault();
     parameters = {
-      text: $('#text').val(),
+      text: $('#text').val().trim(),
       wrap_links: true,
       screen_name: Application.get_dm_recipient_name()
     };

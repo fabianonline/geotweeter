@@ -22,7 +22,7 @@ class DirectMessage extends Tweet
 		# event is a global variable. preventDefault() prevents the form from being submitted after this function returned
 		event.preventDefault() if event?
 		parameters = {
-			text: $('#text').val()
+			text: $('#text').val().trim()
 			wrap_links: true
 			screen_name: Application.get_dm_recipient_name()
 		}
