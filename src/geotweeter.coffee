@@ -53,8 +53,8 @@ class Application
 		return number if number>10
 		return "0#{number}"
 	
-	@send_dm_to: (recipient_name) ->
-		return @sending_dm_to unless recipient_name?
+	@get_dm_recipient_name: -> @sending_dm_to
+	@set_dm_recipient_name: (recipient_name) ->
 		@sending_dm_to = recipient_name
 		if recipient_name?
 			$("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();')

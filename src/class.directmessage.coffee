@@ -8,7 +8,7 @@ class DirectMessage extends Tweet
 	
 	reply: ->
 		$('#text').val('').focus()
-		Application.send_dm_to(if @sender.screen_name!=@account.screen_name then @sender.screen_name else @recipient.screen_name)
+		Application.set_dm_recipient_name(if @sender.screen_name!=@account.screen_name then @sender.screen_name else @recipient.screen_name)
 	
 	get_buttons_html: ->
 		"<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
@@ -22,7 +22,7 @@ class DirectMessage extends Tweet
 		parameters = {
 			text: $('#text').val()
 			wrap_links: true
-			screen_name: Application.send_dm_to()
+			screen_name: Application.get_dm_recipient_name()
 		}
 		data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters)
 		url = "proxy/api/direct_messages/new.json"
@@ -38,7 +38,7 @@ class DirectMessage extends Tweet
 				if data.recipient
 					$('#text').val('')
 					Application.reply_to(null)
-					Application.send_dm_to(null)
+					Application.set_dm_recipient_name(null)
 					Hooks.toggle_file(false)
 					$('#success_info').html("DM erfolgreich verschickt.")
 					$('#success').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))

@@ -574,7 +574,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.reply = function() {
     var mention, mentions, sender;
-    Application.send_dm_to(null);
+    Application.set_dm_recipient_name(null);
     $('#text').val('').focus();
     Application.reply_to(this);
     sender = this.sender.screen_name !== this.account.screen_name ? "@" + this.sender.screen_name + " " : "";
@@ -765,7 +765,7 @@ DirectMessage = (function(_super) {
 
   DirectMessage.prototype.reply = function() {
     $('#text').val('').focus();
-    return Application.send_dm_to(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
+    return Application.set_dm_recipient_name(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
   };
 
   DirectMessage.prototype.get_buttons_html = function() {
@@ -783,7 +783,7 @@ DirectMessage = (function(_super) {
     parameters = {
       text: $('#text').val(),
       wrap_links: true,
-      screen_name: Application.send_dm_to()
+      screen_name: Application.get_dm_recipient_name()
     };
     data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
     url = "proxy/api/direct_messages/new.json";
@@ -798,7 +798,7 @@ DirectMessage = (function(_super) {
         if (data.recipient) {
           $('#text').val('');
           Application.reply_to(null);
-          Application.send_dm_to(null);
+          Application.set_dm_recipient_name(null);
           Hooks.toggle_file(false);
           $('#success_info').html("DM erfolgreich verschickt.");
           return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
@@ -1076,8 +1076,11 @@ Application = (function() {
     return "0" + number;
   };
 
-  Application.send_dm_to = function(recipient_name) {
-    if (recipient_name == null) return this.sending_dm_to;
+  Application.get_dm_recipient_name = function() {
+    return this.sending_dm_to;
+  };
+
+  Application.set_dm_recipient_name = function(recipient_name) {
     this.sending_dm_to = recipient_name;
     if (recipient_name != null) {
       return $("#tweet_button").attr('onClick', 'DirectMessage.hooks.send();');

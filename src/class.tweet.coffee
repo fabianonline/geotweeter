@@ -135,7 +135,7 @@ class Tweet extends TwitterMessage
 	report_as_spam: -> @sender.report_as_spam(@account)
 	
 	reply: ->
-		Application.send_dm_to(null)
+		Application.set_dm_recipient_name(null)
 		$('#text').val('').focus()
 		Application.reply_to(this)
 		sender = if @sender.screen_name!=@account.screen_name then "@#{@sender.screen_name} " else ""
