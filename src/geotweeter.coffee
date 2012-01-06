@@ -62,11 +62,13 @@ class Application
 			$('#dm_info_text').html("DM @#{recipient_name}")
 			$('#dm_info').show()
 			$('#place').hide()
+			$('#file_choose').hide()
 		else
 			$("#tweet_button").attr('onClick', 'Tweet.hooks.send();')
 			Hooks.toggle_file(true)
 			$('#dm_info').hide()
 			$('#place').show()
+			$('#file_choose').show()
 	
 	@reply_to: (tweet) ->
 		return @reply_to_tweet unless tweet?

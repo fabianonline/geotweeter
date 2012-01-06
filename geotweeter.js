@@ -1088,12 +1088,14 @@ Application = (function() {
       Hooks.toggle_file(false);
       $('#dm_info_text').html("DM @" + recipient_name);
       $('#dm_info').show();
-      return $('#place').hide();
+      $('#place').hide();
+      return $('#file_choose').hide();
     } else {
       $("#tweet_button").attr('onClick', 'Tweet.hooks.send();');
       Hooks.toggle_file(true);
       $('#dm_info').hide();
-      return $('#place').show();
+      $('#place').show();
+      return $('#file_choose').show();
     }
   };
 

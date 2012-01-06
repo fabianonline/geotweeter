@@ -643,17 +643,6 @@ function updateCounter() {
     }
 }
 
-/** Updated the visibility of the different fields in the form area. */
-function update_form_display() {
-    if (sending_dm_to!=null) {
-        toggle_file(true);
-        $('#dm_info_text').html('DM @' + sending_dm_to);
-    }
-    $('#dm_info').toggle(sending_dm_to!=null);
-    $('#place').toggle(sending_dm_to==null);
-    $('#file_choose').toggle(sending_dm_to==null);
-}
-
 /** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
 function cancel_dm() {
     $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
