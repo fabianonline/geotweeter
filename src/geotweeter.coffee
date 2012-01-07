@@ -50,10 +50,6 @@ class Application
 		$("#user_#{id}").addClass('active')
 		@current_account = @accounts[id]
 	
-	@add_null: (number) ->
-		return number if number>10
-		return "0#{number}"
-	
 	@get_dm_recipient_name: -> @sending_dm_to
 	@set_dm_recipient_name: (recipient_name) ->
 		@sending_dm_to = recipient_name

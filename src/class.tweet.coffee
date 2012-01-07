@@ -19,8 +19,6 @@ class Tweet extends TwitterMessage
 		@linkify_text()
 		@thumbs = @get_thumbnails()
 		@date = new Date(@data.created_at)
-		format = Application.add_null
-		@nice_date = "#{format(@date.getDate())}.#{format(@date.getMonth()+1)}.#{@date.getYear()+1900} #{format(@date.getHours())}:#{format(@date.getMinutes())}";
 	
 	fill_user_variables: -> 
 		if @data.retweeted_status?
@@ -53,7 +51,7 @@ class Tweet extends TwitterMessage
 	
 	get_temporary_info_html: ->
 		"<div class='info'>" +
-		"<a href='#{@permalink}' target='_blank'>#{@nice_date}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
+		"<a href='#{@permalink}' target='_blank'>#{@date.format_nice()}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
 		"</div>"
 			
 	get_buttons_html: ->

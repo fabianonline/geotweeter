@@ -478,7 +478,6 @@ Tweet = (function(_super) {
   Tweet.prototype.permalink = "";
 
   function Tweet(data, account) {
-    var format;
     this.account = account;
     this.data = data;
     this.id = data.id_str;
@@ -490,8 +489,6 @@ Tweet = (function(_super) {
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
     this.date = new Date(this.data.created_at);
-    format = Application.add_null;
-    this.nice_date = "" + (format(this.date.getDate())) + "." + (format(this.date.getMonth() + 1)) + "." + (this.date.getYear() + 1900) + " " + (format(this.date.getHours())) + ":" + (format(this.date.getMinutes()));
   }
 
   Tweet.prototype.fill_user_variables = function() {
@@ -528,7 +525,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_temporary_info_html = function() {
-    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + this.nice_date + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
+    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format_nice()) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
   };
 
   Tweet.prototype.get_buttons_html = function() {
@@ -1286,11 +1283,6 @@ Application = (function() {
     $('#users .user').removeClass('active');
     $("#user_" + id).addClass('active');
     return this.current_account = this.accounts[id];
-  };
-
-  Application.add_null = function(number) {
-    if (number > 10) return number;
-    return "0" + number;
   };
 
   Application.get_dm_recipient_name = function() {

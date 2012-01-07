@@ -400,13 +400,6 @@ function getStatusHTML(status, account_id) {
     return html;
 }
 
-/** Adds a leading null to numbers less than 10. */
-function addnull(number) {
-    if (number<10)
-        return "0" + number;
-    return number;
-}
-
 
 
 /** Shows a "fullscreen" element with defined title and content. */
@@ -634,18 +627,6 @@ function addToAutoCompletion(term) {
         autocompletes.push(term);
         autocompletes.sort();
     }
-}
-
-/** Adds an entry to the debug log if enabled in settings.js. */
-function log_message(place, s, account_id) {
-    if (settings.debug && typeof console != "undefined" && console.log) {
-        if (account_id==null) account_id=" ";
-        var str = "[ " + account_id + " ] ";
-        str += "[ " + place;
-        for(var i=0; i<(20-place.length); i++) str += " ";
-        str += " ] " + s;
-        console.log(str);
-     }
 }
 
 function update_user_counter(account_id) {
