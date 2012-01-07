@@ -5,7 +5,7 @@ Fabians Geotweeter ist mein kleiner, fast komplett in Javascript geschriebener, 
 Diese Version ist der Coffeescript-basierende Rewrite mit Klassen, Objekten und so.
 
 Die Source-Files liegen in src/, zum Kompilieren nutze man
-`coffee --bare --join geotweeter.js --compile src/class.{account,hooks,thumbnail,twittermessage,tweet,user,request,streamrequest,pullrequest}.coffee src/geotweeter.coffee`.
+`coffee --bare --join geotweeter.js --compile src/class.{account,hooks,thumbnail,twittermessage,tweet,user,request,streamrequest,pullrequest}.coffee src/extensions.*.coffee src/geotweeter.coffee`.
 Dabei ist wichtig, dass Klassen, die eine andere Klasse erweitern, nach der Basisklasse geladen werden.
 Davon betroffen sind:
 * Tweet benötigt Twittermessage

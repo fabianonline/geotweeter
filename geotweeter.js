@@ -1036,6 +1036,19 @@ PullRequest = (function(_super) {
 
 })(Request);
 
+String.prototype.pad = function(length, pad_char) {
+  if (pad_char == null) pad_char = " ";
+  if (length > this.length) {
+    return this + pad_char.repeat(length - this.length);
+  } else {
+    return this;
+  }
+};
+
+String.prototype.repeat = function(times) {
+  return (new Array(times + 1)).join(this);
+};
+
 Application = (function() {
 
   function Application() {}
@@ -1051,6 +1064,7 @@ Application = (function() {
   Application.twitter_config = {};
 
   Application.start = function() {
+    Application.log(this, "", "Starting...");
     if (!this.is_settings_version_okay()) return;
     this.fill_places();
     this.attach_hooks();
@@ -1148,8 +1162,21 @@ Application = (function() {
     return this.reply_to_tweet = tweet;
   };
 
+  Application.to_string = function() {
+    return "Application";
+  };
+
   Application.is_sending_dm = function() {
     return this.sending_dm_to != null;
+  };
+
+  Application.log = function(place, category, message) {
+    var place_str;
+    if (!(settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
+      return;
+    }
+    place_str = typeof place === "string" ? place : (place.to_string != null ? place.to_string() : place);
+    return console.log("[ " + (place_str.pad(20)) + " ] [ " + (category.pad(20)) + " ] " + message);
   };
 
   return Application;

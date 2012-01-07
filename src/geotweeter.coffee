@@ -6,6 +6,7 @@ class Application
 	@twitter_config: {}
 
 	@start: ->
+		Application.log(this, "", "Starting...")
 		return unless @is_settings_version_okay()
 		@fill_places()
 		@attach_hooks()
@@ -73,4 +74,10 @@ class Application
 		@reply_to_tweet = tweet
 		# TODO
 	
+	@to_string: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
+	@log: (place, category, message) ->
+		return unless settings.debug && console? && console.log?
+		place_str = if typeof place=="string" then place else (if place.to_string? then place.to_string() else place)
+		console.log("[ #{place_str.pad(20)} ] [ #{category.pad(20)} ] #{message}")
+	
