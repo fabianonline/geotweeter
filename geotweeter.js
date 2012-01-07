@@ -3,6 +3,28 @@ var Account, Application, DirectMessage, Hooks, PullRequest, Request, StreamRequ
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+Date.prototype.format_nice = function() {
+  return "" + (this.getDate().add_null()) + "." + ((this.getMonth() + 1).add_null()) + "." + (this.getYear() + 1900) + " " + (this.getHours().add_null()) + ":" + (this.getMinutes().add_null());
+};
+
+Number.prototype.add_null = function() {
+  if (this > 10) return this.toString();
+  return "0" + this.toString();
+};
+
+String.prototype.pad = function(length, pad_char) {
+  if (pad_char == null) pad_char = " ";
+  if (length > this.length) {
+    return this + pad_char.repeat(length - this.length);
+  } else {
+    return this;
+  }
+};
+
+String.prototype.repeat = function(times) {
+  return (new Array(times + 1)).join(this);
+};
+
 Account = (function() {
 
   Account.prototype.screen_name = null;

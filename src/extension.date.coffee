@@ -1,0 +1,1 @@
+Date::format_nice = -> "#{this.getDate().add_null()}.#{(this.getMonth()+1).add_null()}.#{this.getYear()+1900} #{this.getHours().add_null()}:#{this.getMinutes().add_null()}"
