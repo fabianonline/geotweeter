@@ -19,7 +19,14 @@ class User
 			</a>
 		</span>"
 	
-	get_link_html: -> "<span class='poster'><a href='https://twitter.com/#{@data.screen_name}' target='_blank'>#{@data.screen_name}</a></span>"
+	get_link_html: (show_full_name=false)-> "
+		<span class='poster'>
+			<a href='https://twitter.com/#{@data.screen_name}' target='_blank'>
+				#{@data.screen_name}
+			</a>
+			#{if show_full_name then " (#{@data.name})" else ""}
+			</span>"
+	
 	get_screen_name: -> @data.screen_name
 	report_as_spam: (account) ->
 		return unless confirm("Wirklich #{@screen_name} als Spammer melden?")

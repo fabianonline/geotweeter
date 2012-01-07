@@ -7,5 +7,6 @@ class TwitterMessage
 		return unless data?
 		return new DirectMessage(data, account) if data.text? && data.recipient?
 		return new Tweet(data, account) if data.text?
+		return Event.get_object(data, account) if data.event?
 		return
 	

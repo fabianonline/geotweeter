@@ -1,4 +1,4 @@
-var Account, Application, DirectMessage, Hooks, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, User,
+var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User, event,
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -454,6 +454,7 @@ TwitterMessage = (function() {
       return new DirectMessage(data, account);
     }
     if (data.text != null) return new Tweet(data, account);
+    if (data.event != null) return Event.get_object(data, account);
   };
 
   return TwitterMessage;
@@ -924,8 +925,9 @@ User = (function() {
     return "<span class='avatar'>			<span class='tooltip_info'>				<strong>" + this.data.name + "</strong><br /><br />				" + this.data.followers_count + " Follower<br />				" + this.data.friends_count + " Friends<br />				" + this.data.statuses_count + " Tweets			</span>			<a href='https://twitter.com/account/profile_image/" + this.data.screen_name + "' target='_blank'>				<img class='user_avatar' src='" + this.data.profile_image_url + "' />			</a>		</span>";
   };
 
-  User.prototype.get_link_html = function() {
-    return "<span class='poster'><a href='https://twitter.com/" + this.data.screen_name + "' target='_blank'>" + this.data.screen_name + "</a></span>";
+  User.prototype.get_link_html = function(show_full_name) {
+    if (show_full_name == null) show_full_name = false;
+    return "		<span class='poster'>			<a href='https://twitter.com/" + this.data.screen_name + "' target='_blank'>				" + this.data.screen_name + "			</a>			" + (show_full_name ? " (" + this.data.name + ")" : "") + "			</span>";
   };
 
   User.prototype.get_screen_name = function() {
@@ -1058,18 +1060,150 @@ PullRequest = (function(_super) {
 
 })(Request);
 
-String.prototype.pad = function(length, pad_char) {
-  if (pad_char == null) pad_char = " ";
-  if (length > this.length) {
-    return this + pad_char.repeat(length - this.length);
-  } else {
-    return this;
-  }
-};
+event = (function(_super) {
 
-String.prototype.repeat = function(times) {
-  return (new Array(times + 1)).join(this);
-};
+  __extends(event, _super);
+
+  event.prototype.get_user_data = function() {
+    return this.source;
+  };
+
+  event.prototype.get_html = function() {
+    return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + (this.get_inner_html()) + "		</div>	";
+  };
+
+  event.prototype.get_inner_html = function() {
+    return alert("get_inner_html should be overwritten!");
+  };
+
+  event.prototype.id = null;
+
+  function event(data, account) {
+    this.data = data;
+    this.account = account;
+    this.target = new User(this.data.target);
+    this.source = new User(this.data.source);
+    this.date = new Date(this.data.created_at);
+  }
+
+  event.get_object = function(data, account) {
+    switch (data.event) {
+      case "follow":
+        return new FollowEvent(data, account);
+      case "favorite":
+        return new FavoriteEvent(data, account);
+      case "list_member_added":
+        return new ListMemberAddedEvent(data, account);
+      case "list_member_removed":
+        return new ListMemberRemovedEvent(data, account);
+      case "block":
+      case "user_update":
+      case "unfavorite":
+        return new HiddenEvent(data, account);
+      default:
+        return new UnknownElement(data, account);
+    }
+  };
+
+  return event;
+
+})(TwitterMessage);
+
+FollowEvent = (function(_super) {
+
+  __extends(FollowEvent, _super);
+
+  function FollowEvent() {
+    FollowEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  FollowEvent.prototype.get_inner_html = function() {
+    return "Neuer Follower: " + (this.source.get_link_html(true));
+  };
+
+  return FollowEvent;
+
+})(Event);
+
+FavoriteEvent = (function(_super) {
+
+  __extends(FavoriteEvent, _super);
+
+  function FavoriteEvent() {
+    FavoriteEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  FavoriteEvent.prototype.get_inner_html = function() {
+    return "" + (this.source.get_link_html(true)) + " favorisierte:<br />" + this.data.text;
+  };
+
+  return FavoriteEvent;
+
+})(Event);
+
+ListMemberAddedEvent = (function(_super) {
+
+  __extends(ListMemberAddedEvent, _super);
+
+  function ListMemberAddedEvent() {
+    ListMemberAddedEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  ListMemberAddedEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " fügte dich zu einer Liste hinzu:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+  };
+
+  return ListMemberAddedEvent;
+
+})(Event);
+
+ListMemberRemovedEvent = (function(_super) {
+
+  __extends(ListMemberRemovedEvent, _super);
+
+  function ListMemberRemovedEvent() {
+    ListMemberRemovedEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  ListMemberRemovedEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " entfernte dich von einer Liste:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+  };
+
+  return ListMemberRemovedEvent;
+
+})(Event);
+
+HiddenEvent = (function(_super) {
+
+  __extends(HiddenEvent, _super);
+
+  function HiddenEvent() {
+    HiddenEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  HiddenEvent.prototype.get_html = function() {
+    return "";
+  };
+
+  return HiddenEvent;
+
+})(Event);
+
+UnknownEvent = (function(_super) {
+
+  __extends(UnknownEvent, _super);
+
+  function UnknownEvent() {
+    UnknownEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  UnknownEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " löste folgendes, unbekanntes Event namens " + this.data.event + " aus:<br />		" + (this.data.toString());
+  };
+
+  return UnknownEvent;
+
+})(Event);
 
 Application = (function() {
 
