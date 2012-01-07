@@ -1,8 +1,6 @@
 class Hooks
 	@display_file: false
 	@time_of_last_enter: new Date()
-	
-	@check_file: => # TODO
 	@update_counter: ->
 		if event? && event.type? && event.type == "keyup" && event.which == 13
 			# user pressed enter. check the time since last press of enter...
@@ -35,8 +33,8 @@ class Hooks
 
 		
 	@send: -> if Application.get_dm_recipient_name()? then DirectMessage.hooks.send() else Tweet.hooks.send()
-	
 	@cancel_dm: ->
+	
 	@toggle_file: (new_value) ->
 		if new_value?
 			@display_file = new_value
@@ -45,3 +43,15 @@ class Hooks
 		$('#file_div').toggle(@display_file)
 		$('#file').val('') unless @display_file
 		return false
+	
+	@check_file: ->
+		file = $('#file')[0].files[0]
+		error = false
+		return unless file?
+		if file.fileSize > Application.twitter_config.photo_size_limit
+			alert("Die Datei ist zu groß.\n\nDateigröße:\t#{file.fileSize} Bytes\nMaximum:\t#{Application.twitter_config.photo_size_limit} Bytes")
+			error = true
+		else if $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1
+			alert("Der Dateityp #{file.type} wird von Twitter nicht akzeptiert.")
+			error = true
+		$('#file').val('') if error

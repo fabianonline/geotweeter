@@ -365,8 +365,6 @@ Hooks = (function() {
 
   Hooks.time_of_last_enter = new Date();
 
-  Hooks.check_file = function() {};
-
   Hooks.update_counter = function() {
     var color, length, now, parts, reply, text, url, urls, _i, _len, _ref;
     if ((typeof event !== "undefined" && event !== null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
@@ -424,9 +422,24 @@ Hooks = (function() {
     return false;
   };
 
+  Hooks.check_file = function() {
+    var error, file;
+    file = $('#file')[0].files[0];
+    error = false;
+    if (file == null) return;
+    if (file.fileSize > Application.twitter_config.photo_size_limit) {
+      alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + Application.twitter_config.photo_size_limit + " Bytes");
+      error = true;
+    } else if ($.inArray(file.type, ["image/png", "image/gif", "image/jpeg"]) === -1) {
+      alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
+      error = true;
+    }
+    if (error) return $('#file').val('');
+  };
+
   return Hooks;
 
-}).call(this);
+})();
 
 Thumbnail = (function() {
 
