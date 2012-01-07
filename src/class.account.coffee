@@ -8,6 +8,7 @@ class Account
 	user_data: null
 	request: null
 	keys: {}
+	followers_ids: []
 	
 	constructor: (settings_id) ->
 		@id=settings_id
@@ -18,6 +19,7 @@ class Account
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
 		@validate_credentials()
+		@get_followers()
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
 		
@@ -57,6 +59,7 @@ class Account
 				})
 		})
 	
+	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
 	get_tweet: (id) -> @tweets[id]
 	add_html: (html) -> 
 		element = document.createElement("div")

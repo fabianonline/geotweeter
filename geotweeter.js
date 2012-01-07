@@ -45,6 +45,8 @@ Account = (function() {
 
   Account.prototype.keys = {};
 
+  Account.prototype.followers_ids = [];
+
   function Account(settings_id) {
     this.id = settings_id;
     this.keys = {
@@ -54,6 +56,7 @@ Account = (function() {
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
     this.validate_credentials();
+    this.get_followers();
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
     this.fill_list();
   }
@@ -99,6 +102,17 @@ Account = (function() {
           showURL: false,
           left: 5
         });
+      }
+    });
+  };
+
+  Account.prototype.get_followers = function() {
+    var _this = this;
+    return this.twitter_request('followers/ids.json', {
+      silent: true,
+      method: "GET",
+      success: function(element, data) {
+        return _this.followers_ids = data.ids;
       }
     });
   };

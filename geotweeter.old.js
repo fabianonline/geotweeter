@@ -185,19 +185,6 @@ function checkSettings() {
     return (settings.version == expected_settings_version);
 }
 
-
-/** Asynchronously gets the IDs of all followers of the current user. */
-function getFollowers(account_id) {
-    simple_twitter_request('followers/ids.json', {
-        silent: true,
-        method: "GET",
-        account: account_id,
-        success: function(element, data) {
-            followers_ids[account_id] = data.ids;
-        }
-    });
-}
-
 /** Changes the currently used account to the one specified. */
 function change_account(to_id) {
     $('.content').hide();
