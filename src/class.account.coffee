@@ -19,14 +19,41 @@ class Account
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
 		@validate_credentials()
+		@get_max_read_id()
 		@get_followers()
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
 		
 	get_my_element: -> $("#content_#{@id}")
 	
-	set_max_read_id: -> # TODO
-	get_max_read_id: -> # TODO
+	set_max_read_id: -> 
+		$.ajax({
+			method: 'POST'
+			url: settings.set_maxreadid_url || 'maxreadid/set.php'
+			async: false
+			dataType: 'text'
+			data: {account_id: @user.id, value: @max_read_id}
+			error: (req) =>
+				html = "
+					<div class='status'>
+						<b>Fehler in setMaxReadID():</b><br />
+						Error #{req.status} (#{req.responseText})
+					</div>"
+				@add_html(html)
+		})
+	
+	get_max_read_id: ->
+		value = $.ajax({
+			method: 'GET'
+			url: settings.get_maxreadid_url || 'maxreadid/get.php'
+			async: false
+			dataType: 'text'
+			data: {account_id: @user.id}
+		}).responseText
+		@max_read_id = value
+		Application.log(this, "getMaxReadID", "result: " + value);
+		return value
+	
 	mark_as_read: -> # TODO
 	get_content_div_id: -> "content_#{@id}"
 	validate_credentials: ->

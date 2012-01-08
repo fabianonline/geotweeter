@@ -56,6 +56,7 @@ Account = (function() {
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
     this.validate_credentials();
+    this.get_max_read_id();
     this.get_followers();
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
     this.fill_list();
@@ -65,9 +66,40 @@ Account = (function() {
     return $("#content_" + this.id);
   };
 
-  Account.prototype.set_max_read_id = function() {};
+  Account.prototype.set_max_read_id = function() {
+    var _this = this;
+    return $.ajax({
+      method: 'POST',
+      url: settings.set_maxreadid_url || 'maxreadid/set.php',
+      async: false,
+      dataType: 'text',
+      data: {
+        account_id: this.user.id,
+        value: this.max_read_id
+      },
+      error: function(req) {
+        var html;
+        html = "					<div class='status'>						<b>Fehler in setMaxReadID():</b><br />						Error " + req.status + " (" + req.responseText + ")					</div>";
+        return _this.add_html(html);
+      }
+    });
+  };
 
-  Account.prototype.get_max_read_id = function() {};
+  Account.prototype.get_max_read_id = function() {
+    var value;
+    value = $.ajax({
+      method: 'GET',
+      url: settings.get_maxreadid_url || 'maxreadid/get.php',
+      async: false,
+      dataType: 'text',
+      data: {
+        account_id: this.user.id
+      }
+    }).responseText;
+    this.max_read_id = value;
+    Application.log(this, "getMaxReadID", "result: " + value);
+    return value;
+  };
 
   Account.prototype.mark_as_read = function() {};
 
