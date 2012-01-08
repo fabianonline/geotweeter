@@ -37,6 +37,7 @@ class Tweet extends TwitterMessage
 		"<span class='text'>#{@text}</span>" +
 		@get_permanent_info_html() +
 		@get_overlay_html() +
+		"<div style='clear: both;'></div>" +
 		"</div>"
 		
 	get_permanent_info_html: ->

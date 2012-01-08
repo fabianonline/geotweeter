@@ -558,7 +558,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "</div>";
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
   };
 
   Tweet.prototype.get_permanent_info_html = function() {
