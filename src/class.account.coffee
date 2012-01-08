@@ -26,9 +26,14 @@ class Account
 		
 	get_my_element: -> $("#content_#{@id}")
 	
-	set_max_read_id: -> 
+	set_max_read_id: (id) -> 
+		unless id?
+			Aplication.log(this, "set_max_read_id", "Falscher Wert: #{id}")
+			return
+		
+		@max_read_id = id
 		$.ajax({
-			method: 'POST'
+			type: 'POST'
 			url: settings.set_maxreadid_url || 'maxreadid/set.php'
 			async: false
 			dataType: 'text'
@@ -41,6 +46,10 @@ class Account
 					</div>"
 				@add_html(html)
 		})
+		elements = $("#content_#{@id} .new")
+		for elm in elements
+			element = $(elm)
+			element.removeClass('new') unless @is_unread_tweet(element.attr('data-tweet-id'))
 	
 	get_max_read_id: ->
 		value = $.ajax({
@@ -56,7 +65,6 @@ class Account
 	
 	toString: -> "Account #{@user.screen_name}"
 	
-	mark_as_read: -> # TODO
 	get_content_div_id: -> "content_#{@id}"
 	validate_credentials: ->
 		@twitter_request('account/verify_credentials.json', {
@@ -279,5 +287,16 @@ class Account
 			account_id = $(elm).parents('.user').data('account-id')
 			acct = Application.accounts[account_id]
 			acct.activate()
+			return false
+		
+		mark_as_read: (elm) ->
+			elements = $("#content_#{Application.current_account.id} .tweet.new")
+			id = null
+			offset = $(document).scrollTop() + $('#top').height()
+			for element in elements
+				if $(element).offset().top >= offset
+					id = $(element).attr('data-tweet-id')
+					break
+			Application.current_account.set_max_read_id(id)
 			return false
 	}

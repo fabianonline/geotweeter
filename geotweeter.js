@@ -66,10 +66,16 @@ Account = (function() {
     return $("#content_" + this.id);
   };
 
-  Account.prototype.set_max_read_id = function() {
-    var _this = this;
-    return $.ajax({
-      method: 'POST',
+  Account.prototype.set_max_read_id = function(id) {
+    var element, elements, elm, _i, _len, _results,
+      _this = this;
+    if (id == null) {
+      Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
+      return;
+    }
+    this.max_read_id = id;
+    $.ajax({
+      type: 'POST',
       url: settings.set_maxreadid_url || 'maxreadid/set.php',
       async: false,
       dataType: 'text',
@@ -83,6 +89,18 @@ Account = (function() {
         return _this.add_html(html);
       }
     });
+    elements = $("#content_" + this.id + " .new");
+    _results = [];
+    for (_i = 0, _len = elements.length; _i < _len; _i++) {
+      elm = elements[_i];
+      element = $(elm);
+      if (!this.is_unread_tweet(element.attr('data-tweet-id'))) {
+        _results.push(element.removeClass('new'));
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
   };
 
   Account.prototype.get_max_read_id = function() {
@@ -104,8 +122,6 @@ Account = (function() {
   Account.prototype.toString = function() {
     return "Account " + this.user.screen_name;
   };
-
-  Account.prototype.mark_as_read = function() {};
 
   Account.prototype.get_content_div_id = function() {
     return "content_" + this.id;
@@ -403,6 +419,21 @@ Account = (function() {
       account_id = $(elm).parents('.user').data('account-id');
       acct = Application.accounts[account_id];
       acct.activate();
+      return false;
+    },
+    mark_as_read: function(elm) {
+      var element, elements, id, offset, _i, _len;
+      elements = $("#content_" + Application.current_account.id + " .tweet.new");
+      id = null;
+      offset = $(document).scrollTop() + $('#top').height();
+      for (_i = 0, _len = elements.length; _i < _len; _i++) {
+        element = elements[_i];
+        if ($(element).offset().top >= offset) {
+          id = $(element).attr('data-tweet-id');
+          break;
+        }
+      }
+      Application.current_account.set_max_read_id(id);
       return false;
     }
   };

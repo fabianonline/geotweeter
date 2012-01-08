@@ -33,7 +33,7 @@
     <a href="#" onClick="addUser(); return false;" style="float: right;"><img src="icons/add.png" /></a>
 </div>
 <div id="buttonbar" style="clear: both;">
-    <a href="#" onClick="markAllRead(); return false;"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
+    <a href="#" onClick="return Account.hooks.mark_as_read();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
     <a href="#" onClick="goToLastRead(); return false;"><img src="icons/arrowdown.png" title="Zum letzten ungelesenen Tweet springen" /></a>
     <a href="#" onClick="goToMyLastTweet(); return false;"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
     <a href="#" onClick="$('#chars').toggle(500); updateCounter(); return false;"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>

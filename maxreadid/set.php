@@ -1,6 +1,6 @@
 <?php
 $data = @unserialize(@file_get_contents('maxreadid.dat'));
-if (!is_array($old_data)) $data = array();
+if (!is_array($data)) $data = array();
 
 $data[$_POST['account_id']] = $_POST['value'];
 $result = @file_put_contents('maxreadid.dat', serialize($data));
