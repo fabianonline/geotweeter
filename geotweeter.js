@@ -101,6 +101,10 @@ Account = (function() {
     return value;
   };
 
+  Account.prototype.toString = function() {
+    return "Account " + this.user.screen_name;
+  };
+
   Account.prototype.mark_as_read = function() {};
 
   Account.prototype.get_content_div_id = function() {
@@ -1379,7 +1383,7 @@ Application = (function() {
     return this.reply_to_tweet = tweet;
   };
 
-  Application.to_string = function() {
+  Application.toString = function() {
     return "Application";
   };
 
@@ -1392,7 +1396,7 @@ Application = (function() {
     if (!(settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
       return;
     }
-    place_str = typeof place === "string" ? place : (place.to_string != null ? place.to_string() : place);
+    place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
     return console.log("[ " + (place_str.pad(20)) + " ] [ " + (category.pad(20)) + " ] " + message);
   };
 

@@ -54,6 +54,8 @@ class Account
 		Application.log(this, "getMaxReadID", "result: " + value);
 		return value
 	
+	toString: -> "Account #{@user.screen_name}"
+	
 	mark_as_read: -> # TODO
 	get_content_div_id: -> "content_#{@id}"
 	validate_credentials: ->

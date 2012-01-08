@@ -62,10 +62,10 @@ class Application
 		@reply_to_tweet = tweet
 		# TODO
 	
-	@to_string: -> "Application"
+	@toString: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
 	@log: (place, category, message) ->
 		return unless settings.debug && console? && console.log?
-		place_str = if typeof place=="string" then place else (if place.to_string? then place.to_string() else place)
+		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
 		console.log("[ #{place_str.pad(20)} ] [ #{category.pad(20)} ] #{message}")
 	
