@@ -93,7 +93,7 @@ Account = (function() {
         new_area.attr('id', _this.get_content_div_id());
         $('body').append(new_area);
         html = '';
-        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='change_account(); return false;'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
+        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
         return $("#user_" + _this.id).tooltip({
           bodyHandler: function() {
             return "<strong>@" + _this.user_data.name + "</strong>";
@@ -351,6 +351,24 @@ Account = (function() {
     }
     this.add_html(html);
     return this.update_user_counter();
+  };
+
+  Account.prototype.activate = function() {
+    $('.content').hide();
+    $("#content_" + this.id).show();
+    $('#users .user').removeClass('active');
+    $("#user_" + this.id).addClass('active');
+    return Application.current_account = this;
+  };
+
+  Account.hooks = {
+    change_current_account: function(elm) {
+      var account_id, acct;
+      account_id = $(elm).parents('.user').data('account-id');
+      acct = Application.accounts[account_id];
+      acct.activate();
+      return false;
+    }
   };
 
   return Account;
@@ -1250,7 +1268,7 @@ Application = (function() {
     this.attach_hooks();
     this.initialize_accounts();
     this.get_twitter_configuration();
-    return this.change_account(0);
+    return this.accounts[0].activate();
   };
 
   Application.is_settings_version_okay = function() {
@@ -1302,14 +1320,6 @@ Application = (function() {
 
   Application.get_twitter_configuration = function() {
     return this.accounts[0].get_twitter_configuration();
-  };
-
-  Application.change_account = function(id) {
-    $('.content').hide();
-    $("#content_" + id).show();
-    $('#users .user').removeClass('active');
-    $("#user_" + id).addClass('active');
-    return this.current_account = this.accounts[id];
   };
 
   Application.get_dm_recipient_name = function() {

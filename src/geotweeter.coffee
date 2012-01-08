@@ -12,8 +12,7 @@ class Application
 		@attach_hooks()
 		@initialize_accounts()
 		@get_twitter_configuration()
-		# select the first account
-		@change_account(0)
+		@accounts[0].activate()
 
 	@is_settings_version_okay: -> 
 		if settings.version != @expected_settings_version
@@ -42,13 +41,6 @@ class Application
 			@accounts[id] = acct
 
 	@get_twitter_configuration: -> @accounts[0].get_twitter_configuration()
-
-	@change_account: (id) ->
-		$('.content').hide()
-		$("#content_#{id}").show()
-		$('#users .user').removeClass('active')
-		$("#user_#{id}").addClass('active')
-		@current_account = @accounts[id]
 	
 	@get_dm_recipient_name: -> @sending_dm_to
 	@set_dm_recipient_name: (recipient_name) ->

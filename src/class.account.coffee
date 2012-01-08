@@ -46,7 +46,7 @@ class Account
 				html = '';
 				$('#users').append("
 					<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
-						<a href='#' onClick='change_account(); return false;'>
+						<a href='#' onClick='return Account.hooks.change_current_account(this);'>
 							<img src='#{data.profile_image_url}' />
 						</a>
 					</div>
@@ -237,3 +237,18 @@ class Account
 			old_id = this_id
 		@add_html(html)
 		@update_user_counter()
+	
+	activate: ->
+		$('.content').hide()
+		$("#content_#{@id}").show()
+		$('#users .user').removeClass('active')
+		$("#user_#{@id}").addClass('active')
+		Application.current_account = this
+	
+	@hooks: {
+		change_current_account: (elm) ->
+			account_id = $(elm).parents('.user').data('account-id')
+			acct = Application.accounts[account_id]
+			acct.activate()
+			return false
+	}

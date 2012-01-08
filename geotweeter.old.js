@@ -185,15 +185,6 @@ function checkSettings() {
     return (settings.version == expected_settings_version);
 }
 
-/** Changes the currently used account to the one specified. */
-function change_account(to_id) {
-    $('.content').hide();
-    $('#content_' + to_id).show();
-    $('#users .user').removeClass('active');
-    $('#user_' + to_id).addClass('active');
-    current_account = to_id;
-}
-
 /**
  * Checks if a timeout in the stream occured. Gets run via timer every 30 Seconds.
  * The stream should at least send a newline every 30 seconds.
