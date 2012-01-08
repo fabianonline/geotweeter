@@ -39,7 +39,7 @@ Account = (function() {
 
   Account.prototype.id = null;
 
-  Account.prototype.user_data = null;
+  Account.prototype.user = null;
 
   Account.prototype.request = null;
 
@@ -123,8 +123,8 @@ Account = (function() {
           _this.add_html("Unknown error in validate_credentials. Exiting. " + data);
           return;
         }
-        _this.user_data = data;
-        _this.screen_name = data.screen_name;
+        _this.user = new User(data);
+        _this.screen_name = _this.user.screen_name;
         new_area = $('#content_template').clone();
         new_area.attr('id', _this.get_content_div_id());
         $('body').append(new_area);
@@ -132,7 +132,7 @@ Account = (function() {
         $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
         return $("#user_" + _this.id).tooltip({
           bodyHandler: function() {
-            return "<strong>@" + _this.user_data.name + "</strong>";
+            return "<strong>@" + _this.user.screen_name + "</strong>";
           },
           track: true,
           showURL: false,

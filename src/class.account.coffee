@@ -5,7 +5,7 @@ class Account
 	max_known_dm_id: "0"
 	tweets: {}
 	id: null
-	user_data: null
+	user: null
 	request: null
 	keys: {}
 	followers_ids: []
@@ -67,8 +67,8 @@ class Account
 				unless data.screen_name
 					@add_html("Unknown error in validate_credentials. Exiting. #{data}")
 					return
-				@user_data = data
-				@screen_name = data.screen_name
+				@user = new User(data)
+				@screen_name = @user.screen_name
 				new_area = $('#content_template').clone()
 				new_area.attr('id', @get_content_div_id())
 				$('body').append(new_area);
@@ -81,7 +81,7 @@ class Account
 					</div>
 				")
 				$("#user_#{@id}").tooltip({
-					bodyHandler: => "<strong>@#{@user_data.name}</strong>"
+					bodyHandler: => "<strong>@#{@user.screen_name}</strong>"
 					track: true
 					showURL: false
 					left: 5
