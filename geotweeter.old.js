@@ -103,15 +103,7 @@ $(document).ready(start);
 
 /** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
 function start() {
-    // check the credentials and exit if not okay.
-    validateCredentials();
-    get_twitter_configuration();
-    if (!this_users_name) return;
-
-    for (var i=0; i<settings.twitter.users.length; i++){
-        getFollowers(i);
-    }
-
+	
     maxreadid = getMaxReadID();
     for(var i=0; i<settings.twitter.users.length; i++){
         if (!maxreadid[i]) maxreadid[i]="0";
@@ -154,24 +146,6 @@ function start() {
     });
 
     
-}
-
-/** Checks the selected file for compatibility with twitter. That is
- *  *) The size is less or equal to photo_size_limit (determined by get_twitter_configuration at startup)
- *  *) The file type is acceptable (list according to twitter docs)
- */
-function check_file() {
-    var file = $('#file')[0].files[0];
-    var error = false;
-    if (file && file.fileSize>photo_size_limit) {
-        alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + photo_size_limit + " Bytes");
-        error = true;
-    }
-    if (file && $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1) {
-        alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
-        error = true;
-    }
-    if (error) $('#file').val('');
 }
 
 /** Returns the last word of the given string. Used by autocompletion. */
@@ -237,57 +211,8 @@ function get_time_since_last_tweet(account_id) {
 }
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status, account_id) {
-    // Check if we are working on a DM. If yes, modify the structure to be more tweet-like.
-    isDM = false;
-    if (status.direct_message) {
-        isDM = true;
-        status = status.direct_message;
-    }
-    if (status.recipient) {
-        isDM = true;
-    }
+	# SNIP
     
-    // Preparations: Replace the (too large for JS) numeric IDs with the string-based IDs
-    if (status.id_str)
-        status.id = status.id_str;
-    if (status.in_reply_to_status_id_str)
-        status.in_reply_to_status_id = status.in_reply_to_status_id_str;
-    
-    
-    if (!isDM && status.in_reply_to_status_id) {
-        repliesData[status.id] = status.in_reply_to_status_id;
-    }
-    
-    // Prepares variable with text for several checks
-    var temp_text = "";
-    if (status.retweeted_status) {
-        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
-    } else {
-        temp_text += linkify(status.text, status.entities);
-    }
-    
-    var html = "";
-    var user;
-    var user_object;
-    if (status.retweeted_status)
-        user_object = status.retweeted_status.user;
-    else if (isDM)
-        if (status.sender.screen_name == this_users_name[account_id]) {
-            user_object = status.recipient;
-            user_object.is_receiver = true;
-        } else {
-            user_object = status.sender;
-        }
-    else
-        user_object = status.user;
-	   
-    user = user_object.screen_name;
-	
-	    // Check if tweet user is muted
-     if(check_muted(user))
-          return ""; 
-	
-	
     addToAutoCompletion("@" + user);
 
     if (!isDM && biggerThan(status.id, maxknownid[account_id]))
@@ -309,27 +234,18 @@ function getStatusHTML(status, account_id) {
         last_event_times[account_id].push(date);
     }
     if (last_event_times[account_id].length > (settings.timeout_detect_tweet_count+1)) last_event_times[account_id].pop();
-    var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
-    html += '<div class="...SNIP..." ';
-    html += 'id="id_' + status.id + '" ';
-    html += 'data-sender="' + user_object.screen_name + '" ';
-    var mentions = "";
-    if (status.entities) for (var i in status.entities.user_mentions) {
-        var mention = status.entities.user_mentions[i].screen_name;
-        if (mention == this_users_name[account_id]) continue;
-        mentions += mention + " ";
-    }
-    html += 'data-mentions="' + mentions.trim() + '" ';
-    html += 'data-id="' + status.id + '" ';
-    html += '>';
-    html += '<a name="status_' + status.id + '"></a>';
-    
-    
+  
+
+
+
     
     if (thumbs.length==1) {
        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
     }
     
+
+
+
 
     
     if (thumbs.length>1) {
@@ -342,40 +258,7 @@ function getStatusHTML(status, account_id) {
         
         
         
-            
-
-    html += '<div class="links">';
-    if (isDM) {
-        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
-    } else {
-        var recipient = user;
-        if (user==this_users_name[account_id] && status.entities.user_mentions && status.entities.user_mentions.length>0) {
-            recipient = status.entities.user_mentions[0].screen_name;
-        }
-        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + recipient + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
-    }
-    if (!isDM)
-        html += '<a href="#" onClick="retweet(\'' + status.id + '\'); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
-    if (!isDM)
-        html += '<a href="#" onClick="quote(\'' + status.id + '\', \'' + user + '\', \'' + escape(status.text) + '\'); return false;"><img src="icons/tag.png" title="Quote" /></a>';
-    html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank"><img src="icons/transmit.png" title="Translate" /></a>';
-    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank"><img src="icons/link.png" title="Permalink" /></a>';
-    if (status.coordinates) {
-        html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a>';
-        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250" target="_blank"><img src="icons/world_add.png" title="All Geotags" /></a>';
-    }
-    if ( user==this_users_name[account_id]) {
-        html += '<a href="#" onClick="delete_tweet(\'' + status.id + '\'); return false;"><img src="icons/cross.png" title="Delete Tweet" /></a>';
-    } else {
-        html += '<a href="#" onClick="report_spam(\'' + user + '\'); return false;"><img src="icons/exclamation.png" title="Block and report as spam" /></a>';
-    }
-
-    html += '</div>'; // Links
-    html += '</div>'; // overlay
-    html += '<div style="clear: both;"></div>';
-    html += '</div>'; // tweet
-
-    return html;
+        
 }
 
 
