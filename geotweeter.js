@@ -19,7 +19,7 @@ Date.prototype.format_nice = function() {
 };
 
 Number.prototype.add_null = function() {
-  if (this > 10) return this.toString();
+  if (this >= 10) return this.toString();
   return "0" + this.toString();
 };
 
