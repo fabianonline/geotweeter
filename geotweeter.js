@@ -1125,6 +1125,8 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.last_event_times = [];
 
+  StreamRequest.prototype.opera_interval = null;
+
   function StreamRequest(account) {
     this.timeout = __bind(this.timeout, this);    StreamRequest.__super__.constructor.call(this, account);
   }
@@ -1187,7 +1189,11 @@ StreamRequest = (function(_super) {
       _this.response_offset = _this.request.responseText.length;
       return _this.process_buffer();
     };
-    return this.request.send(null);
+    this.request.send(null);
+    if (this.opera_interval != null) window.clearInterval(this.opera_interval);
+    if (window.opera) {
+      return this.opera_interval = window.setInterval(this.request.onreadystatechange, 5000);
+    }
   };
 
   StreamRequest.prototype.timeout = function() {

@@ -8,6 +8,7 @@ class StreamRequest extends Request
 	last_data_received_at: null
 	timeout_timer: null
 	last_event_times: []
+	opera_interval: null
 	
 	constructor: (account) ->
 		super(account)
@@ -56,7 +57,9 @@ class StreamRequest extends Request
 			@process_buffer()
 		
 		@request.send(null)
-	
+		window.clearInterval(@opera_interval) if @opera_interval?
+		@opera_interval = window.setInterval(@request.onreadystatechange, 5000) if window.opera
+		
 	timeout: =>
 		Application.log(this, "Timeout", "Timeout reached.")
 		@account.add_status_html("Timeout vermutet.")
