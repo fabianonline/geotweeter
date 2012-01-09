@@ -56,6 +56,7 @@ class Account
 		for elm in elements
 			element = $(elm)
 			element.removeClass('new') unless @is_unread_tweet(element.attr('data-tweet-id'))
+		@update_user_counter()
 	
 	get_max_read_id: ->
 		value = $.ajax({
@@ -92,6 +93,7 @@ class Account
 					<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
 						<a href='#' onClick='return Account.hooks.change_current_account(this);'>
 							<img src='#{data.profile_image_url}' />
+							<span class='count'></span>
 						</a>
 					</div>
 				")
@@ -118,7 +120,10 @@ class Account
 		@add_html(html)
 		return ""
 		
-	update_user_counter: -> # TODO
+	update_user_counter: ->
+		count = $("#content_#{@id} .tweet.new").not('.by_this_user').length
+		str = if count>0 then "(#{count})" else ""
+		$("#user_#{@id} .count").html(str)
 	
 	is_unread_tweet: (tweet_id) -> tweet_id.is_bigger_than(@max_read_id)
 	
@@ -187,7 +192,6 @@ class Account
 			else
 				setTimeout(@fill_list, 30000)
 				@add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
-			@update_user_counter
 		
 		success = (element, data) ->
 			responses.push(data)

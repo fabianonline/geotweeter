@@ -83,7 +83,7 @@ Account = (function() {
   };
 
   Account.prototype.set_max_read_id = function(id) {
-    var element, elements, elm, _i, _len, _results,
+    var element, elements, elm, _i, _len,
       _this = this;
     if (id == null) {
       Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
@@ -106,17 +106,14 @@ Account = (function() {
       }
     });
     elements = $("#content_" + this.id + " .new");
-    _results = [];
     for (_i = 0, _len = elements.length; _i < _len; _i++) {
       elm = elements[_i];
       element = $(elm);
       if (!this.is_unread_tweet(element.attr('data-tweet-id'))) {
-        _results.push(element.removeClass('new'));
-      } else {
-        _results.push(void 0);
+        element.removeClass('new');
       }
     }
-    return _results;
+    return this.update_user_counter();
   };
 
   Account.prototype.get_max_read_id = function() {
@@ -162,7 +159,7 @@ Account = (function() {
         new_area.attr('id', _this.get_content_div_id());
         $('body').append(new_area);
         html = '';
-        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
+        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />							<span class='count'></span>						</a>					</div>				");
         return $("#user_" + _this.id).tooltip({
           bodyHandler: function() {
             return "<strong>@" + _this.user.screen_name + "</strong><br />" + _this.status_text;
@@ -204,7 +201,12 @@ Account = (function() {
     return "";
   };
 
-  Account.prototype.update_user_counter = function() {};
+  Account.prototype.update_user_counter = function() {
+    var count, str;
+    count = $("#content_" + this.id + " .tweet.new").not('.by_this_user').length;
+    str = count > 0 ? "(" + count + ")" : "";
+    return $("#user_" + this.id + " .count").html(str);
+  };
 
   Account.prototype.is_unread_tweet = function(tweet_id) {
     return tweet_id.is_bigger_than(this.max_read_id);
@@ -299,12 +301,11 @@ Account = (function() {
       if (threads_errored === 0) {
         _this.set_status("", "");
         _this.parse_data(responses);
-        _this.request.start_request();
+        return _this.request.start_request();
       } else {
         setTimeout(_this.fill_list, 30000);
-        _this.add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
+        return _this.add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
       }
-      return _this.update_user_counter;
     };
     success = function(element, data) {
       responses.push(data);
