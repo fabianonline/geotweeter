@@ -302,6 +302,7 @@ Account = (function() {
         _this.request.start_request();
       } else {
         setTimeout(_this.fill_list, 30000);
+        _this.add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
       }
       return _this.update_user_counter;
     };

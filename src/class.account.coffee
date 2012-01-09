@@ -186,7 +186,7 @@ class Account
 				@request.start_request() 
 			else
 				setTimeout(@fill_list, 30000)
-				# TODO Dokumentation
+				@add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
 			@update_user_counter
 		
 		success = (element, data) ->
