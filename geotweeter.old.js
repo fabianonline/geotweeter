@@ -159,95 +159,21 @@ function checkSettings() {
     return (settings.version == expected_settings_version);
 }
 
-/**
- * Checks if a timeout in the stream occured. Gets run via timer every 30 Seconds.
- * The stream should at least send a newline every 30 seconds.
- * If this doesn't happen we assume the connection timed out and force it to be re-established.
- *
- * This code also checks for long pauses within the stream and restarts the geotweeter if necessary.
- */
-function checkForTimeout(account_id) {
-    var jetzt = new Date();
-    if (lastDataReceivedAt[account_id] && jetzt.getTime() - lastDataReceivedAt[account_id].getTime() > 30000) {
-        log_message("checkForTimeout", "Timeout: No data received for the last " + (jetzt.getTime() - lastDataReceivedAt[account_id].getTime())/1000 + "seconds");
-        disconnectBecauseOfTimeout[account_id] = true;
-        req[account_id].abort();
-        return;
-    }
-    if (get_time_since_last_tweet(account_id) > get_timeout_difference(account_id) && $('#text').val()=='') {
-        log_message("checkForTimeout", "Timeout: Lack of tweets");
-        log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time(account_id)/1000);
-        log_message("checkForTimeout", "Timeout after: " + get_timeout_difference(account_id)/1000);
-        log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweet(account_id)/1000);
-        disconnectBecauseOfTimeout[account_id] = true;
-        req[account_id].abort();
-    }
-}
-
-/**
- * Returns the max allowed time between two tweets in seconds. Used to reconnect if
- * the stream didn't send tweets in the last time.
- */
-function get_timeout_difference(account_id) {
-    var delay = get_average_tweet_time(account_id)*settings.timeout_detect_factor;
-    if (settings.timeout_minimum_delay*1000 > delay) return settings.timeout_minimum_delay*1000;
-    if (settings.timeout_maximum_delay*1000 < delay) return settings.timeout_maximum_delay*1000;
-    return delay;
-}
-
-/**
- * Returns the average time between the last x tweets.
- **/
-function get_average_tweet_time(account_id) {
-    if (last_event_times[account_id].length<2) return NaN;
-    return (last_event_times[account_id][0] - last_event_times[account_id][last_event_times[account_id].length-1]) / (last_event_times[account_id].length-1);
-}
-
-/**
- * Returns the time since the last received tweet in milliseconds.
- */
-function get_time_since_last_tweet(account_id) {
-    return (Date.now() - last_event_times[account_id][0]);
-}
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status, account_id) {
 	# SNIP
     
     addToAutoCompletion("@" + user);
 
-    if (!isDM && biggerThan(status.id, maxknownid[account_id]))
-        maxknownid[account_id] = status.id;
-    if (!isDM && (minknownid[account_id]==0 || biggerThan(minknownid[account_id], status.id)))
-        minknownid[account_id] = status.id;
-
-    if(isDM && biggerThan(status.id, maxknowndmid[account_id]))
-        maxknowndmid[account_id] = status.id;
-
     if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid[account_id]))
         mylasttweetid[account_id] = status.id;
-
-    var date = new Date(status.created_at);
-    if (typeof last_event_times[account_id] != "object") last_event_times[account_id]=new Array();
-    if (last_event_times[account_id].length==0 || date > last_event_times[account_id][0]) {
-        last_event_times[account_id].unshift(date);
-    } else if (date < last_event_times[account_id][last_event_times[account_id].length-1]) {
-        last_event_times[account_id].push(date);
-    }
-    if (last_event_times[account_id].length > (settings.timeout_detect_tweet_count+1)) last_event_times[account_id].pop();
-  
-
-
 
     
     if (thumbs.length==1) {
        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
     }
     
-
-
-
-
-    
+   
     if (thumbs.length>1) {
         html += '<div class="media">';
        for (var i=0; i<thumbs.length; i++) {
@@ -255,9 +181,6 @@ function getStatusHTML(status, account_id) {
        }
        html += '</div>';
     }
-        
-        
-        
         
 }
 
@@ -351,63 +274,6 @@ function removeReplyWarning() {
     $('#reply_warning').fadeOut();
     reply_to_user = null;
     reply_to_id = null;
-}
-
-/** Gets the max read ID from the server. */
-function getMaxReadID() {
-    value = $.ajax({
-        method: 'GET',
-        url: settings.get_maxreadid_url || 'maxreadid/get.php',
-        async: false,
-        dataType: 'text'
-    }).responseText;
-    log_message("getMaxReadID", "result: " + value);
-    
-    return $.parseJSON(value);
-}
-
-/** Sets the max read ID on the server. */
-function setMaxReadID(id, account_id) {
-    $.ajax({
-        method: 'GET',
-        url: settings.set_maxreadid_url || 'maxreadid/set.php',
-        async: false,
-        dataType: 'text',
-        data: {id: id, account_id: account_id},
-        error: function(req) {
-            var html = '<div class="status"><b>Fehler in setMaxReadID():</b><br />';
-            html += 'Error ' + req.status + ' (' + req.responseText + ')';
-            html += '</div>';
-            addHTML(html);
-        }
-    });
-}
-
-/** Sets the max read ID by using setmaxReadID and marks all tweets as read. */
-function markAllRead() {
-    // get the id of the first visible tweet
-    var elms = $('#content_'+current_account+' .tweet.new');
-    var id = null;
-    var offset = $(document).scrollTop() + $('#top').height();
-    for (var i=0; i<elms.length; i++) {
-        if ($(elms[i]).offset().top >= offset) {
-            id = $(elms[i]).attr('data-id');
-            break;
-        }
-    }
-    log_message('markAllAsRead', 'Gefundene ID: '+id);
-    if (id && biggerThan(id,maxreadid[current_account])) {
-        log_message('markAllRead', 'Updating.');
-        setMaxReadID(id, current_account);
-        maxreadid[current_account] = id;
-        var elm = $('.new');
-        for(var i=0; i<elm.length; i++) {
-            if (!biggerThan($(elm[i]).attr('data-id'), id)) {
-                $(elm[i]).removeClass('new');
-            }
-        }
-    }
-    update_user_counter(current_account);
 }
 
 /** Scrolls to the last tweet written by the current user. */

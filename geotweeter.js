@@ -1,4 +1,5 @@
 var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User, event,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -56,7 +57,7 @@ Account = (function() {
   Account.prototype.followers_ids = [];
 
   function Account(settings_id) {
-    this.id = settings_id;
+    this.fill_list = __bind(this.fill_list, this);    this.id = settings_id;
     this.keys = {
       consumerKey: settings.twitter.consumerKey,
       consumerSecret: settings.twitter.consumerSecret,
@@ -1106,13 +1107,40 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.last_data_received_at = null;
 
+  StreamRequest.prototype.timeout_timer = null;
+
+  StreamRequest.prototype.last_event_times = [];
+
   function StreamRequest(account) {
-    StreamRequest.__super__.constructor.call(this, account);
+    this.timeout = __bind(this.timeout, this);    StreamRequest.__super__.constructor.call(this, account);
   }
+
+  StreamRequest.prototype.toString = function() {
+    return "StreamReq " + this.account.user.screen_name;
+  };
+
+  StreamRequest.prototype.clear_timeout = function() {
+    if (this.timeout_timer != null) {
+      window.clearTimeout(this.timeout_timer);
+      return this.timeout_timer = null;
+    }
+  };
+
+  StreamRequest.prototype.set_timeout = function(delay) {
+    this.clear_timeout();
+    this.timeout_timer = window.setTimeout(this.timeout, delay);
+    return Application.log(this, "set_timeout", "Delay: " + delay);
+  };
+
+  StreamRequest.prototype.stop_request = function() {
+    return this.request.abort();
+  };
 
   StreamRequest.prototype.start_request = function() {
     var data, url,
       _this = this;
+    this.last_event_times = [];
+    this.set_timeout(settings.timeout_maximum_delay * 1000);
     this.processing = false;
     this.buffer = "";
     this.response_offset = 0;
@@ -1148,8 +1176,13 @@ StreamRequest = (function(_super) {
     return this.request.send(null);
   };
 
+  StreamRequest.prototype.timeout = function() {
+    Application.log(this, "Timeout", "Timeout reached.");
+    return this.account.fill_list();
+  };
+
   StreamRequest.prototype.process_buffer = function() {
-    var len, parseable_text, regex, res;
+    var average_tweet_delay, len, parseable_text, regex, res, targeted_delay;
     if (this.processing) return;
     this.processing = true;
     regex = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
@@ -1161,6 +1194,23 @@ StreamRequest = (function(_super) {
       try {
         this.account.parse_data(parseable_text);
       } catch (_error) {}
+      this.last_event_times.unshift(new Date());
+      if (this.last_event_times.length > (settings.timeout_detect_tweet_count + 1)) {
+        this.last_event_times.pop();
+      }
+      if (this.last_event_times.length >= 2) {
+        average_tweet_delay = (this.last_event_times[0] - this.last_event_times[this.last_event_times.length - 1]) / (this.last_event_times.length - 1);
+        targeted_delay = average_tweet_delay * settings.timeout_detect_factor;
+        if (settings.timeout_minimum_delay * 1000 > targeted_delay) {
+          targeted_delay = settings.timeout_minimum_delay * 1000;
+        }
+        if (settings.timeout_maximum_delay * 1000 < targeted_delay) {
+          targeted_delay = settings.timeout_maximum_delay * 1000;
+        }
+        this.set_timeout(this.last_event_times[0].getTime() + targeted_delay - (new Date()).getTime());
+      } else {
+        this.set_timeout(settings.timeout_maximum_delay * 1000);
+      }
     }
     return this.processing = false;
   };
@@ -1177,7 +1227,9 @@ PullRequest = (function(_super) {
     PullRequest.__super__.constructor.apply(this, arguments);
   }
 
-  PullRequest.prototype.start_request = function() {};
+  PullRequest.prototype.start_request = function() {
+    return window.setTimeout(this.account.fill_list, 300000);
+  };
 
   return PullRequest;
 

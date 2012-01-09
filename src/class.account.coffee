@@ -158,7 +158,7 @@ class Account
 		})
 		return result.responseText if options.return_response
 	
-	fill_list: ->
+	fill_list: =>
 		threads_running = 5
 		threads_errored = 0
 		responses = []
