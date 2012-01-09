@@ -93,22 +93,27 @@ Account = (function() {
   };
 
   Account.prototype.set_max_read_id = function(id) {
-    var element, elements, elm, _i, _len,
+    var element, elements, elm, header, _i, _len,
       _this = this;
     if (id == null) {
       Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
       return;
     }
     this.max_read_id = id;
+    header = {
+      "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
+      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {
+        return_type: "header"
+      })
+    };
     $.ajax({
       type: 'POST',
-      url: settings.set_maxreadid_url || 'maxreadid/set.php',
-      async: false,
+      url: "proxy/tweetmarker/lastread?collection=timeline&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
+      headers: header,
+      contentType: "text/plain",
       dataType: 'text',
-      data: {
-        account_id: this.user.id,
-        value: this.max_read_id
-      },
+      data: "" + id,
+      processData: false,
       error: function(req) {
         var html;
         html = "					<div class='status'>						<b>Fehler in setMaxReadID():</b><br />						Error " + req.status + " (" + req.responseText + ")					</div>";
@@ -127,16 +132,20 @@ Account = (function() {
   };
 
   Account.prototype.get_max_read_id = function() {
-    var value;
-    value = $.ajax({
+    var header, value, _ref;
+    header = {
+      "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
+      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {
+        return_type: "header"
+      })
+    };
+    value = (_ref = $.ajax({
       method: 'GET',
-      url: settings.get_maxreadid_url || 'maxreadid/get.php',
       async: false,
-      dataType: 'text',
-      data: {
-        account_id: this.user.id
-      }
-    }).responseText;
+      url: "proxy/tweetmarker/lastread?collection=timeline&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
+      headers: header,
+      dataType: 'text'
+    }).responseText) != null ? _ref : "0";
     this.max_read_id = value;
     Application.log(this, "getMaxReadID", "result: " + value);
     return value;
@@ -232,8 +241,9 @@ Account = (function() {
     });
   };
 
-  Account.prototype.sign_request = function(url, method, parameters) {
-    var message;
+  Account.prototype.sign_request = function(url, method, parameters, options) {
+    var key, message, value;
+    if (options == null) options = {};
     message = {
       action: url,
       method: method,
@@ -242,6 +252,23 @@ Account = (function() {
     OAuth.setTimestampAndNonce(message);
     OAuth.completeRequest(message, this.keys);
     OAuth.SignatureMethod.sign(message, this.keys);
+    switch (options.return_type) {
+      case "header":
+        return ((function() {
+          var _ref, _results;
+          _ref = message.parameters;
+          _results = [];
+          for (key in _ref) {
+            value = _ref[key];
+            if (key.slice(0, 5) === "oauth") {
+              _results.push("" + key + "=\"" + value + "\"");
+            }
+          }
+          return _results;
+        })()).join(", ");
+      case "parameters":
+        return message.parameters;
+    }
     return OAuth.formEncode(message.parameters);
   };
 

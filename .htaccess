@@ -6,6 +6,7 @@ RewriteRule proxy/api/(.+)$ https://api.twitter.com/1/$1 [proxy]
 RewriteRule proxy/oauth/(.+)$ https://api.twitter.com/oauth/$1 [proxy]
 RewriteRule proxy/upload/(.+)$ https://upload.twitter.com/1/$1 [proxy]
 RewriteRule proxy/unshort.me(.+)$ http://api.unshort.me$1 [proxy]
+RewriteRule proxy/tweetmarker/(.+)$ https://api.tweetmarker.net/v1/$1 [proxy]
 RewriteRule user_proxy$ https://userstream.twitter.com/2/user.json [proxy]
 RewriteRule sample_proxy$ http://stream.twitter.com/1/statuses/sample.json [proxy]
 

@@ -62,7 +62,3 @@ Zudem muss die .htaccess genug Rechte haben. Hier wäre dann also im Ordner-Kont
 In der `settings.js` werden Twitter-OAuth-Tokens und -Secrets sowie sonstige Einstellungen hinterlegt.
 `settings.js.example` dient hier als Vorlage.
 
-`setmaxreadid.php` und `getmaxreadid.php` sind minimale PHP-Skripte, über die eine Echofon-mäßige Sync-
-Funktionalität realisiert wird. Diese müssen Schreibzugriff auf eine Datei `maxreadid.dat` im gleichen
-Ordner haben.
-

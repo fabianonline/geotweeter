@@ -38,12 +38,20 @@ class Account
 			return
 		
 		@max_read_id = id
+		
+		header = {
+			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
+			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
+		}
+		
 		$.ajax({
 			type: 'POST'
-			url: settings.set_maxreadid_url || 'maxreadid/set.php'
-			async: false
+			url: "proxy/tweetmarker/lastread?collection=timeline&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
+			headers: header
+			contentType: "text/plain"
 			dataType: 'text'
-			data: {account_id: @user.id, value: @max_read_id}
+			data: "#{id}"
+			processData: false
 			error: (req) =>
 				html = "
 					<div class='status'>
@@ -52,6 +60,7 @@ class Account
 					</div>"
 				@add_html(html)
 		})
+		
 		elements = $("#content_#{@id} .new")
 		for elm in elements
 			element = $(elm)
@@ -59,13 +68,18 @@ class Account
 		@update_user_counter()
 	
 	get_max_read_id: ->
+		header = {
+			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
+			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
+		}
 		value = $.ajax({
 			method: 'GET'
-			url: settings.get_maxreadid_url || 'maxreadid/get.php'
 			async: false
+			url: "proxy/tweetmarker/lastread?collection=timeline&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
+			headers: header
 			dataType: 'text'
-			data: {account_id: @user.id}
-		}).responseText
+		}).responseText ? "0"
+		
 		@max_read_id = value
 		Application.log(this, "getMaxReadID", "result: " + value);
 		return value
@@ -134,7 +148,7 @@ class Account
 			success: (element, data) -> Application.twitter_config = data
 		})
 	
-	sign_request: (url, method, parameters) ->
+	sign_request: (url, method, parameters, options={}) ->
 		message = {
 			action: url
 			method: method
@@ -143,6 +157,12 @@ class Account
 		OAuth.setTimestampAndNonce(message)
 		OAuth.completeRequest(message, @keys)
 		OAuth.SignatureMethod.sign(message, @keys)
+		
+		switch options.return_type
+			when "header"
+				return ("#{key}=\"#{value}\"" for key, value of message.parameters when key.slice(0, 5)=="oauth").join(", ")
+			when "parameters"
+				return message.parameters
 		return OAuth.formEncode(message.parameters)
 	
 	twitter_request: (url, options) ->
