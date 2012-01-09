@@ -59,6 +59,7 @@ class StreamRequest extends Request
 	
 	timeout: =>
 		Application.log(this, "Timeout", "Timeout reached.")
+		@account.add_status_html("Timeout vermutet.")
 		@account.fill_list()
 	
 	process_buffer: ->

@@ -102,6 +102,14 @@ class Account
 		element = document.createElement("div")
 		element.innerHTML = html
 		@get_my_element().prepend(element)
+	
+	add_status_html: (message) ->
+		html = "
+			<div class='status'>
+				#{message}
+			</div>"
+		@add_html(html)
+		return ""
 		
 	update_user_counter: -> # TODO
 	

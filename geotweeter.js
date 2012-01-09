@@ -189,6 +189,13 @@ Account = (function() {
     return this.get_my_element().prepend(element);
   };
 
+  Account.prototype.add_status_html = function(message) {
+    var html;
+    html = "			<div class='status'>				" + message + "			</div>";
+    this.add_html(html);
+    return "";
+  };
+
   Account.prototype.update_user_counter = function() {};
 
   Account.prototype.is_unread_tweet = function(tweet_id) {
@@ -1178,6 +1185,7 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.timeout = function() {
     Application.log(this, "Timeout", "Timeout reached.");
+    this.account.add_status_html("Timeout vermutet.");
     return this.account.fill_list();
   };
 
