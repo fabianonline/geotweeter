@@ -105,11 +105,7 @@ class Account
 		
 	update_user_counter: -> # TODO
 	
-	is_unread_tweet: (tweet_id) -> 
-		l1 = @max_read_id.length
-		l2 = tweet_id.length
-		return tweet_id>@max_read_id if l1 == l2
-		return l2 > l1
+	is_unread_tweet: (tweet_id) -> tweet_id.is_bigger_than(@max_read_id)
 	
 	get_twitter_configuration: ->
 		@twitter_request('help/configuration.json', {

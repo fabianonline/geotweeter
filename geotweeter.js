@@ -25,6 +25,14 @@ String.prototype.repeat = function(times) {
   return (new Array(times + 1)).join(this);
 };
 
+String.prototype.is_bigger_than = function(id) {
+  var l1, l2;
+  l1 = this.length;
+  l2 = id.length;
+  if (l1 === l2) return this > id;
+  return l1 > l2;
+};
+
 Account = (function() {
 
   Account.prototype.screen_name = null;
@@ -183,11 +191,7 @@ Account = (function() {
   Account.prototype.update_user_counter = function() {};
 
   Account.prototype.is_unread_tweet = function(tweet_id) {
-    var l1, l2;
-    l1 = this.max_read_id.length;
-    l2 = tweet_id.length;
-    if (l1 === l2) return tweet_id > this.max_read_id;
-    return l2 > l1;
+    return tweet_id.is_bigger_than(this.max_read_id);
   };
 
   Account.prototype.get_twitter_configuration = function() {
