@@ -2,6 +2,7 @@ class User
 	constructor: (@data) ->
 		users[@data.id] = this
 		@screen_name = @data.screen_name
+		Application.add_to_autocomplete("@#{@screen_name}") 
 		@permalink = "https://twitter.com/#{@screen_name}"
 		@id = @data.id_str
 		

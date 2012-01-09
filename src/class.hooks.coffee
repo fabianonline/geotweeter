@@ -28,7 +28,6 @@ class Hooks
 		color = '#f00' if length>140
 		$('#counter').html(140-length)
 		$('#counter').css('color', color)
-		reply = Application.get_reply_to_tweet()
 		
 
 		

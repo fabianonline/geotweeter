@@ -4,6 +4,7 @@ class Application
 	@expected_settings_version: 12
 	@current_account: null
 	@twitter_config: {}
+	@autocompletes: []
 
 	@start: ->
 		Application.log(this, "", "Starting...")
@@ -33,6 +34,25 @@ class Application
 	@attach_hooks: ->
 		$('#place').change( -> $.cookie('last_place', $('#place option:selected').val(), {expires: 365}))
 		$('#file').change( Hooks.check_file )
+		$('#text').autocomplete({
+			minLength: 1
+			source: (request, response) =>
+				word = request.term.split(/\s+/).pop()
+				word='@'+word if request.term.match(/^d @?[a-z0-9_]+$/i)
+				if (word[0]!="@" && word[0]!="#")
+					response(new Array())
+				else
+					response($.ui.autocomplete.filter(@autocompletes, word));
+			focus: -> return false
+			autoFocus: true
+			delay: 0
+			appendTo: "#autocomplete_area"
+			select: (event, ui) ->
+				term = this.value.split(/\s+/).pop()
+				this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " "
+				return false
+			
+		});
 
 	@initialize_accounts: ->
 		for data, id in settings.twitter.users
@@ -67,4 +87,9 @@ class Application
 		return unless settings.debug && console? && console.log?
 		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
 		console.log("[#{place_str.pad(25)}][#{category.pad(15)}] #{message}")
+	
+	@add_to_autocomplete: (term) ->
+		if $.inArray(term, @autocompletes)==-1
+			@autocompletes.push(term)
+			@autocompletes.sort()
 	

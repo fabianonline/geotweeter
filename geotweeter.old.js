@@ -99,54 +99,6 @@ regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
 
 
-$(document).ready(start);
-
-/** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
-function start() {
-	
-    maxreadid = getMaxReadID();
-    for(var i=0; i<settings.twitter.users.length; i++){
-        if (!maxreadid[i]) maxreadid[i]="0";
-        last_event_times[i]=new Array();
-        responseOffset[i] = 0;
-        buffer[i] = "";
-        isProcessing[i] = false;
-        fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
-        if (settings.twitter.users[i].stream) {
-            window.setInterval("checkForTimeout(" + i + ")", 30000);
-            if (window.opera) window.setInterval("parseResponse(" + i + ")", 5000);
-        } else {
-            window.setInterval("fillList(" + i + ")", 300000);
-        }
-    }
-
-    updateCounter();
-    update_form_display();
-
-    $(document).bind('keydown', 'Alt+s', sendTweet);
-    $('#text').bind('keydown', 'return', checkEnter);
-
-    $('#text').autocomplete({
-        minLength: 1,
-        source: function(request, response) {
-            var word = extractLast(request.term);
-            if (request.term.match(/^d @?[a-z0-9_]+$/i)) word='@'+word;
-            if (word[0]!="@" && word[0]!="#") response(new Array());
-            else response($.ui.autocomplete.filter(autocompletes, word));
-        },
-        focus: function() { return false; },
-        autoFocus: true,
-        delay: 0,
-        appendTo: "#autocomplete_area",
-        select: function(event, ui) {
-            var term = this.value.split(/\s+/).pop();
-            this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " ";
-            return false;
-        }
-    });
-
-    
-}
 
 /** Returns the last word of the given string. Used by autocompletion. */
 function extractLast(term) {
@@ -257,13 +209,6 @@ function show_stats() {
 
     infoarea_show("Stats", html);
 }
-/** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
-function cancel_dm() {
-    $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
-    sending_dm_to = null;
-    updateCounter();
-    update_form_display();
-}
 
 /**
  * Gets called if the user removed a mention and klicked the link in the appearing warning message.
@@ -346,14 +291,6 @@ if (settings.troll.length == settings.trigger.length)
 		}
 		return false;
 }
-}
-
-/** Adds a term to the list of usable autocompletions. */
-function addToAutoCompletion(term) {
-    if ($.inArray(term, autocompletes)==-1) {
-        autocompletes.push(term);
-        autocompletes.sort();
-    }
 }
 
 function update_user_counter(account_id) {

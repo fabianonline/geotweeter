@@ -473,7 +473,7 @@ Hooks = (function() {
   Hooks.time_of_last_enter = new Date();
 
   Hooks.update_counter = function() {
-    var color, length, now, parts, reply, text, url, urls, _i, _len, _ref;
+    var color, length, now, parts, text, url, urls, _i, _len, _ref;
     if ((typeof event !== "undefined" && event !== null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
       now = new Date();
       if (now - this.time_of_last_enter <= settings.timings.max_double_enter_time) {
@@ -504,8 +504,7 @@ Hooks = (function() {
     }
     if (length > 140) color = '#f00';
     $('#counter').html(140 - length);
-    $('#counter').css('color', color);
-    return reply = Application.get_reply_to_tweet();
+    return $('#counter').css('color', color);
   };
 
   Hooks.send = function() {
@@ -731,6 +730,7 @@ Tweet = (function(_super) {
             break;
           case "hashtags":
             this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank'>#" + entity.text + "</a>");
+            Application.add_to_autocomplete("#" + entity.text);
         }
       }
     }
@@ -1050,6 +1050,7 @@ User = (function() {
     this.data = data;
     users[this.data.id] = this;
     this.screen_name = this.data.screen_name;
+    Application.add_to_autocomplete("@" + this.screen_name);
     this.permalink = "https://twitter.com/" + this.screen_name;
     this.id = this.data.id_str;
   }
@@ -1408,6 +1409,8 @@ Application = (function() {
 
   Application.twitter_config = {};
 
+  Application.autocompletes = [];
+
   Application.start = function() {
     Application.log(this, "", "Starting...");
     if (!this.is_settings_version_okay()) return;
@@ -1445,12 +1448,38 @@ Application = (function() {
   };
 
   Application.attach_hooks = function() {
+    var _this = this;
     $('#place').change(function() {
       return $.cookie('last_place', $('#place option:selected').val(), {
         expires: 365
       });
     });
-    return $('#file').change(Hooks.check_file);
+    $('#file').change(Hooks.check_file);
+    return $('#text').autocomplete({
+      minLength: 1,
+      source: function(request, response) {
+        var word;
+        word = request.term.split(/\s+/).pop();
+        if (request.term.match(/^d @?[a-z0-9_]+$/i)) word = '@' + word;
+        if (word[0] !== "@" && word[0] !== "#") {
+          return response(new Array());
+        } else {
+          return response($.ui.autocomplete.filter(_this.autocompletes, word));
+        }
+      },
+      focus: function() {
+        return false;
+      },
+      autoFocus: true,
+      delay: 0,
+      appendTo: "#autocomplete_area",
+      select: function(event, ui) {
+        var term;
+        term = this.value.split(/\s+/).pop();
+        this.value = this.value.substring(0, this.value.length - term.length) + ui.item.value + " ";
+        return false;
+      }
+    });
   };
 
   Application.initialize_accounts = function() {
@@ -1508,6 +1537,13 @@ Application = (function() {
     }
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
     return console.log("[" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
+  };
+
+  Application.add_to_autocomplete = function(term) {
+    if ($.inArray(term, this.autocompletes) === -1) {
+      this.autocompletes.push(term);
+      return this.autocompletes.sort();
+    }
   };
 
   return Application;
