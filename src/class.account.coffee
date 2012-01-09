@@ -10,6 +10,7 @@ class Account
 	request: null
 	keys: {}
 	followers_ids: []
+	status_text: ""
 	
 	constructor: (settings_id) ->
 		@id=settings_id
@@ -68,6 +69,7 @@ class Account
 	
 	get_content_div_id: -> "content_#{@id}"
 	validate_credentials: ->
+		@set_status("Validating Credentials...", "orange")
 		@twitter_request('account/verify_credentials.json', {
 			method: "GET"
 			silent: true
@@ -90,7 +92,7 @@ class Account
 					</div>
 				")
 				$("#user_#{@id}").tooltip({
-					bodyHandler: => "<strong>@#{@user.screen_name}</strong>"
+					bodyHandler: => "<strong>@#{@user.screen_name}</strong><br />#{@status_text}"
 					track: true
 					showURL: false
 					left: 5
@@ -168,12 +170,14 @@ class Account
 		return result.responseText if options.return_response
 	
 	fill_list: =>
+		@set_status("Filling List...", "orange")
 		threads_running = 5
 		threads_errored = 0
 		responses = []
 		
 		after_run = =>
 			if threads_errored == 0
+				@set_status("", "")
 				@parse_data(responses)
 				@request.start_request() 
 			else
@@ -299,6 +303,10 @@ class Account
 		$('#users .user').removeClass('active')
 		$("#user_#{@id}").addClass('active')
 		Application.current_account = this
+	
+	set_status: (message, color) ->
+		$("#user_#{@id}").removeClass('red green yellow orange').addClass(color)
+		@status_text = message
 	
 	@hooks: {
 		change_current_account: (elm) ->

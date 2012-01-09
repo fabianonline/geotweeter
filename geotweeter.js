@@ -58,6 +58,8 @@ Account = (function() {
 
   Account.prototype.followers_ids = [];
 
+  Account.prototype.status_text = "";
+
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);    this.id = settings_id;
     this.keys = {
@@ -140,6 +142,7 @@ Account = (function() {
 
   Account.prototype.validate_credentials = function() {
     var _this = this;
+    this.set_status("Validating Credentials...", "orange");
     return this.twitter_request('account/verify_credentials.json', {
       method: "GET",
       silent: true,
@@ -159,7 +162,7 @@ Account = (function() {
         $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />						</a>					</div>				");
         return $("#user_" + _this.id).tooltip({
           bodyHandler: function() {
-            return "<strong>@" + _this.user.screen_name + "</strong>";
+            return "<strong>@" + _this.user.screen_name + "</strong><br />" + _this.status_text;
           },
           track: true,
           showURL: false,
@@ -285,11 +288,13 @@ Account = (function() {
   Account.prototype.fill_list = function() {
     var after_run, default_parameters, error, key, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _results,
       _this = this;
+    this.set_status("Filling List...", "orange");
     threads_running = 5;
     threads_errored = 0;
     responses = [];
     after_run = function() {
       if (threads_errored === 0) {
+        _this.set_status("", "");
         _this.parse_data(responses);
         _this.request.start_request();
       } else {
@@ -446,6 +451,11 @@ Account = (function() {
     $('#users .user').removeClass('active');
     $("#user_" + this.id).addClass('active');
     return Application.current_account = this;
+  };
+
+  Account.prototype.set_status = function(message, color) {
+    $("#user_" + this.id).removeClass('red green yellow orange').addClass(color);
+    return this.status_text = message;
   };
 
   Account.hooks = {
@@ -1180,6 +1190,7 @@ StreamRequest = (function(_super) {
   StreamRequest.prototype.start_request = function() {
     var data, url,
       _this = this;
+    this.account.set_status("Connecting to stream...", "orange");
     this.last_event_times = [];
     this.set_timeout(settings.timeout_maximum_delay * 1000);
     this.processing = false;
@@ -1200,9 +1211,11 @@ StreamRequest = (function(_super) {
       _this.last_data_received_at = new Date();
       switch (_this.request.readyState) {
         case 3:
+          if (!_this.connected) _this.account.set_status("Connected.", "green");
           _this.connected = true;
           break;
         case 4:
+          _this.account.set_status("Disconnected", "red");
           _this.connected = false;
           if ((new Date()).getTime() - _this.connection_started_at.getTime() > 10000) {
             _this.delay = settings.timings.mindelay;

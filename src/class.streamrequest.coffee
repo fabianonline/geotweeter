@@ -29,6 +29,7 @@ class StreamRequest extends Request
 		@request.abort()
 	
 	start_request: ->
+		@account.set_status("Connecting to stream...", "orange")
 		@last_event_times = []
 		@set_timeout(settings.timeout_maximum_delay*1000)
 		@processing = false
@@ -45,8 +46,10 @@ class StreamRequest extends Request
 			@last_data_received_at = new Date()
 			switch @request.readyState
 				when 3
+					@account.set_status("Connected.", "green") unless @connected
 					@connected = true
 				when 4
+					@account.set_status("Disconnected", "red")
 					@connected = false
 					@delay = settings.timings.mindelay if (new Date()).getTime() - @connection_started_at.getTime() > 10000
 					# TODO: Fehlermeldung
