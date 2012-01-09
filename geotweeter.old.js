@@ -98,13 +98,6 @@ regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
 regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
 regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
 
-
-
-/** Returns the last word of the given string. Used by autocompletion. */
-function extractLast(term) {
-    return term.split(/\s+/).pop();
-}
-
 /** Checks the settings object for the right version. */
 function checkSettings() {
     if (typeof(settings)=="undefined") return false;
@@ -113,14 +106,8 @@ function checkSettings() {
 
 /** Creates html for a normal tweet, RT or DM. */
 function getStatusHTML(status, account_id) {
-	# SNIP
-    
-    addToAutoCompletion("@" + user);
-
-    if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid[account_id]))
-        mylasttweetid[account_id] = status.id;
-
-    
+	
+	
     if (thumbs.length==1) {
        html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
     }
@@ -220,32 +207,10 @@ function removeReplyWarning() {
     reply_to_user = null;
     reply_to_id = null;
 }
-
-/** Scrolls to the last tweet written by the current user. */
-function goToMyLastTweet() {
-    if (mylasttweetid[current_account] > 0)
-        scroll_to(mylasttweetid[current_account]);
-}
-
-/** Scrolls to a tweet specified by it's id. */
-function scroll_to(tweet_id) {
-    var element_top = $('#id_'+tweet_id).offset().top;
-    // Just scrolling to a tweet doesn't show it because it will be hidden behind
-    // the form on the top. So we use this as an offset.
-    var topheight = parseInt($('#content_template').css("padding-top"));
-    $(document).scrollTop(element_top-topheight);
-    return;
-}
-
 /** Sets a status message. The colors are actually class names. */
 function setStatus(message, color, account_id) {
     $('#user_'+account_id).removeClass('red green yellow orange').addClass(color);
     $('#user_'+account_id).data('status', message);
-}
-
-/** Scrolls down to the last read tweet. */
-function goToLastRead(){
-    scroll_to(maxreadid[current_account]);
 }
 
 /** Checks for blacklisted words. */

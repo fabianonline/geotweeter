@@ -44,6 +44,8 @@ Account = (function() {
 
   Account.prototype.max_known_dm_id = "0";
 
+  Account.prototype.my_last_tweet_id = "0";
+
   Account.prototype.tweets = {};
 
   Account.prototype.id = null;
@@ -415,6 +417,9 @@ Account = (function() {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
           this.max_known_tweet_id = object.id;
         }
+        if (object.sender.id === this.user.id && object.id.is_bigger_than(this.my_last_tweet_id)) {
+          this.my_last_tweet_id = object.id;
+        }
       }
       if (object.constructor === DirectMessage) {
         if (object.id.is_bigger_than(this.max_known_dm_id)) {
@@ -425,6 +430,14 @@ Account = (function() {
     }
     this.add_html(html);
     return this.update_user_counter();
+  };
+
+  Account.prototype.scroll_to = function(tweet_id) {
+    var element_top, topheight;
+    element_top = $("#" + tweet_id).offset().top;
+    topheight = parseInt($('#content_template').css("padding-top"));
+    $(document).scrollTop(element_top - topheight);
+    return false;
   };
 
   Account.prototype.activate = function() {
@@ -456,6 +469,14 @@ Account = (function() {
         }
       }
       Application.current_account.set_max_read_id(id);
+      return false;
+    },
+    goto_my_last_tweet: function() {
+      Application.current_account.scroll_to(Application.current_account.my_last_tweet_id);
+      return false;
+    },
+    goto_unread_tweet: function() {
+      Application.current_account.scroll_to(Application.current_account.max_read_id);
       return false;
     }
   };

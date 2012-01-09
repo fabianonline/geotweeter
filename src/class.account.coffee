@@ -3,6 +3,7 @@ class Account
 	max_read_id: "0"
 	max_known_tweet_id: "0"
 	max_known_dm_id: "0"
+	my_last_tweet_id: "0"
 	tweets: {}
 	id: null
 	user: null
@@ -277,11 +278,20 @@ class Account
 			html += object.get_html() unless this_id==old_id
 			if object.constructor==Tweet
 				@max_known_tweet_id=object.id if object.id.is_bigger_than(@max_known_tweet_id)
+				@my_last_tweet_id=object.id if object.sender.id==@user.id && object.id.is_bigger_than(@my_last_tweet_id)
 			if object.constructor==DirectMessage
 				@max_known_dm_id=object.id if object.id.is_bigger_than(@max_known_dm_id)
 			old_id = this_id
 		@add_html(html)
 		@update_user_counter()
+	
+	scroll_to: (tweet_id) ->
+		element_top = $("##{tweet_id}").offset().top
+		# Just scrolling to a tweet doesn't show it because it will be hidden behind
+		# the form on the top. So we use this as an offset.
+		topheight = parseInt($('#content_template').css("padding-top"))
+		$(document).scrollTop(element_top - topheight);
+		return false
 	
 	activate: ->
 		$('.content').hide()
@@ -306,5 +316,13 @@ class Account
 					id = $(element).attr('data-tweet-id')
 					break
 			Application.current_account.set_max_read_id(id)
+			return false
+		
+		goto_my_last_tweet: ->
+			Application.current_account.scroll_to(Application.current_account.my_last_tweet_id)
+			return false
+		
+		goto_unread_tweet: ->
+			Application.current_account.scroll_to(Application.current_account.max_read_id)
 			return false
 	}
