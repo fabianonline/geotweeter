@@ -1502,7 +1502,7 @@ Application = (function() {
       return;
     }
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
-    return console.log("[ " + (place_str.pad(20)) + " ] [ " + (category.pad(20)) + " ] " + message);
+    return console.log("[" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
   };
 
   return Application;
