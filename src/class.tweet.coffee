@@ -15,7 +15,8 @@ class Tweet extends TwitterMessage
 		@save_as_last_message()
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
 		@account.tweets[@id] = this
-		@text = data.text
+		@text = if data.retweeted_status? then data.retweeted_status.text else data.text
+		@entities = if data.retweeted_status? then data.retweeted_status.entities else data.entities
 		@linkify_text()
 		@thumbs = @get_thumbnails()
 		@date = new Date(@data.created_at)
@@ -85,9 +86,9 @@ class Tweet extends TwitterMessage
 	
 	linkify_text: ->
 		@mentions = [] # hack to prevent semi-static array mentions from filling up
-		if @data.entities?
+		if @entities?
 			all_entities = []
-			for entity_type, entities of @data.entities
+			for entity_type, entities of @entities
 				for entity in entities
 					entity.type=entity_type
 					all_entities.push(entity)

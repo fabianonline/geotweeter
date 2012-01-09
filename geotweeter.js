@@ -619,7 +619,8 @@ Tweet = (function(_super) {
     this.save_as_last_message();
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
     this.account.tweets[this.id] = this;
-    this.text = data.text;
+    this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
+    this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
     this.linkify_text();
     this.thumbs = this.get_thumbnails();
     this.date = new Date(this.data.created_at);
@@ -694,9 +695,9 @@ Tweet = (function(_super) {
   Tweet.prototype.linkify_text = function() {
     var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
     this.mentions = [];
-    if (this.data.entities != null) {
+    if (this.entities != null) {
       all_entities = [];
-      _ref = this.data.entities;
+      _ref = this.entities;
       for (entity_type in _ref) {
         entities = _ref[entity_type];
         for (_i = 0, _len = entities.length; _i < _len; _i++) {
