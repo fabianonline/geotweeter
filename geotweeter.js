@@ -478,6 +478,10 @@ Account = (function() {
     goto_unread_tweet: function() {
       Application.current_account.scroll_to(Application.current_account.max_read_id);
       return false;
+    },
+    reload: function() {
+      Application.current_account.request.stop_request();
+      return false;
     }
   };
 
@@ -1271,6 +1275,10 @@ PullRequest = (function(_super) {
 
   PullRequest.prototype.start_request = function() {
     return window.setTimeout(this.account.fill_list, 300000);
+  };
+
+  PullRequest.prototype.stop_request = function() {
+    return this.account.fill_list();
   };
 
   return PullRequest;

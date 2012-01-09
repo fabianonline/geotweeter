@@ -325,4 +325,8 @@ class Account
 		goto_unread_tweet: ->
 			Application.current_account.scroll_to(Application.current_account.max_read_id)
 			return false
+		
+		reload: ->
+			Application.current_account.request.stop_request()
+			return false
 	}
