@@ -1,3 +1,13 @@
+/*
+DO NOT MODIFY THIS FILE
+
+Geotweeter is written in CoffeeScript (http://coffeescript.org/).
+All source files are located in src/. This file (geotweeter.js)
+is automatically generated from all the files in src/. Any modifications
+to this file will be overwritten!
+
+DO NOT MODIFY THIS FILE
+*/
 var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User, event,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = Object.prototype.hasOwnProperty,

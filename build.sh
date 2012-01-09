@@ -1,5 +1,6 @@
 #!/bin/bash
 coffee $@ --bare --join geotweeter.js --compile \
+	src/_info.coffee \
 	src/extension.date.coffee \
 	src/extension.number.coffee \
 	src/extension.string.coffee \
