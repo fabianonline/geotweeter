@@ -664,7 +664,8 @@ Tweet = (function(_super) {
     this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
     this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
     this.linkify_text();
-    this.thumbs = this.get_thumbnails();
+    this.thumbs = [];
+    this.get_thumbnails();
     this.date = new Date(this.data.created_at);
   }
 
@@ -690,7 +691,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
   };
 
   Tweet.prototype.get_permanent_info_html = function() {
@@ -707,6 +708,24 @@ Tweet = (function(_super) {
 
   Tweet.prototype.get_buttons_html = function() {
     return "<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  };
+
+  Tweet.prototype.get_single_thumb_html = function() {
+    if (this.thumbs.length !== 1) return "";
+    return this.thumbs[0].get_single_thumb_html();
+  };
+
+  Tweet.prototype.get_multi_thumb_html = function() {
+    var html, thumb, _i, _len, _ref;
+    if (!(this.thumbs.length > 1)) return "";
+    html = "<div class='media'>";
+    _ref = this.thumbs;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      thumb = _ref[_i];
+      html += thumb.get_multi_thumb_html();
+    }
+    html += "</div>";
+    return html;
   };
 
   Tweet.prototype.get_source_html = function() {
@@ -841,40 +860,49 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_thumbnails = function() {
-    var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
-    _ref2 = ((_ref = this.data.entities) != null ? _ref.media : void 0) != null;
-    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-      media = _ref2[_i];
-      this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url));
+    var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _results;
+    if (this.data.entities == null) return;
+    if (this.data.entities.media != null) {
+      _ref = this.data.entities.media;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        media = _ref[_i];
+        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url));
+      }
     }
-    _ref4 = ((_ref3 = this.data.entities) != null ? _ref3.urls : void 0) != null;
-    for (_j = 0, _len2 = _ref4.length; _j < _len2; _j++) {
-      entity = _ref4[_j];
-      url = entity.expanded_url;
-      if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
-        thumbs.push(new Thumbnail("http://img.youtube.com/" + res[1] + "/1.jpg", url));
+    if (this.data.entities.urls != null) {
+      _ref2 = this.data.entities.urls;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        entity = _ref2[_j];
+        url = (_ref3 = entity.expanded_url) != null ? _ref3 : entity.url;
+        if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
+          this.thumbs.push(new Thumbnail("http://img.youtube.com/" + res[1] + "/1.jpg", url));
+        }
+        if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
+          this.thumbs.push(new Thumbnail("http://twitpic.com/show/mini/" + res[1], url));
+        }
+        if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://yfrog.com/" + res[1] + ".th.jpg", url));
+        }
+        if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
+          this.thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
+        }
+        if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://moby.to/" + res[1] + ":square", url));
+        }
+        if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://ragefac.es/" + res[1] + "/i", url));
+        }
+        if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url));
+        }
+        if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
+          _results.push(this.thumbs.push(new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url)));
+        } else {
+          _results.push(void 0);
+        }
       }
-      if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
-        thumbs.push(new Thumbnail("http://twitpic.com/show/mini/" + res[1], url));
-      }
-      if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
-        thumbs.push(new Thumbnail("http://yfrog.com/" + res[1] + ".th.jpg", url));
-      }
-      if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
-        thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
-      }
-      if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
-        thumbs.push(new Thumbnail("http://moby.to/" + res[1] + ":square", url));
-      }
-      if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
-        thumbs.push(new Thumbnail("http://ragefac.es/" + res[1] + "/i", url));
-      }
-      if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
-        thumbs.push(new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url));
-      }
-      if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
-        thumbs.push(new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url));
-      }
+      return _results;
     }
   };
 

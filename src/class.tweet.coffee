@@ -18,7 +18,8 @@ class Tweet extends TwitterMessage
 		@text = if data.retweeted_status? then data.retweeted_status.text else data.text
 		@entities = if data.retweeted_status? then data.retweeted_status.entities else data.entities
 		@linkify_text()
-		@thumbs = @get_thumbnails()
+		@thumbs = [] # Keine Ahnung, warum man das hier braucht... Lässt man es weg. sammeln sich die Thumbnails an.
+		@get_thumbnails()
 		@date = new Date(@data.created_at)
 	
 	fill_user_variables: -> 
@@ -33,9 +34,11 @@ class Tweet extends TwitterMessage
 	div_id: -> "#tweet_#{@id}"
 	get_html: ->
 		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
+		@get_single_thumb_html() +
 		@sender.get_avatar_html() +
 		@sender.get_link_html() +
 		"<span class='text'>#{@text}</span>" +
+		@get_multi_thumb_html() +
 		@get_permanent_info_html() +
 		@get_overlay_html() +
 		"<div style='clear: both;'></div>" +
@@ -65,7 +68,18 @@ class Tweet extends TwitterMessage
 		(if @data.coordinates? then "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" else "") +
 		(if @account.screen_name==@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" else "") +
 		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
-		
+	
+	get_single_thumb_html: ->
+		return "" unless @thumbs.length==1
+		return @thumbs[0].get_single_thumb_html()
+	
+	get_multi_thumb_html: ->
+		return "" unless @thumbs.length>1
+		html = "<div class='media'>"
+		html += thumb.get_multi_thumb_html() for thumb in @thumbs
+		html += "</div>"
+		return html
+	
 	get_source_html: ->
 		return "" unless @data.source?
 		obj = $(@data.source)
@@ -147,19 +161,21 @@ class Tweet extends TwitterMessage
 		$('#text').focus()
 	
 	get_thumbnails: ->
-		for media in @data.entities?.media?
-			@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))
-		for entity in @data.entities?.urls?
-			url = entity.expanded_url
-			thumbs.push(new Thumbnail("http://img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
-			thumbs.push(new Thumbnail("http://twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
-			thumbs.push(new Thumbnail("http://yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
-			thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
-			thumbs.push(new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
-			thumbs.push(new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
-			thumbs.push(new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
-			thumbs.push(new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/)) 
-		return
+		return unless @data.entities?
+		if @data.entities.media?
+			for media in @data.entities.media
+				@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))
+		if @data.entities.urls?
+			for entity in @data.entities.urls
+				url = entity.expanded_url ? entity.url
+				@thumbs.push(new Thumbnail("http://img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
+				@thumbs.push(new Thumbnail("http://twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
+				@thumbs.push(new Thumbnail("http://yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
+				@thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
+				@thumbs.push(new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
+				@thumbs.push(new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
+				@thumbs.push(new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
+				@thumbs.push(new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
 	
 	@hooks: {
 		get_tweet: (element) -> 

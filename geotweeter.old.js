@@ -104,25 +104,6 @@ function checkSettings() {
     return (settings.version == expected_settings_version);
 }
 
-/** Creates html for a normal tweet, RT or DM. */
-function getStatusHTML(status, account_id) {
-	
-	
-    if (thumbs.length==1) {
-       html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
-    }
-    
-   
-    if (thumbs.length>1) {
-        html += '<div class="media">';
-       for (var i=0; i<thumbs.length; i++) {
-           html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" /></a>';
-       }
-       html += '</div>';
-    }
-        
-}
-
 
 
 /** Shows a "fullscreen" element with defined title and content. */
@@ -195,22 +176,6 @@ function show_stats() {
     html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet(current_account)/1000 + " Sekunden";
 
     infoarea_show("Stats", html);
-}
-
-/**
- * Gets called if the user removed a mention and klicked the link in the appearing warning message.
- * Especially removes the in_reply_to_id value.
- */
-function removeReplyWarning() {
-    $('#reply_to_id').val('');
-    $('#reply_warning').fadeOut();
-    reply_to_user = null;
-    reply_to_id = null;
-}
-/** Sets a status message. The colors are actually class names. */
-function setStatus(message, color, account_id) {
-    $('#user_'+account_id).removeClass('red green yellow orange').addClass(color);
-    $('#user_'+account_id).data('status', message);
 }
 
 /** Checks for blacklisted words. */
