@@ -14,6 +14,13 @@ class DirectMessage extends Tweet
 		"<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
 		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
 	
+	get_sender_html: -> 
+		if @account.screen_name == @sender.screen_name
+			return @sender.get_avatar_html() + "to " + @recipient.get_link_html()
+		else
+			return @sender.get_avatar_html() + @sender.get_link_html()
+	
+	
 	@hooks: {
 		get_tweet: (element) ->
 			tweet_div = $(element).parents('.dm')

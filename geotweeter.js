@@ -736,7 +736,11 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
+  };
+
+  Tweet.prototype.get_sender_html = function() {
+    return this.sender.get_avatar_html() + this.sender.get_link_html();
   };
 
   Tweet.prototype.get_permanent_info_html = function() {
@@ -1131,6 +1135,14 @@ DirectMessage = (function(_super) {
 
   DirectMessage.prototype.get_buttons_html = function() {
     return "<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  };
+
+  DirectMessage.prototype.get_sender_html = function() {
+    if (this.account.screen_name === this.sender.screen_name) {
+      return this.sender.get_avatar_html() + "to " + this.recipient.get_link_html();
+    } else {
+      return this.sender.get_avatar_html() + this.sender.get_link_html();
+    }
   };
 
   DirectMessage.hooks = {

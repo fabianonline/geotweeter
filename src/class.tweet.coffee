@@ -35,14 +35,15 @@ class Tweet extends TwitterMessage
 	get_html: ->
 		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
 		@get_single_thumb_html() +
-		@sender.get_avatar_html() +
-		@sender.get_link_html() +
+		@get_sender_html() +
 		"<span class='text'>#{@text}</span>" +
 		@get_multi_thumb_html() +
 		@get_permanent_info_html() +
 		@get_overlay_html() +
 		"<div style='clear: both;'></div>" +
 		"</div>"
+	
+	get_sender_html: -> @sender.get_avatar_html() + @sender.get_link_html()
 		
 	get_permanent_info_html: ->
 		@get_retweet_html() +
