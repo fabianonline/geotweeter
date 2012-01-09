@@ -96,7 +96,7 @@ class Tweet extends TwitterMessage
 	
 	get_reply_to_info_html: ->
 		return "" unless @data.in_reply_to_status_id?
-		"<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> "
+		"<a href='#' onClick='return Tweet.hooks.show_replies(this);'>in reply to...</a> "
 	
 	linkify_text: ->
 		@mentions = [] # hack to prevent semi-static array mentions from filling up
@@ -177,6 +177,34 @@ class Tweet extends TwitterMessage
 				@thumbs.push(new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
 				@thumbs.push(new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
 	
+	show_replies: ->
+		html = ""
+		tweet = this
+		while true
+			html += tweet.get_html()
+			break unless tweet.data.in_reply_to_status_id_str?
+			new_id = tweet.data.in_reply_to_status_id_str
+			tweet = @account.tweets[new_id]
+			unless tweet?
+				html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>'
+				@fetch_reply(new_id)
+				break
+		Application.infoarea.show("Replies", html)
+	
+	fetch_reply: (id) ->
+		@account.twitter_request('statuses/show.json', {
+			parameters: {id: id, include_entities: true}
+			silent: true
+			method: "GET"
+			success: (foo, data) =>
+				tweet = new Tweet(data, @account)
+				$('#info_spinner').before(tweet.get_html())
+				if Application.infoarea.visible && tweet.data.in_reply_to_status_id_str
+					@fetch_reply(tweet.data.in_reply_to_status_id_str)
+				else
+					$('#info_spinner').remove()
+		})
+	
 	@hooks: {
 		get_tweet: (element) -> 
 			tweet_div = $(element).parents('.tweet')
@@ -187,6 +215,7 @@ class Tweet extends TwitterMessage
 		quote:          (elm) -> @get_tweet(elm).quote(); return false
 		delete:         (elm) -> @get_tweet(elm).delete(); return false
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
+		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
 		
 		# called by the tweet button
 		send: ->

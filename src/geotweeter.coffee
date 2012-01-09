@@ -93,3 +93,17 @@ class Application
 			@autocompletes.push(term)
 			@autocompletes.sort()
 	
+	@infoarea: {
+		visible: false
+		show: (title, content) ->
+			Application.infoarea.visible = true
+			$('#infoarea_title').html(title)
+			$('#infoarea_content').html(content)
+			$('#infoarea').show()
+			return false
+			
+		hide: ->
+			Application.infoarea.visible = false
+			$('#infoarea').hide()
+			return false
+	}

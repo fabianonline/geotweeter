@@ -752,7 +752,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.get_reply_to_info_html = function() {
     if (this.data.in_reply_to_status_id == null) return "";
-    return "<a href='#' onClick='Hooks.show_replies(); return false;'>in reply to...</a> ";
+    return "<a href='#' onClick='return Tweet.hooks.show_replies(this);'>in reply to...</a> ";
   };
 
   Tweet.prototype.linkify_text = function() {
@@ -908,6 +908,46 @@ Tweet = (function(_super) {
     }
   };
 
+  Tweet.prototype.show_replies = function() {
+    var html, new_id, tweet;
+    html = "";
+    tweet = this;
+    while (true) {
+      html += tweet.get_html();
+      if (tweet.data.in_reply_to_status_id_str == null) break;
+      new_id = tweet.data.in_reply_to_status_id_str;
+      tweet = this.account.tweets[new_id];
+      if (tweet == null) {
+        html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>';
+        this.fetch_reply(new_id);
+        break;
+      }
+    }
+    return Application.infoarea.show("Replies", html);
+  };
+
+  Tweet.prototype.fetch_reply = function(id) {
+    var _this = this;
+    return this.account.twitter_request('statuses/show.json', {
+      parameters: {
+        id: id,
+        include_entities: true
+      },
+      silent: true,
+      method: "GET",
+      success: function(foo, data) {
+        var tweet;
+        tweet = new Tweet(data, _this.account);
+        $('#info_spinner').before(tweet.get_html());
+        if (Application.infoarea.visible && tweet.data.in_reply_to_status_id_str) {
+          return _this.fetch_reply(tweet.data.in_reply_to_status_id_str);
+        } else {
+          return $('#info_spinner').remove();
+        }
+      }
+    });
+  };
+
   Tweet.hooks = {
     get_tweet: function(element) {
       var tweet_div;
@@ -932,6 +972,10 @@ Tweet = (function(_super) {
     },
     report_as_spam: function(elm) {
       this.get_tweet(elm).report_as_spam();
+      return false;
+    },
+    show_replies: function(elm) {
+      this.get_tweet(elm).show_replies();
       return false;
     },
     send: function() {
@@ -1624,6 +1668,22 @@ Application = (function() {
     if ($.inArray(term, this.autocompletes) === -1) {
       this.autocompletes.push(term);
       return this.autocompletes.sort();
+    }
+  };
+
+  Application.infoarea = {
+    visible: false,
+    show: function(title, content) {
+      Application.infoarea.visible = true;
+      $('#infoarea_title').html(title);
+      $('#infoarea_content').html(content);
+      $('#infoarea').show();
+      return false;
+    },
+    hide: function() {
+      Application.infoarea.visible = false;
+      $('#infoarea').hide();
+      return false;
     }
   };
 
