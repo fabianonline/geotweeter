@@ -32,6 +32,7 @@ class StreamRequest extends Request
 		@account.set_status("Connecting to stream...", "orange")
 		@last_event_times = []
 		@set_timeout(settings.timeout_maximum_delay*1000)
+		@account.get_max_read_id()
 		@processing = false
 		@buffer = ""
 		@response_offset = 0

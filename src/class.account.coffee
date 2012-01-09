@@ -60,7 +60,9 @@ class Account
 					</div>"
 				@add_html(html)
 		})
-		
+		@update_read_tweet_status()
+	
+	update_read_tweet_status: ->
 		elements = $("#content_#{@id} .new")
 		for elm in elements
 			element = $(elm)
@@ -81,7 +83,8 @@ class Account
 		}).responseText ? "0"
 		
 		@max_read_id = value
-		Application.log(this, "getMaxReadID", "result: " + value);
+		Application.log(this, "getMaxReadID", "result: " + value)
+		@update_read_tweet_status()
 		return value
 	
 	toString: -> "Account #{@user.screen_name}"

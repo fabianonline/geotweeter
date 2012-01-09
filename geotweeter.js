@@ -93,7 +93,7 @@ Account = (function() {
   };
 
   Account.prototype.set_max_read_id = function(id) {
-    var element, elements, elm, header, _i, _len,
+    var header,
       _this = this;
     if (id == null) {
       Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
@@ -120,6 +120,11 @@ Account = (function() {
         return _this.add_html(html);
       }
     });
+    return this.update_read_tweet_status();
+  };
+
+  Account.prototype.update_read_tweet_status = function() {
+    var element, elements, elm, _i, _len;
     elements = $("#content_" + this.id + " .new");
     for (_i = 0, _len = elements.length; _i < _len; _i++) {
       elm = elements[_i];
@@ -148,6 +153,7 @@ Account = (function() {
     }).responseText) != null ? _ref : "0";
     this.max_read_id = value;
     Application.log(this, "getMaxReadID", "result: " + value);
+    this.update_read_tweet_status();
     return value;
   };
 
@@ -1307,6 +1313,7 @@ StreamRequest = (function(_super) {
     this.account.set_status("Connecting to stream...", "orange");
     this.last_event_times = [];
     this.set_timeout(settings.timeout_maximum_delay * 1000);
+    this.account.get_max_read_id();
     this.processing = false;
     this.buffer = "";
     this.response_offset = 0;
@@ -1401,6 +1408,7 @@ PullRequest = (function(_super) {
   }
 
   PullRequest.prototype.start_request = function() {
+    this.account.get_max_read_id();
     return window.setTimeout(this.account.fill_list, 300000);
   };
 
