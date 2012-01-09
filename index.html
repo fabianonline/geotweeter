@@ -36,13 +36,10 @@
     <a href="#" onClick="return Account.hooks.mark_as_read();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>
     <a href="#" onClick="return Account.hooks.goto_unread_tweet();"><img src="icons/arrowdown.png" title="Zum letzten ungelesenen Tweet springen" /></a>
     <a href="#" onClick="return Account.hooks.goto_my_last_tweet();"><img src="icons/user_orange.png" title="Zu meinem neuesten Tweet." /></a>
-    <a href="#" onClick="$('#chars').toggle(500); updateCounter(); return false;"><img src="icons/font.png" title="Sonderzeichen einfügen" /></a>
-    <a href="#" onClick="$('#text').val($('#text').val() + '<Nelson>Ha, ha!</Nelson>'); updateCounter(); return false;"><img src="icons/bug.png" title="Nelson" /></a>
-    <a href="#" onClick="show_stats(); return false;"><img src="icons/calculator.png" title="Statistiken" /></a>
     <a href="#" onClick="reload_current_account(); return false;" style="float: right;"><img src="icons/arrow_refresh_small.png" title="Aktuellen Account neu laden" /></a>
+    <a href="#" onClick="alert('Hups, da war wer zu faul, die Stats einzubauen...'); return false;"><img src="icons/calculator.png" title="Statistiken" /></a>
     <a href="#" onClick="location.href='#'; location.reload();" style="float: right;"><img src="icons/arrow_refresh.png" title="Neu laden." /></a>
 </div>
-<div id="chars"></div>
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 <div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
