@@ -1,2000 +1,1702 @@
-/****************************************/
-/********** Fabians Geotweeter **********/
-/****************************************/
+/*
+DO NOT MODIFY THIS FILE
 
-/** Keeps track of how much of the server stream has already been processed. */
-var responseOffset = new Array();
+Geotweeter is written in CoffeeScript (http://coffeescript.org/).
+All source files are located in src/. This file (geotweeter.js)
+is automatically generated from all the files in src/. Any modifications
+to this file will be overwritten!
 
-/** Request object containing the Streams. */
-var req = new Array();
+DO NOT MODIFY THIS FILE
+*/
+var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User, event,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = Object.prototype.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+  __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-/** Contains "new" parts of the stream for processing. */
-var buffer = new Array();
+Date.prototype.format_nice = function() {
+  return "" + (this.getDate().add_null()) + "." + ((this.getMonth() + 1).add_null()) + "." + (this.getYear() + 1900) + " " + (this.getHours().add_null()) + ":" + (this.getMinutes().add_null());
+};
 
-/** isProcessing is true while parseData is running. */
-var isProcessing = new Array();
+Number.prototype.add_null = function() {
+  if (this > 10) return this.toString();
+  return "0" + this.toString();
+};
 
-/** Keeps track of a user and his tweet's id if we're replying to a tweet. */
-var reply_to_user = null;
-var reply_to_id = null;
+String.prototype.pad = function(length, pad_char) {
+  if (pad_char == null) pad_char = " ";
+  if (length > this.length) {
+    return this + pad_char.repeat(length - this.length);
+  } else {
+    return this;
+  }
+};
 
-/** ID of last "marked as read" tweet. Any tweet with an ID bigger than this is considered new. */
-var maxreadid = new Array();
+String.prototype.repeat = function(times) {
+  return (new Array(times + 1)).join(this);
+};
 
-/** IDs of newest and oldest known tweets. */
-var maxknownid = new Array();
-var minknownid = new Array();
-var maxknowndmid = new Array();
+String.prototype.is_bigger_than = function(id) {
+  var l1, l2;
+  l1 = this.length;
+  l2 = id.length;
+  if (l1 === l2) return this > id;
+  return l1 > l2;
+};
 
-/** ID of the newest tweet belonging to "this" user. */
-var mylasttweetid = new Array();
+Account = (function() {
 
-/** delay to use the next time the stream gets disconnected. */
-var delay;
+  Account.first = null;
 
-/** Time the connection to the streaming API was established / got the last data. */
-var connectionStartedAt = new Array();
-var lastDataReceivedAt = new Array();
+  Account.prototype.screen_name = null;
 
-/** true, if the streaming connection was terminated because of a timeout. */
-var disconnectBecauseOfTimeout = new Array();
+  Account.prototype.max_read_id = "0";
 
-/** Keeps track of all tweets being replied to. */
-var repliesData = new Array();
+  Account.prototype.max_known_tweet_id = "0";
 
-/** Gets filled by verify_credentials with the current user's name. */
-var this_users_name = new Array();
+  Account.prototype.max_known_dm_id = "0";
 
-/** Gets filled with the IDs of all followers. */
-var followers_ids = new Array();
+  Account.prototype.my_last_tweet_id = "0";
 
-/** Collects all possible autocompletion values. */
-var autocompletes = new Array();
+  Account.prototype.tweets = {};
 
-/** Expected version of settings.js. Gets compared to settings.version by checkSettings(). */
-var expected_settings_version = 12;
+  Account.prototype.id = null;
 
-/** Time of the last press of Enter. Used for double-Enter-recognition. */
-var timeOfLastEnter = 0;
+  Account.prototype.user = null;
 
-/** Text from the textbox before pressing double-enter. Used to remove unwanted newlines. */
-var textBeforeEnter = "";
+  Account.prototype.request = null;
 
-/** Are we sending a DM? Who's the receiver? */
-var sending_dm_to = null;
+  Account.prototype.keys = {};
 
-var current_account = null;
+  Account.prototype.followers_ids = [];
 
-/** Lengths of automatically shorted t.co-links */
-var short_url_length = null;
-var short_url_length_https = null;
-var characters_reserved_per_media = null;
-var max_media_per_upload = null;
-var photo_size_limit = null;
+  Account.prototype.status_text = "";
 
-/** If file-field is visible */
-var show_file_field = false;
+  function Account(settings_id) {
+    this.fill_list = __bind(this.fill_list, this);    this.id = settings_id;
+    if (settings_id === 0) Account.first = this;
+    this.keys = {
+      consumerKey: settings.twitter.consumerKey,
+      consumerSecret: settings.twitter.consumerSecret,
+      token: settings.twitter.users[settings_id].token,
+      tokenSecret: settings.twitter.users[settings_id].tokenSecret
+    };
+    this.validate_credentials();
+    this.get_max_read_id();
+    this.get_followers();
+    this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
+    this.fill_list();
+  }
 
-/** Saves the creation-times of the last received tweets. */
-var last_event_times = new Array();
+  Account.prototype.get_my_element = function() {
+    return $("#content_" + this.id);
+  };
 
-/** Used in fillList. */
-var temp_responses = new Array();
-var threadsRunning = new Array();
-var threadsErrored = new Array();
-
-/** Is the infoarea visible? */
-var infoarea_visible = false;
-
-/** Used by addUser() and addUser2() */
-var oauth_results;
-
-regexp_url = /((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig;
-regexp_user = /(^|\s)@([a-zA-Z0-9_]+)/g;
-regexp_hash = /(^|\s)#([\wäöüÄÖÜß]+)/g;
-regexp_cache = /(^|\s)(GC[A-Z0-9]+)/g;
-
-
-$(document).ready(start);
-
-/** Gets run as soon as the page finishes loading. Initializes Variables, sets timers, starts requests. */
-function start() {
-    if (!checkSettings()) {
-        alert("settings.js veraltet. Bitte mit settings.js.example abgleichen und DANACH die Version auf " + expected_settings_version + " setzen. Breche ab.");
-        return;
+  Account.prototype.set_max_read_id = function(id) {
+    var element, elements, elm, _i, _len,
+      _this = this;
+    if (id == null) {
+      Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
+      return;
     }
-
-    delay = settings.timings.mindelay;
-
-    // Fill Places
-    if (settings.places.length==0) {
-        // If there are no places defined in settings.js, we don't even show the dropdown field
-        $("#place").remove();
-    } else {
-        // otherwise, the first (default) entry is an empty entry
-        document.tweet_form.place.options[document.tweet_form.place.length] = new Option("-- leer --", 0);
-        for(var i=0; i<settings.places.length; i++) {
-            document.tweet_form.place.options[document.tweet_form.place.length] = new Option(settings.places[i].name, i+1);
-        }
-
-        if ($.cookie('last_place')) $("#place option[value='" + $.cookie('last_place') + "']").attr('selected', true);
-    }
-
-    $('#place').change(function(){
-        $.cookie('last_place', $('#place option:selected').val(), {expires: 365});
+    this.max_read_id = id;
+    $.ajax({
+      type: 'POST',
+      url: settings.set_maxreadid_url || 'maxreadid/set.php',
+      async: false,
+      dataType: 'text',
+      data: {
+        account_id: this.user.id,
+        value: this.max_read_id
+      },
+      error: function(req) {
+        var html;
+        html = "					<div class='status'>						<b>Fehler in setMaxReadID():</b><br />						Error " + req.status + " (" + req.responseText + ")					</div>";
+        return _this.add_html(html);
+      }
     });
-
-    $('#file').change(check_file);
-
-    for(var i=0; i<settings.chars.length; i++) {
-        $('#chars').append('<a href="#" onClick="$(\'#text\').val($(\'#text\').val() + \'' + settings.chars[i] + '\');">' + settings.chars[i] + '</a>');
+    elements = $("#content_" + this.id + " .new");
+    for (_i = 0, _len = elements.length; _i < _len; _i++) {
+      elm = elements[_i];
+      element = $(elm);
+      if (!this.is_unread_tweet(element.attr('data-tweet-id'))) {
+        element.removeClass('new');
+      }
     }
+    return this.update_user_counter();
+  };
 
-    // check the credentials and exit if not okay.
-    validateCredentials();
-    get_twitter_configuration();
-    if (!this_users_name) return;
+  Account.prototype.get_max_read_id = function() {
+    var value;
+    value = $.ajax({
+      method: 'GET',
+      url: settings.get_maxreadid_url || 'maxreadid/get.php',
+      async: false,
+      dataType: 'text',
+      data: {
+        account_id: this.user.id
+      }
+    }).responseText;
+    this.max_read_id = value;
+    Application.log(this, "getMaxReadID", "result: " + value);
+    return value;
+  };
 
-    for (var i=0; i<settings.twitter.users.length; i++){
-        getFollowers(i);
-    }
+  Account.prototype.toString = function() {
+    return "Account " + this.user.screen_name;
+  };
 
-    maxreadid = getMaxReadID();
-    for(var i=0; i<settings.twitter.users.length; i++){
-        if (!maxreadid[i]) maxreadid[i]="0";
-        last_event_times[i]=new Array();
-        responseOffset[i] = 0;
-        buffer[i] = "";
-        isProcessing[i] = false;
-        fillList(i); // after fillList completed, it will automatically start startRequest to start listening to the stream
-        if (settings.twitter.users[i].stream) {
-            window.setInterval("checkForTimeout(" + i + ")", 30000);
-            if (window.opera) window.setInterval("parseResponse(" + i + ")", 5000);
-        } else {
-            window.setInterval("fillList(" + i + ")", 300000);
+  Account.prototype.get_content_div_id = function() {
+    return "content_" + this.id;
+  };
+
+  Account.prototype.validate_credentials = function() {
+    var _this = this;
+    this.set_status("Validating Credentials...", "orange");
+    return this.twitter_request('account/verify_credentials.json', {
+      method: "GET",
+      silent: true,
+      async: false,
+      success: function(element, data) {
+        var html, new_area;
+        if (!data.screen_name) {
+          _this.add_html("Unknown error in validate_credentials. Exiting. " + data);
+          return;
         }
-    }
-
-    updateCounter();
-    update_form_display();
-
-    $(document).bind('keydown', 'Alt+s', sendTweet);
-    $('#text').bind('keydown', 'return', checkEnter);
-
-    $('#text').autocomplete({
-        minLength: 1,
-        source: function(request, response) {
-            var word = extractLast(request.term);
-            if (request.term.match(/^d @?[a-z0-9_]+$/i)) word='@'+word;
-            if (word[0]!="@" && word[0]!="#") response(new Array());
-            else response($.ui.autocomplete.filter(autocompletes, word));
-        },
-        focus: function() { return false; },
-        autoFocus: true,
-        delay: 0,
-        appendTo: "#autocomplete_area",
-        select: function(event, ui) {
-            var term = this.value.split(/\s+/).pop();
-            this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " ";
-            return false;
-        }
-    });
-
-    
-}
-
-/** Checks the selected file for compatibility with twitter. That is
- *  *) The size is less or equal to photo_size_limit (determined by get_twitter_configuration at startup)
- *  *) The file type is acceptable (list according to twitter docs)
- */
-function check_file() {
-    var file = $('#file')[0].files[0];
-    var error = false;
-    if (file && file.fileSize>photo_size_limit) {
-        alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + photo_size_limit + " Bytes");
-        error = true;
-    }
-    if (file && $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1) {
-        alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
-        error = true;
-    }
-    if (error) $('#file').val('');
-}
-
-/** Returns the last word of the given string. Used by autocompletion. */
-function extractLast(term) {
-    return term.split(/\s+/).pop();
-}
-
-/** Checks the settings object for the right version. */
-function checkSettings() {
-    if (typeof(settings)=="undefined") return false;
-    return (settings.version == expected_settings_version);
-}
-
-/** Checks the credentials from settings.js and fills this_users_name with the screen_name of the current user. */
-function validateCredentials() {
-    for(var i=0; i<settings.twitter.users.length; i++) {
-        
-        simple_twitter_request('account/verify_credentials.json', {
-            method: "GET",
-            silent: true,
-            async: false,
-            account: i,
-            success: function(element, data) {
-                if (data.screen_name) {
-                    this_users_name[i] = data.screen_name;
-                    // Copy geotweeter content area
-                    var new_area = $('#content_template').clone();
-                    new_area.attr('id', 'content_' + i);
-                    $('body').append(new_area);
-                    var html = '';
-                    html+= '<div class="user" id="user_' + i + '" data-username="' + data.screen_name + '" data-stream="' + !!settings.twitter.users[i].stream + '">';
-                    html+= '<a href="#" onClick="change_account(' + i + '); return false;">';
-                    html+= '<img src="' + data.profile_image_url + '" /> ';
-                    html+= '<span class="count"></span>';
-                    html+= '</a>';
-                    html+= '</div>';
-                    $('#users').append(html);
-                            
-                    $('#user_'+i).tooltip({
-                        bodyHandler: function() {
-                            var html = '<strong>@' + $(this).data('username') + '</strong>';
-                            if ($(this).data('status').length>0) {
-                                html += '<br />';
-                                html += $(this).data('status');
-                            }
-                            return html;
-                        },
-                        track: true,
-                        showURL: false,
-                        left: 5
-                    });
-                } else {
-                    addHTML("Unknown error in validateCredentials. Exiting. " + data);
-                }
-            }
+        _this.user = new User(data);
+        _this.screen_name = _this.user.screen_name;
+        new_area = $('#content_template').clone();
+        new_area.attr('id', _this.get_content_div_id());
+        $('body').append(new_area);
+        html = '';
+        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />							<span class='count'></span>						</a>					</div>				");
+        return $("#user_" + _this.id).tooltip({
+          bodyHandler: function() {
+            return "<strong>@" + _this.user.screen_name + "</strong><br />" + _this.status_text;
+          },
+          track: true,
+          showURL: false,
+          left: 5
         });
-    }
-    // select first account at startup
-    change_account(0);
-}
-
-/** Get twitter configuration */
-function get_twitter_configuration() {
-    simple_twitter_request('help/configuration.json', {
-        silent: true,
-        async: false,
-        success: function(element, data) { // success
-            short_url_length = data.short_url_length;
-            log_message("get_twitter_config", "short_url_length: "+data.short_url_length);
-            short_url_length_https = data.short_url_length_https;
-            log_message("get_twitter_config", "short_url_length_https: "+data.short_url_length_https);
-            characters_reserved_per_media = data.characters_reserved_per_media;
-            log_message("get_twitter_config", "characters_reserved_per_media: "+data.characters_reserved_per_media);
-            max_media_per_upload = data.max_media_per_upload;
-            log_message("get_twitter_config", "max_media_per_upload: "+data.max_media_per_upload);
-            photo_size_limit = data.photo_size_limit;
-            log_message("get_twitter_config", "photo_size_limit: "+data.photo_size_limit);
-        }
+      }
     });
-}
+  };
 
-/** Asynchronously gets the IDs of all followers of the current user. */
-function getFollowers(account_id) {
-    simple_twitter_request('followers/ids.json', {
-        silent: true,
-        method: "GET",
-        account: account_id,
-        success: function(element, data) {
-            followers_ids[account_id] = data.ids;
-        }
+  Account.prototype.get_followers = function() {
+    var _this = this;
+    return this.twitter_request('followers/ids.json', {
+      silent: true,
+      method: "GET",
+      success: function(element, data) {
+        return _this.followers_ids = data.ids;
+      }
     });
-}
+  };
 
-/** Changes the currently used account to the one specified. */
-function change_account(to_id) {
-    $('.content').hide();
-    $('#content_' + to_id).show();
-    $('#users .user').removeClass('active');
-    $('#user_' + to_id).addClass('active');
-    current_account = to_id;
-}
+  Account.prototype.get_tweet = function(id) {
+    return this.tweets[id];
+  };
 
-/**
- * Checks if a timeout in the stream occured. Gets run via timer every 30 Seconds.
- * The stream should at least send a newline every 30 seconds.
- * If this doesn't happen we assume the connection timed out and force it to be re-established.
- *
- * This code also checks for long pauses within the stream and restarts the geotweeter if necessary.
- */
-function checkForTimeout(account_id) {
-    var jetzt = new Date();
-    if (lastDataReceivedAt[account_id] && jetzt.getTime() - lastDataReceivedAt[account_id].getTime() > 30000) {
-        log_message("checkForTimeout", "Timeout: No data received for the last " + (jetzt.getTime() - lastDataReceivedAt[account_id].getTime())/1000 + "seconds");
-        disconnectBecauseOfTimeout[account_id] = true;
-        req[account_id].abort();
-        return;
-    }
-    if (get_time_since_last_tweet(account_id) > get_timeout_difference(account_id) && $('#text').val()=='') {
-        log_message("checkForTimeout", "Timeout: Lack of tweets");
-        log_message("checkForTimeout", "Average Time between tweets: " + get_average_tweet_time(account_id)/1000);
-        log_message("checkForTimeout", "Timeout after: " + get_timeout_difference(account_id)/1000);
-        log_message("checkForTimeout", "Time since last tweet: " + get_time_since_last_tweet(account_id)/1000);
-        disconnectBecauseOfTimeout[account_id] = true;
-        req[account_id].abort();
-    }
-}
+  Account.prototype.add_html = function(html) {
+    var element;
+    element = document.createElement("div");
+    element.innerHTML = html;
+    return this.get_my_element().prepend(element);
+  };
 
-/**
- * Returns the max allowed time between two tweets in seconds. Used to reconnect if
- * the stream didn't send tweets in the last time.
- */
-function get_timeout_difference(account_id) {
-    var delay = get_average_tweet_time(account_id)*settings.timeout_detect_factor;
-    if (settings.timeout_minimum_delay*1000 > delay) return settings.timeout_minimum_delay*1000;
-    if (settings.timeout_maximum_delay*1000 < delay) return settings.timeout_maximum_delay*1000;
-    return delay;
-}
+  Account.prototype.add_status_html = function(message) {
+    var html;
+    html = "			<div class='status'>				" + message + "			</div>";
+    this.add_html(html);
+    return "";
+  };
 
-/**
- * Returns the average time between the last x tweets.
- **/
-function get_average_tweet_time(account_id) {
-    if (last_event_times[account_id].length<2) return NaN;
-    return (last_event_times[account_id][0] - last_event_times[account_id][last_event_times[account_id].length-1]) / (last_event_times[account_id].length-1);
-}
+  Account.prototype.update_user_counter = function() {
+    var count, str;
+    count = $("#content_" + this.id + " .tweet.new").not('.by_this_user').length;
+    str = count > 0 ? "(" + count + ")" : "";
+    return $("#user_" + this.id + " .count").html(str);
+  };
 
-/**
- * Returns the time since the last received tweet in milliseconds.
- */
-function get_time_since_last_tweet(account_id) {
-    return (Date.now() - last_event_times[account_id][0]);
-}
+  Account.prototype.is_unread_tweet = function(tweet_id) {
+    return tweet_id.is_bigger_than(this.max_read_id);
+  };
 
-/**
- * Requests all tweets for the timeline (non-streaming).
- * If this is the first call since start of the geotweeter, as many tweets as possible are requested.
- * Otherwise it gets called after a disconnect. Then only missed tweets are fetched.
- *
- * Queries the home_timeline and then mentions, since home_timeline doesn't contain mentions from
- * people you don't follow.
- */
-function fillList(account_id) {
-    log_message("fillList", "Starting");
-    setStatus("Filling List...", "orange", account_id);
-    
-    threadsRunning[account_id] = 5;
-    threadsErrored[account_id] = 0;
-    temp_responses[account_id] = new Array();
-    
-    var after_run = function(account_id) {
-        if (threadsErrored[account_id]==0) {
-            // everything was successfull. Great.
-            startRequest(account_id);
-        } else {
-            // oops... trigger the restart mechanism
-            var html = '<div class="status">Retrying in 30 seconds...</div>';
-            addHTML(html, account_id);
-            window.setTimeout('fillList(' + account_id + ')', 30000);
-        }
-        update_user_counter(account_id);
-        setStatus("", null, account_id);
-    }
-    
-    var success = function(element, data, req, additional_info) {
-        temp_responses[additional_info.account_id].push(data);
-        threadsRunning[additional_info.account_id]-=1;
-        if (threadsRunning[additional_info.account_id]==0) {
-            after_run(additional_info.account_id);
-        }
-    }
-    
-    var error = function(info_element, data, request, raw_response, exception, additional_info) {
-        threadsRunning[additional_info.account_id]-=1;
-        threadsErrored[additional_info.account_id]+=1;
-        var html = '<div class="status"><b>Fehler in ' + additional_info.name + ":</b><br />";
-        if (data && data.error) {
-            html += data.error;
-        } else {
-            html += 'Error ' + request.status + ' (' + exception + ')';
-        }
-        html += "</div>";
-        addHTML(html, account_id);
-        if (threadsRunning[additional_info.account_id]==0) {
-            after_run(additional_info.account_id);
-        }
-    }
-
-    var parameters = {include_rts: true, count: 200, include_entities: true, page: 1};
-    if (maxknownid[account_id] && maxknownid[account_id]!="0") parameters.since_id = maxknownid[account_id];
-    
-    log_message("fillList", "since_id: "+parameters.since_id, account_id);
-
-    log_message("fillList", "home_timeline 1...", account_id);
-    simple_twitter_request('statuses/home_timeline.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'home_timeline 1', account_id: account_id},
-        success: success,
-        error: error
+  Account.prototype.get_twitter_configuration = function() {
+    return this.twitter_request('help/configuration.json', {
+      silent: true,
+      async: false,
+      success: function(element, data) {
+        return Application.twitter_config = data;
+      }
     });
-    
-    log_message("fillList", "mentions...");
-    var returned_mentions = simple_twitter_request('statuses/mentions.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'mentions', account_id: account_id},
-        success: success,
-        error: error
-    });
+  };
 
-    parameters.page = 2;
-    log_message("fillList", "home_timeline 2...");
-    var returned_2 = simple_twitter_request('statuses/home_timeline.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'home_timeline 2', account_id: account_id},
-        success: success,
-        error: error
-    });
-    
-    var parameters = {count: 100};
-    if (maxknowndmid[account_id] && maxknowndmid[account_id]!="0") parameters.since_id = maxknowndmid[account_id];
-    log_message("fillList", "DMs...");
-    var received_dms = simple_twitter_request('direct_messages.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'received dms', account_id: account_id},
-        success: success,
-        error: error
-    });
-
-    log_message("fillList", "Sent DMs...");
-    var sent_dms = simple_twitter_request('direct_messages/sent.json', {
-        method: "GET",
-        parameters: parameters,
-        async: true,
-        silent: true,
-        dataType: "text",
-        account: account_id,
-        additional_info: {name: 'sent dms', account_id: account_id},
-        success: success,
-        error: error
-    });
-}
-
-
-/** Starts a request to the streaming api. */
-function startRequest(account_id) {
-    parseData(temp_responses[account_id], account_id);
-    last_event_times[account_id].unshift(Date.now());
-    last_event_times[account_id].pop();
-    
-    if (!settings.twitter.users[account_id].stream) return;
-    
-    var message = {
-        action: "https://userstream.twitter.com/2/user.json",
-        method: "GET",
-        parameters: {delimited: "length", include_entities: "1", include_rts: "1"}
-    }
-    
-    var keys = {
-        consumerKey: settings.twitter.consumerKey,
-        consumerSecret: settings.twitter.consumerSecret,
-        token: settings.twitter.users[account_id].token,
-        tokenSecret: settings.twitter.users[account_id].tokenSecret
+  Account.prototype.sign_request = function(url, method, parameters) {
+    var message;
+    message = {
+      action: url,
+      method: method,
+      parameters: parameters
     };
     OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, keys);
-    OAuth.SignatureMethod.sign(message, keys);
-    var url = 'user_proxy?' + OAuth.formEncode(message.parameters);
+    OAuth.completeRequest(message, this.keys);
+    OAuth.SignatureMethod.sign(message, this.keys);
+    return OAuth.formEncode(message.parameters);
+  };
 
-    setStatus("Connecting to stream...", "orange", account_id);
-
-    disconnectBecauseOfTimeout[account_id] = false;
-    
-    var r;
-    r = new XMLHttpRequest();
-    r.open('GET', url, true);
-    r.onreadystatechange = parseResponse;
-    r.send(null);
-    r.account_id = account_id;
-    req[account_id] = r;
-    connectionStartedAt[account_id] = new Date();
-    lastDataReceivedAt[account_id] = new Date();
-}
-
-
-/**
- * Gets run by onreadystatechange of the XHR object of the streaming connection.
- * (On Opera, this doesn't work, so here we use a timer to call it every 5 seconds.
- */
-function parseResponse(account_id) {
-    var acct = (typeof account_id == 'number' ? account_id : this.account_id);
-    var request = req[acct];
-    if (!request) return;
-    if (request.readyState == 4) {
-        setStatus("Disconnected.", "red", account_id);
-        var jetzt = new Date();
-        if (jetzt.getTime() - connectionStartedAt[acct].getTime() > 10000)
-            delay = settings.timings.mindelay;
-        var html = '<div class="status">Disconnect. ';
-        if (disconnectBecauseOfTimeout[acct]) {
-            html += 'Grund: Timeout. ';
-        }
-        if (request.status != 200 && !disconnectBecauseOfTimeout[acct]) {
-            html += 'Status: ' + request.status + ' (' + request.statusText + '). ';
-            delay = settings.timings.maxdelay;
-        }
-        addHTML(html + 'Nächster Versuch in ' + delay + ' Sekunden.</div>', acct);
-        window.setTimeout('fillList(' + acct + ')', delay*1000);
-        request = null;
-        if (delay*2 <= settings.timings.maxdelay)
-            delay = delay * 2;
-    } else if (request.readyState == 3) {
-        setStatus("Connected to stream.", "green", acct);
-        lastDataReceivedAt[acct] = new Date();
-    }
-    if (request) {
-        buffer[acct] += request.responseText.substr(responseOffset[acct]);
-        responseOffset[acct] = request.responseText.length;
-    }
-    if (!isProcessing[acct]) processBuffer(acct);
-}
-
-
-/**
- * Processes the stream buffer. Gets new data from the end of the stream data and gives it to parseData().
- */
-function processBuffer(account_id) {
-    isProcessing[account_id] = true;
-    reg = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
-    while(res = buffer[account_id].match(reg)) {
-        len = parseInt(res[1]);
-        if (res[2].length >= len) {
-            var parseableText = res[2].substr(0, len);
-            buffer[account_id] = res[2].substr(len);
-            try {
-                parseData(parseableText, account_id);
-            } catch (e) {
-                // do nothing
-            }
+  Account.prototype.twitter_request = function(url, options) {
+    var data, method, result, verbose, _ref, _ref2, _ref3;
+    method = (_ref = options.method) != null ? _ref : "POST";
+    verbose = !(!!options.silent && true);
+    if (verbose) $('#form').fadeTo(500, 0).delay(500);
+    data = this.sign_request("https://api.twitter.com/1/" + url, method, options.parameters);
+    url = "proxy/api/" + url;
+    result = $.ajax({
+      url: url,
+      data: data,
+      dataType: (_ref2 = options.dataType) != null ? _ref2 : "json",
+      async: (_ref3 = options.async) != null ? _ref3 : true,
+      type: method,
+      success: function(data, textStatus, req) {
+        if (req.status === "200" || req.status === 200) {
+          if (options.success_string != null) {
+            $('#success_info').html(options.success_string);
+          }
+          if (options.success != null) {
+            options.success($('#success_info'), data, req, options.additional_info);
+          }
+          if (verbose) {
+            return $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
         } else {
-            break;
+          if (options.error != null) {
+            options.error($('#failure_info'), data, req, "", null, options.additional_info);
+          } else {
+            $('#failure_info').html(data.error);
+          }
+          if (verbose) {
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
         }
-    }
-    isProcessing[account_id] = false;
-}
-
-
-/**
- * Parses responses received from twitter.
- * Can take multiple bunches of data in an array; those are then merged before processing.
- */
-function parseData(string_data, account_id) {
-    if (string_data.constructor!=Array) {
-        string_data = new Array(string_data);
-    }
-
-    // Data is an array containing one or more JSON-encoded responses from Twitter
-    var responses = new Array();
-
-    // parse the strings
-    for (var i in string_data) {
-        try {
-            var temp = $.parseJSON(string_data[i]);
-            if (temp) {
-                if (temp.constructor==Array) {
-                    if (temp.length>0) {
-                        responses.push(temp);
-                    }
-                } else {
-                    responses.push(new Array(temp));
-                }
-            }
-        } catch (e) {
-            addHTML("Exception: " + e + '<br />' + string_data[i] + '<hr />', account_id);
+      },
+      error: function(req, textStatus, exc) {
+        if (options.error != null) {
+          options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info);
+        } else {
+          $('#failure_info').html("Error " + req.status + " (" + req.statusText + ")");
         }
-    }
-
-    if (responses.length==0) return;
-
-    // responses now contains one or more Arrays containing one or more Events ordered "date DESC".
-
-    var html = "";
-    var last_id = "";
-    while (responses.length > 0) {
-        // Go through all responses and get the newest entry
-        var newest_date = null;
-        var newest_index = null;
-        for (var i in responses) {
-            var date;
-            try {
-                date = new Date(responses[i][0].created_at || responses[i][0].direct_message.created_at);
-            } catch(e) {
-                date = new Date();
-            }
-            if (newest_date==null || date>newest_date) {
-                newest_date = date;
-                newest_index = i;
-            }
+        if (verbose) {
+          return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
         }
-        // get the newest entry and remove it from the array
-        var array = responses[newest_index];
-        var element = array.shift();
-        if (array.length==0) {
-            // remove the whole array
-            responses.splice(newest_index, 1);
-        }
-        var this_id;
-        try {
-            this_id = element.id_str || element.direct_message.id_str;
-        } catch(e) {
-            this_id = element;
-        }
-        // Filter duplicate tweets
-        if (this_id != last_id) {
-            html += display_event(element, true, account_id);
-        }
-        last_id = this_id;
-    }
-    addHTML(html, account_id);
-    update_user_counter(account_id);
-}
-
-/**
- * Takes a single Twitter event and gets it's HTML code.
- * Optionally, the code is returned instead of adding it to the DOM.
- */
-function display_event(element, return_html, account_id) {
-    var html = "";
-
-    if (element==null)
-        return ""; // Fix for NULLs in stream
-
-    if (element.text) {
-        html = getStatusHTML(element, account_id);
-    } else if (element.friends) {
-        twitter_friends = element.friends;
-    } else if ("delete" in element) {
-        // Deletion-Request. Do nothing ,-)
-    } else if (element.direct_message) {
-        html = getStatusHTML(element, account_id);
-    } else if (element.event && element.event=="follow") {
-        html = getFollowEventHTML(element, account_id);
-    } else if (element.event && element.event=="favorite") {
-        html = getFavoriteEventHTML(element, account_id);
-    } else if (element.event && element.event=="list_member_added") {
-        html = getListMemberAddedEventHTML(element, account_id);
-    } else if (element.event && element.event=="list_member_removed") {
-        html = getListMemberRemovedEventHTML(element, account_id);
-    } else if (element.event && element.event=="block") {
-        // You blocked someone. Do nothing.
-    } else if (element.event && element.event=="user_update") {
-        // You changed your profile settings on twitter.com. Do nothing.
-    } else if (element.event && element.event=="unfavorite") {
-        // You unfavorited a tweet. Do nothing.
-    } else {
-        html = '<hr />Unbekanntes Element:<br />' + element.toString();
-    }
-
-    if (return_html) {
-        return html;
-    }
-    addHTML(html, account_id);
-}
-
-/**
- * Adds HTML to the DOM.
- *
- * Note: Adding the HTML to a new <div> and then append the <div> to the DOM is MUCH faster than
- * adding the HTML directly to the DOM.
- */
-function addHTML(text, account_id) {
-    if (typeof account_id != 'number') {
-        account_id = current_account;
-    }
-    if(text == "") return;
-
-    var elm = document.createElement("div");
-    elm.innerHTML = text;
-    $(elm).find('.user_avatar').tooltip({
-        bodyHandler: function() {
-            var par = $(this).parent().parent();
-            var obj = par.find('.tooltip_info');
-            var html = obj.html();
-            var id = parseInt(par.attr("data-user-id"));
-            if (followers_ids[account_id].indexOf(id)>=0) {
-                html = html.replace(/%s/, 'folgt dir.');
-            } else {
-                html = html.replace(/%s/, 'folgt dir nicht.');
-            }
-            return html;
-        },
-        track: true,
-        showURL: false,
-        left: 5
+      }
     });
-    if (settings.unshorten_links) {
-        $(elm).find("a.external").tooltip({
-            bodyHandler: function() {
-                return unshortenLink(this.href).replace(/\//g, "<wbr>/");
-            },
-            track: true,
-            showURL: false,
-            delay: 750
-        });
-    }
-    document.getElementById('content_' + account_id).insertBefore(elm, document.getElementById('content_' + account_id).firstChild);
-}
+    if (options.return_response) return result.responseText;
+  };
 
-
-/** Uses unshorten.me to unshorten a given URL. */
-function unshortenLink(url) {
-    var result = null;
-    $.ajax({
-        url: "proxy/unshort.me/?r=" + encodeURIComponent(url) + "&t=json",
-        type: "GET",
-        async: false,
-        dataType: "json",
-        success: function(data) { result = data; }
-    });
-    if(result && result.success=="true") return result.resolvedURL;
-    return url;
-}
-
-
-/** Adds an event with custom text to the DOM. */
-function getEventHTML(event, text) {
-    var html = "";
-    html += '<div class="status">';
-    html += '<span class="avatar">';
-    html += '<a href="http://twitter.com/account/profile_image/' + event.source.screen_name + '" target="_blank"><img class="user_avatar" src="' + event.source.profile_image_url + '" /></a>';
-    html += '</span>';
-    html += text;
-    html += '</div>';
-    return html;
-}
-
-/** Creates html for a new follower-event and adds it to the DOM via addEvent(). */
-function getFollowEventHTML(event, account_id) {
-    if (event.source.screen_name==this_users_name[account_id]) return "";
-    var html = "";
-    html += 'Neuer Follower: ';
-    html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a> (' + event.source.name + ')';
-    html += '</span>';
-    followers_ids[account_id].push(event.source.id);
-    return getEventHTML(event, html);
-}
-
-/** Creates html for a favorite added-event and adds it to the DOM via addEvent(). */
-function getFavoriteEventHTML(event, account_id) {
-    if (event.source.screen_name==this_users_name[account_id]) return "";
-    var html = "";
-    html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
-    html += '</span>';
-    html += ' favorisierte:<br />';
-    html += linkify(event.text);
-    return getEventHTML(event, html);
-}
-
-/** Creates html for an added to list-event and adds it to the DOM via addEvent(). */
-function getListMemberAddedEventHTML(event, account_id) {
-    if (event.source.screen_name==this_users_name[account_id]) return "";
-    var html = "";
-    html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
-    html += '</span>';
-    html += ' fügte dich zu einer Liste hinzu:<br />';
-    html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
-    html += '(' + event.target_object.members_count + 'Members, ' + event.target_object.subscriber_count + ' Subscribers)';
-    return getEventHTML(event, html);
-}
-
-/** Creates html for a removed from list-event and adds it to the DOM via addEvent(). */
-function getListMemberRemovedEventHTML(event, account_id) {
-    if (event.source.screen_name==this_users_name[account_id]) return "";
-    var html = "";
-    html += '<span class="poster">';
-    html += '<a href="http://twitter.com/' + event.source.screen_name + '" target="_blank">' + event.source.screen_name + '</a>';
-    html += '</span>';
-    html += ' löschte dich von einer Liste:<br />';
-    html += '<a href="http://twitter.com' + event.target_object.uri + '" target="_blank">' + event.target_object.full_name + '</a> ';
-    return getEventHTML(event, html);
-}
-
-
-/** Creates html for a normal tweet, RT or DM. */
-function getStatusHTML(status, account_id) {
-    // Check if we are working on a DM. If yes, modify the structure to be more tweet-like.
-    isDM = false;
-    if (status.direct_message) {
-        isDM = true;
-        status = status.direct_message;
-    }
-    if (status.recipient) {
-        isDM = true;
-    }
-    
-    // Preparations: Replace the (too large for JS) numeric IDs with the string-based IDs
-    if (status.id_str)
-        status.id = status.id_str;
-    if (status.in_reply_to_status_id_str)
-        status.in_reply_to_status_id = status.in_reply_to_status_id_str;
-    
-    
-    if (!isDM && status.in_reply_to_status_id) {
-        repliesData[status.id] = status.in_reply_to_status_id;
-    }
-    
-    // Prepares variable with text for several checks
-    var temp_text = "";
-    if (status.retweeted_status) {
-        temp_text += linkify(status.retweeted_status.text, status.retweeted_status.entities);
-    } else {
-        temp_text += linkify(status.text, status.entities);
-    }
-    
-    var html = "";
-    var user;
-    var user_object;
-    if (status.retweeted_status)
-        user_object = status.retweeted_status.user;
-    else if (isDM)
-        if (status.sender.screen_name == this_users_name[account_id]) {
-            user_object = status.recipient;
-            user_object.is_receiver = true;
-        } else {
-            user_object = status.sender;
+  Account.prototype.fill_list = function() {
+    var after_run, default_parameters, error, key, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _results,
+      _this = this;
+    this.set_status("Filling List...", "orange");
+    threads_running = 5;
+    threads_errored = 0;
+    responses = [];
+    after_run = function() {
+      if (threads_errored === 0) {
+        _this.set_status("", "");
+        _this.parse_data(responses);
+        return _this.request.start_request();
+      } else {
+        setTimeout(_this.fill_list, 30000);
+        return _this.add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
+      }
+    };
+    success = function(element, data) {
+      responses.push(data);
+      threads_running -= 1;
+      if (threads_running === 0) return after_run();
+    };
+    error = function(element, data) {
+      threads_running -= 1;
+      threads_errored += 1;
+      if (threads_running === 0) return after_run();
+    };
+    default_parameters = {
+      include_rts: true,
+      count: 200,
+      include_entities: true,
+      page: 1,
+      since_id: this.max_known_tweet_id !== "0" ? this.max_known_tweet_id : void 0
+    };
+    requests = [
+      {
+        url: "statuses/home_timeline.json",
+        name: "home_timeline 1"
+      }, {
+        url: "statuses/home_timeline.json",
+        name: "home_timeline 2",
+        extra_parameters: {
+          page: 2
         }
-    else
-        user_object = status.user;
-	   
-    user = user_object.screen_name;
-	
-	    // Check if tweet user is muted
-     if(check_muted(user))
-          return ""; 
-	
-	
-    addToAutoCompletion("@" + user);
-
-    if (!isDM && biggerThan(status.id, maxknownid[account_id]))
-        maxknownid[account_id] = status.id;
-    if (!isDM && (minknownid[account_id]==0 || biggerThan(minknownid[account_id], status.id)))
-        minknownid[account_id] = status.id;
-
-    if(isDM && biggerThan(status.id, maxknowndmid[account_id]))
-        maxknowndmid[account_id] = status.id;
-
-    if (!isDM && user==this_users_name[account_id] && biggerThan(status.id, mylasttweetid[account_id]))
-        mylasttweetid[account_id] = status.id;
-
-    var date = new Date(status.created_at);
-    if (typeof last_event_times[account_id] != "object") last_event_times[account_id]=new Array();
-    if (last_event_times[account_id].length==0 || date > last_event_times[account_id][0]) {
-        last_event_times[account_id].unshift(date);
-    } else if (date < last_event_times[account_id][last_event_times[account_id].length-1]) {
-        last_event_times[account_id].push(date);
-    }
-    if (last_event_times[account_id].length > (settings.timeout_detect_tweet_count+1)) last_event_times[account_id].pop();
-    var datum = addnull(date.getDate()) + '.' + addnull(date.getMonth()+1) + '.' + (date.getYear()+1900) + ' ' + addnull(date.getHours()) + ':' + addnull(date.getMinutes());
-    html += '<div class="';
-    if (!isDM)
-        html += 'tweet ';
-    else
-        html += 'dm ';
-    html += 'by_' + user + ' ';
-    if (user == this_users_name[account_id]) html += "by_this_user ";
-    if (!isDM && biggerThan(status.id, maxreadid[account_id]))
-        html += 'new ';
-    if (status.entities && status.entities.user_mentions) {
-        for (var i=0; i<status.entities.user_mentions.length; i++) {
-            html += 'mentions_' + status.entities.user_mentions[i].screen_name + ' ';
-            if (status.entities.user_mentions[i].screen_name == this_users_name[account_id]) html += 'mentions_this_user ';
+      }, {
+        url: "statuses/mentions.json",
+        name: "mentions"
+      }, {
+        url: "direct_messages.json",
+        name: "Received DMs",
+        extra_parameters: {
+          count: 100,
+          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
         }
-    } else {
-        var mentions = status.text.match(regexp_user);
-        if (mentions) {
-            for (var i=0; i<mentions.length; i++) {
-                mention = String(mentions[i]).trim().substr(1);
-                html += 'mentions_' + mention + ' ';
-                if (mention == this_users_name[account_id]) html += "mentions_this_user ";
-            }
+      }, {
+        url: "direct_messages/sent.json",
+        name: "Sent DMs",
+        extra_parameters: {
+          count: 100,
+          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
         }
-    }
-    
-   // Checks Tweet for words to be highlighted 
-   if (check_highlight(temp_text))
-    html += "highlight";
-
-    html += '" ';
-    html += 'id="id_' + status.id + '" ';
-    html += 'data-sender="' + user_object.screen_name + '" ';
-    var mentions = "";
-    if (status.entities) for (var i in status.entities.user_mentions) {
-        var mention = status.entities.user_mentions[i].screen_name;
-        if (mention == this_users_name[account_id]) continue;
-        mentions += mention + " ";
-    }
-    html += 'data-mentions="' + mentions.trim() + '" ';
-    html += 'data-id="' + status.id + '" ';
-    html += '>';
-    html += '<a name="status_' + status.id + '"></a>';
-    
-    /* Search for usable entities to display thumbnails */
-    var thumbs = new Array();
-    if (status.entities && status.entities.media) {
-        for (var i in status.entities.media) {
-            var media = status.entities.media[i];
-            thumbs.push({thumbnail: media.media_url_https+':thumb', link: media.expanded_url});
-        }
-    }
-    
-    if(status.entities && status.entities.urls) {
-        for (var i in status.entities.urls) {
-            var entity = status.entities.urls[i];
-            if (entity.expanded_url==null) continue;
-            
-            var res;
-            if (res=entity.expanded_url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_\-]+)/)) {
-                thumbs.push({thumbnail: "http://img.youtube.com/vi/"+res[1]+"/1.jpg", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) {
-                thumbs.push({thumbnail: "http://twitpic.com/show/mini/"+res[1], link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) {
-                thumbs.push({thumbnail: "http://yfrog.com/"+res[1]+".th.jpg", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/lockerz.com\/s\/[0-9]+/)) {
-                thumbs.push({thumbnail: "http://api.plixi.com/api/tpapi.svc/imagefromurl?url="+entity.expanded_url+"&size=thumbnail", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/moby\.to\/([a-zA-Z0-9]+)/)) {
-                thumbs.push({thumbnail: "http://moby.to/"+res[1]+":square", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://ragefac.es/"+res[1]+"/i", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/lauerfac\.es\/([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://lauerfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
-            } else if (res=entity.expanded_url.match(/ponyfac\.es\/([0-9]+)/)) {
-                thumbs.push({thumbnail: "http://ponyfac.es/"+res[1]+"/thumb", link: entity.expanded_url});
-            }
-        }
-    }
-    
-    if (thumbs.length==1) {
-       html += '<a href="'+thumbs[0].link+'" target="_blank"><img src="'+thumbs[0].thumbnail+'" class="media" style="float: right;"/></a>';
-    }
-    
-    html += '<span class="avatar" data-user-id="' + user_object.id + '">';
-
-    // Start Tooltip-Info
-    html += '<span class="tooltip_info">';
-    html += '<strong>' + user_object.name + '</strong><br /><br />';
-    html += user_object.followers_count + ' Follower<br />';
-    html += user_object.friends_count + ' Friends<br />';
-    html += user_object.statuses_count + ' Tweets<br /><br />';
-    html += "@" + user + " %s";
-    html += '</span>';
-    // Ende Tooltip-Info
-
-    html += '<a href="http://twitter.com/account/profile_image/' + user + '" target="_blank"><img class="user_avatar" src="';
-    if (status.retweeted_status)
-        html += status.retweeted_status.user.profile_image_url;
-    else if (isDM)
-        html += status.sender.profile_image_url;
-    else
-        html += status.user.profile_image_url;
-    html += '" /></a>';
-    html += '</span>';
-    html += '<span class="poster">';
-    var extra="";
-    if (user_object.is_receiver) extra = "to ";
-    html += '<a href="http://twitter.com/' + user + '" target="_blank">' + extra + user + '</a>';
-    if (user_object.protected) {
-        html += '🔒';
-    }
-    html += '</span> ';
-    html += '<span class="text">';
-    
-     // Check if tweet contains blacklisted words
-        if(check_blacklist(temp_text))
-              return "";    
-        else if(check_troll(temp_text,user)) //Check for trolling users
-		return "";		
-	    html += temp_text;
-
-    html += '</span>';
-    
-    
-    if (thumbs.length>1) {
-        html += '<div class="media">';
-       for (var i=0; i<thumbs.length; i++) {
-           html += '<a href="'+thumbs[i].link+'" target="_blank"><img src="'+thumbs[i].thumbnail+'" /></a>';
-       }
-       html += '</div>';
-    }
-        
-        
-        
-            
-    if (status.retweeted_status)
-        html += '<div class="retweet_info">Retweeted by <a href="http://twitter.com/' + status.user.screen_name + '" target="_blank">' + status.user.screen_name + '</a></div>';
-    if (status.place)
-        html += '<div class="place">from <a href="http://twitter.com/#!/places/' + status.place.id + '" target="_blank">' + status.place.full_name + '</a></div>';
-    html += '<div class="overlay">';
-    html += '<div class="info">';
-    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank">' + datum + '</a> ';
-    if(status.in_reply_to_status_id) {
-        html += '<a href="#" onClick="show_replies(\'' + status.id + '\'); return false;">in reply to...</a> ';
-    }
-    if (status.source) {
-        var obj = $(status.source);
-        if (obj.attr('href')) {
-            html += 'from <a href="' + obj.attr('href') + '" target="_blank">' + obj.html() + '</a> ';
-        } else {
-            html += 'from ' + status.source + ' ';
-        }
-    }
-    html += '</div>';
-
-    html += '<div class="links">';
-    if (isDM) {
-        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + user + '\', true); return false;"><img src="icons/comments.png" title="Reply" /></a>';
-    } else {
-        var recipient = user;
-        if (user==this_users_name[account_id] && status.entities.user_mentions && status.entities.user_mentions.length>0) {
-            recipient = status.entities.user_mentions[0].screen_name;
-        }
-        html += '<a href="#" onClick="replyToTweet(\'' + status.id + '\', \'' + recipient + '\'); return false;"><img src="icons/comments.png" title="Reply" /></a>';
-    }
-    if (!isDM)
-        html += '<a href="#" onClick="retweet(\'' + status.id + '\'); return false;"><img src="icons/arrow_rotate_clockwise.png" title="Retweet" /></a>';
-    if (!isDM)
-        html += '<a href="#" onClick="quote(\'' + status.id + '\', \'' + user + '\', \'' + escape(status.text) + '\'); return false;"><img src="icons/tag.png" title="Quote" /></a>';
-    html += '<a href="http://translate.google.de/#auto|de|' + escape(status.text.split('"').join('').split('@').join('')) + '" target="_blank"><img src="icons/transmit.png" title="Translate" /></a>';
-    html += '<a href="http://twitter.com/#!/' + user + '/status/' + status.id + '" target="_blank"><img src="icons/link.png" title="Permalink" /></a>';
-    if (status.coordinates) {
-        html += '<a href="http://maps.google.com/?q=' + status.coordinates.coordinates[1] + ',' + status.coordinates.coordinates[0] + '" target="_blank"><img src="icons/world.png" title="Geotag" /></a>';
-        html += '<a href="http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F' + user + '.atom%3Fcount%3D250" target="_blank"><img src="icons/world_add.png" title="All Geotags" /></a>';
-    }
-    if ( user==this_users_name[account_id]) {
-        html += '<a href="#" onClick="delete_tweet(\'' + status.id + '\'); return false;"><img src="icons/cross.png" title="Delete Tweet" /></a>';
-    } else {
-        html += '<a href="#" onClick="report_spam(\'' + user + '\'); return false;"><img src="icons/exclamation.png" title="Block and report as spam" /></a>';
-    }
-
-    html += '</div>'; // Links
-    html += '</div>'; // overlay
-    html += '<div style="clear: both;"></div>';
-    html += '</div>'; // tweet
-
-    return html;
-}
-
-/** Adds a leading null to numbers less than 10. */
-function addnull(number) {
-    if (number<10)
-        return "0" + number;
-    return number;
-}
-
-/** Sort funtion for an array containing entities */
-function entity_sort(a, b) {
-    return a.indices[0] - b.indices[0];
-}
-
-/** Offset-based string replacement function for use with entity indices */
-function replace_entity(str, replace, entity) {
-    var result = str.slice(0, entity.indices[0]) + replace + str.slice(entity.indices[1]);
-    return result;
-}
-
-/** Adds hyperlinks to URLs, Twitternicks, Hastags and GC-Codes. */
-function linkify(text, entities) {
-    if (entities) {
-        var all_entities = new Array();
-        for (var entity_type in entities) {
-            for (var i=0; i<entities[entity_type].length; i++) {
-                var entity = entities[entity_type][i];
-                entity.type = entity_type;
-                all_entities.push(entity);
-            }
-        }
-        var all_entities_sort = all_entities.sort(entity_sort).reverse();
-        for (var i=0; i<all_entities_sort.length; i++) {
-            entity = all_entities_sort[i];
-            if (entity.type=="user_mentions") {
-                text = replace_entity(text, '<a href="https://twitter.com/' + entity.screen_name + '" target="_blank">@' + entity.screen_name + '</a>', entity);
-                addToAutoCompletion('@' + entity.screen_name);
-            } else if (entity.type=="urls") {
-                if (entity.expanded_url) {
-                    text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
-                } else {
-                    text = replace_entity(text, '<a href="' + entity.url + '" class="external" target="_blank">' + entity.url + '</a>', entity);
-                }
-            } else if (entity.type=="hashtags") {
-                text = replace_entity(text, '<a href="http://twitter.com/search?q=#' + entity.text + '" target="_blank">#' + entity.text + '</a>', entity);
-                addToAutoCompletion('#' + entity.text);
-            } else if (entity.type=="media") {
-                text = replace_entity(text, '<a href="' + entity.expanded_url + '" class="external" target="_blank">' + entity.display_url + '</a>', entity);
-            }
-        }
-
-    } else {
-        // We got no entities. This can happen with status messages and so on.
-        // In that case we use the old regexp-based replacement method.
-        var matches = text.match(regexp_user);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            addToAutoCompletion(matches[i].trim());
-        }
-
-        var matches = text.match(regexp_hash);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            addToAutoCompletion(matches[i].trim());
-        }
-
-        text = text.replace(regexp_url, '<a href="$1" target="_blank" class="external">$1</a>');
-        text = text.replace(regexp_user, '$1@<a href="http://twitter.com/$2" target="_blank">$2</a>');
-        text = text.replace(regexp_hash, '$1<a href="http://twitter.com/search?q=#$2" target="_blank">#$2</a>');
-    }
-
-    // Add Links to geocaching.com and "properly" display linebreaks.
-    text = text.replace(regexp_cache, '$1<a href="http://coord.info/$2" target="_blank">$2</a>');
-    text = text.replace(/\n/g, '<br />\n');
-    return text;
-}
-
-/** Shows a "fullscreen" element with defined title and content. */
-function infoarea_show(title, content) {
-    $('#infoarea_title').html(title);
-    $('#infoarea_content').html(content);
-    $('#infoarea').show();
-    infoarea_visible = true;
-}
-
-/** Closes the infoarea view displayed by infoarea_show() */
-function infoarea_close() {
-    $('#infoarea').hide();
-    infoarea_visible = false;
-}
-
-/** Shows the conversation leading to a given tweet. */
-function show_replies(id) {
-    var html = "";
-
-    // Quelle als erstes anzeigen
-    html += $('#id_' + id).fullhtml();
-
-    while (repliesData[id]) {
-        id = repliesData[id];
-        if($('#id_' + id).length>0) {
-            // Tweet ist bekannt -> anzeigen.
-            html += $('#id_' + id).fullhtml();
-        } else {
-            // Unbekannter Tweet -> Spinner anzeigen und Schleife starten...
-            html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>';
-            fetch_reply(id);
-        }
-    }
-    infoarea_show("Replies", html);
-}
-
-/** Fetches replies while the infoarea is visible */
-function fetch_reply(id) {
-    simple_twitter_request('statuses/show.json', {
-        parameters: {id: id, include_entities: true},
+      }
+    ];
+    _results = [];
+    for (_i = 0, _len = requests.length; _i < _len; _i++) {
+      request = requests[_i];
+      parameters = {};
+      for (key in default_parameters) {
+        value = default_parameters[key];
+        if (value) parameters[key] = value;
+      }
+      _ref = request.extra_parameters;
+      for (key in _ref) {
+        value = _ref[key];
+        if (value) parameters[key] = value;
+      }
+      _results.push(this.twitter_request(request.url, {
+        method: "GET",
+        parameters: parameters,
+        dataType: "text",
         silent: true,
-        method: 'GET',
-        success: function(foo, data) {
-            add_reply_to_infoarea(data);
+        additional_info: {
+          name: request.name
+        },
+        success: success,
+        error: error
+      }));
+    }
+    return _results;
+  };
+
+  Account.prototype.parse_data = function(json) {
+    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
+    if (json.constructor !== Array) json = [json];
+    responses = [];
+    for (_i = 0, _len = json.length; _i < _len; _i++) {
+      json_data = json[_i];
+      try {
+        temp = $.parseJSON(json_data);
+      } catch (_error) {}
+      if (temp == null) continue;
+      if (temp.constructor === Array) {
+        if (temp.length > 0) {
+          temp_elements = [];
+          for (_j = 0, _len2 = temp.length; _j < _len2; _j++) {
+            data = temp[_j];
+            temp_elements.push(TwitterMessage.get_object(data, this));
+          }
+          responses.push(temp_elements);
         }
-    });
-}
-
-/** Adds reply to the infoarea and fetches the next one */
-function add_reply_to_infoarea(data) {
-    $('#info_spinner').before(getStatusHTML(data, current_account));
-    if (infoarea_visible && data.in_reply_to_status_id) {
-        fetch_reply(data.in_reply_to_status_id_str);
-    } else {
-        $('#info_spinner').remove();
+      } else {
+        responses.push([TwitterMessage.get_object(temp, this)]);
+      }
     }
-}
-
-function toggle_file(force_hide) {
-    show_file_field = !show_file_field;
-    if (force_hide) show_file_field=false;
-    $('#file_div').toggle(show_file_field);
-    if (!show_file_field) {
-        $('#file').val('');
-    }
-}
-
-/** Shows some stats */
-function show_stats() {
-    var html = "";
-    html += "<strong>Anzahl Tweets:</strong>        " + $('.tweet').length + "<br />";
-    html += "<strong>Verbunden seit:</strong>       " + connectionStartedAt[current_account] + "<br />";
-    html += "<strong>Bekannte Follower:</strong>    " + followers_ids[current_account].length + "<br />";
-    html += "<strong>Buffer-Größe:</strong>         " + responseOffset[current_account] + "<br />";
-
-    html += "<strong>Aktuelle Zeit zwischen Tweets:</strong> " + get_average_tweet_time(current_account)/1000 + " Sekunden<br />";
-    html += "<strong>Neustart nach letztem Tweet nach:</strong> " + get_timeout_difference(current_account)/1000 + " Sekunden<br />";
-    html += "<strong>Letzter Tweet vor:</strong> " + get_time_since_last_tweet(current_account)/1000 + " Sekunden";
-
-    infoarea_show("Stats", html);
-}
-
-/**
- * Get called when the user clicks the "Tweet" button. Does not actually send the tweet,
- * but calls _sendTweet(), which does.
- */
-function sendTweet(event) {
-    if (event) event.preventDefault();
-    if(settings.show_error_if_no_place_is_set && settings.places.length>0 && document.tweet_form.place.options[0].selected && !confirm('Kein Ort gesetzt. Wirklich ohne Koordinaten tweeten?'))
-        return;
-
-    var text = $('#text').val();
-
-    var parts = splitTweet(text);
-
-    if (parts.length==1) {
-        _sendTweet(parts[0], true);
-    } else {
-        for (var i=0; i<parts.length; i++) {
-            if (_sendTweet(parts[i])) {
-                /* Tweet wurde erfolgreich gesendet */
-                if (i == (parts.length-1)) {
-                    /* Es war der letzte oder einzige Teil des Tweets */
-                    $('#text').val('');
-                    reply_to_user = null;
-                    reply_to_id = null;
-                    sending_dm_to = null;
-                    update_form_display();
-                    updateCounter();
-                }
-            } else {
-                /* Tweet konnte nicht abgesendet werden */
-                /* Neuen String bauen... */
-                text = "";
-                for (var j=i; j<parts.length; j++) {
-                    text += parts[j] + ' ';
-                }
-                $('#text').val(text);
-                break;
-            }
+    if (responses.length === 0) return;
+    html = "";
+    last_id = "";
+    while (responses.length > 0) {
+      newest_date = null;
+      newest_index = null;
+      for (index in responses) {
+        array = responses[index];
+        object = array[0];
+        if (newest_date === null || object.get_date() > newest_date) {
+          newest_date = object.get_date();
+          newest_index = index;
         }
+      }
+      array = responses[newest_index];
+      object = array.shift();
+      if (array.length === 0) responses.splice(newest_index, 1);
+      this_id = object.id;
+      if (this_id !== old_id) html += object.get_html();
+      if (object.constructor === Tweet) {
+        if (object.id.is_bigger_than(this.max_known_tweet_id)) {
+          this.max_known_tweet_id = object.id;
+        }
+        if (object.sender.id === this.user.id && object.id.is_bigger_than(this.my_last_tweet_id)) {
+          this.my_last_tweet_id = object.id;
+        }
+      }
+      if (object.constructor === DirectMessage) {
+        if (object.id.is_bigger_than(this.max_known_dm_id)) {
+          this.max_known_dm_id = object.id;
+        }
+      }
+      old_id = this_id;
     }
+    this.add_html(html);
+    return this.update_user_counter();
+  };
+
+  Account.prototype.scroll_to = function(tweet_id) {
+    var element_top, topheight;
+    element_top = $("#" + tweet_id).offset().top;
+    topheight = parseInt($('#content_template').css("padding-top"));
+    $(document).scrollTop(element_top - topheight);
     return false;
-}
+  };
 
-/** Send a tweet. Depending on the parameter async, this happens asynchronously or synchronously.
- * Asynchronously is used, if there's just one tweet to send.
- * Synchronously, if there are multiple tweets (a long, splitted tweet).
- */
-function _sendTweet(text, async) {
-    if (async==undefined) async=false;
-    var parameters = {
-        status: text,
-        wrap_links: true
-    };
-    if (settings.places.length>0) {
-        placeIndex = document.tweet_form.place.value;
-        if(placeIndex > 0) {
-            // Substract placeIndex by one:
-            // The first index in the HTML is the "empty" place, which has id 0.
-            // The elements in the places-array begin with 0, too, so in the HTML they got their id plus one.
-            placeIndex--;
-            parameters.lat = settings.places[placeIndex].lat + (((Math.random()*300)-15)*0.000001);
-            parameters.lon = settings.places[placeIndex].lon + (((Math.random()*300)-15)*0.000001);
-            if (settings.places[placeIndex].place_id)
-                parameters.place_id = settings.places[placeIndex].place_id;
-            parameters.display_coordinates = "true";
+  Account.prototype.activate = function() {
+    $('.content').hide();
+    $("#content_" + this.id).show();
+    $('#users .user').removeClass('active');
+    $("#user_" + this.id).addClass('active');
+    return Application.current_account = this;
+  };
+
+  Account.prototype.set_status = function(message, color) {
+    $("#user_" + this.id).removeClass('red green yellow orange').addClass(color);
+    return this.status_text = message;
+  };
+
+  Account.hooks = {
+    change_current_account: function(elm) {
+      var account_id, acct;
+      account_id = $(elm).parents('.user').data('account-id');
+      acct = Application.accounts[account_id];
+      acct.activate();
+      return false;
+    },
+    mark_as_read: function(elm) {
+      var element, elements, id, offset, _i, _len;
+      elements = $("#content_" + Application.current_account.id + " .tweet.new");
+      id = null;
+      offset = $(document).scrollTop() + $('#top').height();
+      for (_i = 0, _len = elements.length; _i < _len; _i++) {
+        element = elements[_i];
+        if ($(element).offset().top >= offset) {
+          id = $(element).attr('data-tweet-id');
+          break;
         }
+      }
+      Application.current_account.set_max_read_id(id);
+      return false;
+    },
+    goto_my_last_tweet: function() {
+      Application.current_account.scroll_to(Application.current_account.my_last_tweet_id);
+      return false;
+    },
+    goto_unread_tweet: function() {
+      Application.current_account.scroll_to(Application.current_account.max_read_id);
+      return false;
+    },
+    reload: function() {
+      Application.current_account.request.stop_request();
+      return false;
     }
-    if (document.tweet_form.reply_to_id.value != "")
-        parameters.in_reply_to_status_id = document.tweet_form.reply_to_id.value;
+  };
 
-    var message;
-    var url;
-    var data;
-    var content_type = 'application/x-www-form-urlencoded';
+  return Account;
 
-    $('#form').fadeTo(500, 0).delay(500);
-    
-    var keys = {
-        consumerKey: settings.twitter.consumerKey,
-        consumerSecret: settings.twitter.consumerSecret,
-        token: settings.twitter.users[current_account].token,
-        tokenSecret: settings.twitter.users[current_account].tokenSecret
-    };
+})();
 
-    if ($('#file')[0].files[0] && !sending_dm_to) {
-        // Es ist ein Bild vorhanden, das hochgeladen werden soll.
+Hooks = (function() {
 
-        message = {
-            action: "https://upload.twitter.com/1/statuses/update_with_media.json",
-            method: "POST"
+  function Hooks() {}
+
+  Hooks.display_file = false;
+
+  Hooks.time_of_last_enter = new Date();
+
+  Hooks.update_counter = function() {
+    var color, length, now, parts, text, url, urls, _i, _len, _ref;
+    if ((typeof event !== "undefined" && event !== null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
+      now = new Date();
+      if (now - this.time_of_last_enter <= settings.timings.max_double_enter_time) {
+        event.preventDefault();
+        $('#text').val(this.text_before_enter);
+        Hooks.send();
+        return;
+      }
+      this.text_before_enter = $('#text').val();
+      this.time_of_last_enter = now;
+    }
+    text = $('#text').val();
+    if (!(Application.get_dm_recipient_name() != null) && (parts = text.match(/^d @?(\w+) (.*)$/i))) {
+      Application.set_dm_recipient_name(parts[1]);
+      text = parts[2];
+      $('#text').val(text);
+    }
+    color = '#0b0';
+    text = text.trim();
+    length = text.length;
+    if ($('#file')[0].files[0]) length += characters_reserved_per_media + 1;
+    urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig);
+    _ref = urls != null ? urls : [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      url = _ref[_i];
+      length -= url.length;
+      length += url.slice(0, 5) === "https" ? Application.twitter_config.short_url_length_https : Application.twitter_config.short_url_length_http;
+    }
+    if (length > 140) color = '#f00';
+    $('#counter').html(140 - length);
+    return $('#counter').css('color', color);
+  };
+
+  Hooks.send = function() {
+    if (Application.get_dm_recipient_name() != null) {
+      return DirectMessage.hooks.send();
+    } else {
+      return Tweet.hooks.send();
+    }
+  };
+
+  Hooks.cancel_dm = function() {
+    var receiver;
+    receiver = Application.get_dm_recipient_name();
+    Application.set_dm_recipient_name(null);
+    return $('#text').val("@" + receiver + " " + ($('#text').val()));
+  };
+
+  Hooks.toggle_file = function(new_value) {
+    if (new_value != null) {
+      this.display_file = new_value;
+    } else {
+      this.display_file = !this.display_file;
+    }
+    $('#file_div').toggle(this.display_file);
+    if (!this.display_file) $('#file').val('');
+    return false;
+  };
+
+  Hooks.check_file = function() {
+    var error, file;
+    file = $('#file')[0].files[0];
+    error = false;
+    if (file == null) return;
+    if (file.fileSize > Application.twitter_config.photo_size_limit) {
+      alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + Application.twitter_config.photo_size_limit + " Bytes");
+      error = true;
+    } else if ($.inArray(file.type, ["image/png", "image/gif", "image/jpeg"]) === -1) {
+      alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
+      error = true;
+    }
+    if (error) return $('#file').val('');
+  };
+
+  return Hooks;
+
+})();
+
+Thumbnail = (function() {
+
+  function Thumbnail(thumbnail, link) {
+    this.thumbnail = thumbnail;
+    this.link = link;
+  }
+
+  Thumbnail.prototype.get_single_thumb_html = function() {
+    return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+  };
+
+  Thumbnail.prototype.get_multi_thumb_html = function() {
+    return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' />		</a>";
+  };
+
+  return Thumbnail;
+
+})();
+
+TwitterMessage = (function() {
+
+  function TwitterMessage(data) {
+    this.data = data;
+    this.sender = new User(this.get_user_data);
+  }
+
+  TwitterMessage.prototype.get_user_data = function() {
+    throw "Fehler!";
+  };
+
+  TwitterMessage.prototype.get_date = function() {
+    return this.date;
+  };
+
+  TwitterMessage.get_object = function(data, account) {
+    if (data == null) return;
+    if ((data.text != null) && (data.recipient != null)) {
+      return new DirectMessage(data, account);
+    }
+    if (data.text != null) return new Tweet(data, account);
+    if (data.event != null) return Event.get_object(data, account);
+  };
+
+  return TwitterMessage;
+
+})();
+
+Tweet = (function(_super) {
+
+  __extends(Tweet, _super);
+
+  Tweet.last = null;
+
+  Tweet.prototype.mentions = [];
+
+  Tweet.prototype.account = null;
+
+  Tweet.prototype.thumbs = [];
+
+  Tweet.prototype.id = null;
+
+  Tweet.prototype.permalink = "";
+
+  function Tweet(data, account) {
+    this.account = account;
+    this.data = data;
+    this.id = data.id_str;
+    this.fill_user_variables();
+    this.save_as_last_message();
+    this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
+    this.account.tweets[this.id] = this;
+    this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
+    this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
+    this.linkify_text();
+    this.thumbs = [];
+    this.get_thumbnails();
+    this.date = new Date(this.data.created_at);
+  }
+
+  Tweet.prototype.fill_user_variables = function() {
+    if (this.data.retweeted_status != null) {
+      this.sender = new User(this.data.retweeted_status.user);
+      return this.retweeted_by = new User(this.data.user);
+    } else {
+      return this.sender = new User(this.data.user);
+    }
+  };
+
+  Tweet.prototype.save_as_last_message = function() {
+    return Tweet.last = this;
+  };
+
+  Tweet.prototype.get_date = function() {
+    return this.date;
+  };
+
+  Tweet.prototype.div_id = function() {
+    return "#tweet_" + this.id;
+  };
+
+  Tweet.prototype.get_html = function() {
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.sender.get_avatar_html() + this.sender.get_link_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
+  };
+
+  Tweet.prototype.get_permanent_info_html = function() {
+    return this.get_retweet_html() + this.get_place_html();
+  };
+
+  Tweet.prototype.get_overlay_html = function() {
+    return "<div class='overlay'>" + this.get_temporary_info_html() + this.get_buttons_html() + "</div>";
+  };
+
+  Tweet.prototype.get_temporary_info_html = function() {
+    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format_nice()) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
+  };
+
+  Tweet.prototype.get_buttons_html = function() {
+    return "<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  };
+
+  Tweet.prototype.get_single_thumb_html = function() {
+    if (this.thumbs.length !== 1) return "";
+    return this.thumbs[0].get_single_thumb_html();
+  };
+
+  Tweet.prototype.get_multi_thumb_html = function() {
+    var html, thumb, _i, _len, _ref;
+    if (!(this.thumbs.length > 1)) return "";
+    html = "<div class='media'>";
+    _ref = this.thumbs;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      thumb = _ref[_i];
+      html += thumb.get_multi_thumb_html();
+    }
+    html += "</div>";
+    return html;
+  };
+
+  Tweet.prototype.get_source_html = function() {
+    var obj;
+    if (this.data.source == null) return "";
+    obj = $(this.data.source);
+    if (obj.attr('href')) {
+      return "from <a href='" + (obj.attr('href')) + "' target='_blank'>" + (obj.html()) + "</a>";
+    }
+    return "from " + this.data.source;
+  };
+
+  Tweet.prototype.get_retweet_html = function() {
+    if (this.retweeted_by == null) return "";
+    return "<div class='retweet_info'>Retweeted by <a href='" + this.retweeted_by.permalink + "' target='_blank'>" + this.retweeted_by.screen_name + "</a></div>";
+  };
+
+  Tweet.prototype.get_place_html = function() {
+    if (this.data.place == null) return "";
+    return "<div class='place'>from <a href='http://twitter.com/#!/places/" + this.data.place.id + "' target='_blank'>" + this.data.place.full_name + "</a></div>";
+  };
+
+  Tweet.prototype.get_reply_to_info_html = function() {
+    if (this.data.in_reply_to_status_id == null) return "";
+    return "<a href='#' onClick='return Tweet.hooks.show_replies(this);'>in reply to...</a> ";
+  };
+
+  Tweet.prototype.linkify_text = function() {
+    var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
+    this.mentions = [];
+    if (this.entities != null) {
+      all_entities = [];
+      _ref = this.entities;
+      for (entity_type in _ref) {
+        entities = _ref[entity_type];
+        for (_i = 0, _len = entities.length; _i < _len; _i++) {
+          entity = entities[_i];
+          entity.type = entity_type;
+          all_entities.push(entity);
         }
-        
-        var twitter = {
-            
-        };
+      }
+      all_entities = all_entities.sort(function(a, b) {
+        return a.indices[0] - b.indices[0];
+      }).reverse();
+      for (_j = 0, _len2 = all_entities.length; _j < _len2; _j++) {
+        entity = all_entities[_j];
+        switch (entity.type) {
+          case "user_mentions":
+            this.mentions.push(entity.screen_name);
+            this.replace_entity(entity, "<a href='https://twitter.com/" + entity.screen_name + "' target='_blank'>@" + entity.screen_name + "</a>");
+            break;
+          case "urls":
+          case "media":
+            if (entity.expanded_url != null) {
+              this.replace_entity(entity, "<a href='" + entity.expanded_url + "' class='external' target='_blank'>" + entity.display_url + "</a>");
+            } else {
+              this.replace_entity(entity, "<a href='" + entity.url + "' class='external' target='_blank'>" + entity.url + "</a>");
+            }
+            break;
+          case "hashtags":
+            this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank'>#" + entity.text + "</a>");
+            Application.add_to_autocomplete("#" + entity.text);
+        }
+      }
+    }
+    return this.text = this.text.trim().replace(/\n/g, "<br />");
+  };
 
-        OAuth.setTimestampAndNonce(message);
-        OAuth.completeRequest(message, keys);
-        OAuth.SignatureMethod.sign(message, keys);
+  Tweet.prototype.replace_entity = function(entity_object, text) {
+    return this.text = this.text.slice(0, entity_object.indices[0]) + text + this.text.slice(entity_object.indices[1]);
+  };
 
-        url = 'proxy/upload/statuses/update_with_media.json?' + OAuth.formEncode(message.parameters);
+  Tweet.prototype.get_classes = function() {
+    var classes, mention, _i, _len, _ref, _ref2;
+    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.id) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.sender.screen_name ? "by_this_user" : void 0];
+    _ref2 = this.mentions;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      mention = _ref2[_i];
+      classes.push("mentions_" + mention);
+    }
+    return classes;
+  };
+
+  Tweet.prototype.retweet = function() {
+    if (!confirm("Wirklich retweeten?")) return;
+    return this.account.twitter_request("statuses/retweet/" + this.id + ".json", {
+      success_string: "Retweet erfolgreich"
+    });
+  };
+
+  Tweet.prototype.quote = function() {
+    $('#text').val("RT @" + this.sender.screen_name + ": " + this.text).focus();
+    return Application.reply_to(this);
+  };
+
+  Tweet.prototype["delete"] = function() {
+    if (!confirm("Wirklich diesen Tweet löschen?")) return;
+    return this.account.twitter_request("statuses/destroy/" + this.id + ".json", {
+      success_string: "Tweet gelöscht",
+      success: function() {
+        return $(this.div_id()).remove();
+      }
+    });
+  };
+
+  Tweet.prototype.report_as_spam = function() {
+    return this.sender.report_as_spam(this.account);
+  };
+
+  Tweet.prototype.reply = function() {
+    var mention, mentions, sender;
+    Application.set_dm_recipient_name(null);
+    $('#text').val('').focus();
+    Application.reply_to(this);
+    sender = this.sender.screen_name !== this.account.screen_name ? "@" + this.sender.screen_name + " " : "";
+    mentions = ((function() {
+      var _i, _len, _ref, _results;
+      _ref = this.mentions.reverse();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        mention = _ref[_i];
+        if (mention !== this.sender.screen_name && mention !== this.account.screen_name) {
+          _results.push("@" + mention + " ");
+        }
+      }
+      return _results;
+    }).call(this)).join("");
+    $('#text').val("" + sender + mentions);
+    $('#text')[0].selectionStart = sender.length;
+    $('#text')[0].selectionEnd = sender.length + mentions.length;
+    return $('#text').focus();
+  };
+
+  Tweet.prototype.get_thumbnails = function() {
+    var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _results;
+    if (this.data.entities == null) return;
+    if (this.data.entities.media != null) {
+      _ref = this.data.entities.media;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        media = _ref[_i];
+        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url));
+      }
+    }
+    if (this.data.entities.urls != null) {
+      _ref2 = this.data.entities.urls;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        entity = _ref2[_j];
+        url = (_ref3 = entity.expanded_url) != null ? _ref3 : entity.url;
+        if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
+          this.thumbs.push(new Thumbnail("http://img.youtube.com/" + res[1] + "/1.jpg", url));
+        }
+        if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
+          this.thumbs.push(new Thumbnail("http://twitpic.com/show/mini/" + res[1], url));
+        }
+        if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://yfrog.com/" + res[1] + ".th.jpg", url));
+        }
+        if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
+          this.thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
+        }
+        if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://moby.to/" + res[1] + ":square", url));
+        }
+        if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://ragefac.es/" + res[1] + "/i", url));
+        }
+        if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
+          this.thumbs.push(new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url));
+        }
+        if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
+          _results.push(this.thumbs.push(new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url)));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    }
+  };
+
+  Tweet.prototype.show_replies = function() {
+    var html, new_id, tweet;
+    html = "";
+    tweet = this;
+    while (true) {
+      html += tweet.get_html();
+      if (tweet.data.in_reply_to_status_id_str == null) break;
+      new_id = tweet.data.in_reply_to_status_id_str;
+      tweet = this.account.tweets[new_id];
+      if (tweet == null) {
+        html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>';
+        this.fetch_reply(new_id);
+        break;
+      }
+    }
+    return Application.infoarea.show("Replies", html);
+  };
+
+  Tweet.prototype.fetch_reply = function(id) {
+    var _this = this;
+    return this.account.twitter_request('statuses/show.json', {
+      parameters: {
+        id: id,
+        include_entities: true
+      },
+      silent: true,
+      method: "GET",
+      success: function(foo, data) {
+        var tweet;
+        tweet = new Tweet(data, _this.account);
+        $('#info_spinner').before(tweet.get_html());
+        if (Application.infoarea.visible && tweet.data.in_reply_to_status_id_str) {
+          return _this.fetch_reply(tweet.data.in_reply_to_status_id_str);
+        } else {
+          return $('#info_spinner').remove();
+        }
+      }
+    });
+  };
+
+  Tweet.hooks = {
+    get_tweet: function(element) {
+      var tweet_div;
+      tweet_div = $(element).parents('.tweet');
+      return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
+    },
+    reply: function(elm) {
+      this.get_tweet(elm).reply();
+      return false;
+    },
+    retweet: function(elm) {
+      this.get_tweet(elm).retweet();
+      return false;
+    },
+    quote: function(elm) {
+      this.get_tweet(elm).quote();
+      return false;
+    },
+    "delete": function(elm) {
+      this.get_tweet(elm)["delete"]();
+      return false;
+    },
+    report_as_spam: function(elm) {
+      this.get_tweet(elm).report_as_spam();
+      return false;
+    },
+    show_replies: function(elm) {
+      this.get_tweet(elm).show_replies();
+      return false;
+    },
+    send: function() {
+      var content_type, data, key, parameters, place, placeindex, url, value;
+      if (typeof event !== "undefined" && event !== null) event.preventDefault();
+      parameters = {
+        status: $('#text').val().trim(),
+        wrap_links: true
+      };
+      if (settings.places.length > 0 && (placeindex = document.tweet_form.place.value - 1) >= 0) {
+        place = settings.places[placeindex];
+        parameters.lat = place.lat + (((Math.random() * 300) - 15) * 0.000001);
+        parameters.lon = place.lon + (((Math.random() * 300) - 15) * 0.000001);
+        if (place.place_id != null) parameters.place_id = place.place_id;
+        parameters.display_coordinates = true;
+      }
+      if (Application.reply_to() != null) {
+        parameters.in_reply_to_status_id = Application.reply_to().id;
+      }
+      if ($('#file')[0].files[0]) {
+        data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null);
+        url = "proxy/upload/statuses/update_with_media.json?" + data;
         content_type = false;
-
         data = new FormData();
         data.append("media[]", $('#file')[0].files[0]);
-
-        for (var key in parameters) {
-            data.append(key, parameters[key]);
+        for (key in parameters) {
+          value = parameters[key];
+          data.append(key, value);
         }
-
-    } else {
-        message = {
-            action: "https://api.twitter.com/1/statuses/update.json",
-            method: "POST",
-            parameters: parameters
-        }
-
+      } else {
+        data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters);
         url = "proxy/api/statuses/update.json";
-
-        if (sending_dm_to) {
-            message.action = "https://api.twitter.com/1/direct_messages/new.json";
-            url = "proxy/api/direct_messages/new.json";
-            message.parameters.screen_name = sending_dm_to;
-            message.parameters.text = message.parameters.status;
-        }
-
-        OAuth.setTimestampAndNonce(message);
-        OAuth.completeRequest(message, keys);
-        OAuth.SignatureMethod.sign(message, keys);
-
-        data = OAuth.formEncode(message.parameters);
-    }
-
-    var req = $.ajax({
+        content_type = "application/x-www-form-urlencoded";
+      }
+      $('#form').fadeTo(500, 0);
+      $.ajax({
         url: url,
         data: data,
         processData: false,
         contentType: content_type,
-        async: async,
+        async: true,
         dataType: "json",
         type: "POST",
-        success: function(data, textStatus, req) {
-            if (data.text) {
-                //$('#counter').html(data + textStatus);
-                var html = "";
-
-                if (data.user) { // Normaler Tweet
-                    html += 'Tweet-ID: ' + data.id_str + '<br />';
-                    html += 'Mein Tweet Nummer: ' + data.user.statuses_count + '<br />';
-                    html += 'Follower: ' + data.user.followers_count + '<br />';
-                    html += 'Friends:' + data.user.friends_count + '<br />';
-                } else if (data.recipient) { // DM
-                    html += "DM erfolgreich verschickt."
-                }
-
-                if (async) {
-                    $('#text').val('');
-                    reply_to_user = null;
-                    reply_to_id = null;
-                    updateCounter();
-                    sending_dm_to = null;
-                    update_form_display();
-                }
-
-                toggle_file(true);
-                $('#success_info').html(html);
-                $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            } else {
-                $('#failure_info').html(data.error);
-                $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            }
-        },
-        error: function(req, testStatus, exc) {
-            var info = 'Error ' + req.status + ' (' + req.statusText + ')';
-            try {
-                var additional = $.parseJSON(req.responseText);
-                if (additional.error) info += '<br /><strong>' + additional.error + '</strong>';
-            } catch(e) {}
-            $('#failure_info').html(info);
-            $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                $('#form').fadeTo(500, 1);
+        success: function(data) {
+          var html;
+          if (data.text) {
+            html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";
+            $('#text').val('');
+            Application.reply_to(null);
+            Hooks.toggle_file(false);
+            $('#success_info').html(html);
+            return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
             });
-        }
-   });
-   // if we're running asynchronously, we have to return false to prevent the browser from reloading
-   // the current page.
-   // I don't know why this happens, probably because some weird Javascript-Foo... *sigh*
-   if (async) return false;
-   return req.status==200;
-}
-
-/** Splits a tweet at the tweetSeperator, but maintains mentions for all parts. */
-function splitTweet(text) {
-    // if we're sending a dm, we don't support splitting tweets
-    if (sending_dm_to) return [text];
-    
-    var mention = text.match(/^(((@[a-z0-9_]+) +)+)/i);
-    var words = text.split(' ');
-    var word;
-
-    var parts = text.split(settings.tweetSeperator.seperator);
-    for (var i=0; i<parts.length; i++) {
-        parts[i] = parts[i].trim();
-        if (i>0) {
-            parts[i] = settings.tweetSeperator.prefix + parts[i];
-        }
-        if (i<parts.length-1) {
-            parts[i] = parts[i] + settings.tweetSeperator.suffix;
-        }
-        if (mention && i>0) parts[i] = mention[1].trim() + ' ' + parts[i];
-    }
-    return parts;
-}
-
-/** Natively retweets a given tweet. */
-function retweet(id) {
-    if (!confirm('Wirklich direkt retweeten?'))
-        return false;
-
-    simple_twitter_request('statuses/retweet/' + id + '.json', {
-        success_string: "Retweet successfull"
-    });
-}
-
-/** Delete one of your own tweets. */
-function delete_tweet(id) {
-    if (!confirm('Wirklich diesen Tweet löschen?'))
-        return false;
-
-    simple_twitter_request('statuses/destroy/' + id + '.json', {
-        success_string: 'Tweet deleted',
-        success: function() {
-            $('#id_' + id).remove();
-        }
-    });
-}
-
-/** Report user as spamming. */
-function report_spam(sender_name) {
-    if (!confirm('Wirklich ' + sender_name + ' als Spammer melden?'))
-        return false;
-
-    simple_twitter_request('report_spam.json', {
-        parameters: {screen_name: sender_name},
-        success_string: 'Spam reported',
-        success: function() {
-            $('.by_' + sender_name).remove();
-        }
-    });
-}
-
-/**
-   Sends a simple request to the Twitter API
-   Expects following parameters:
-     * URL of the Twitter API endpoint (the part after https://api.twitter.com/1/)
-     * Hash containing following options:
-       * account - ID of the account to use. If unset, current_account (or, as fallback, account 0) will be used
-       * method - "POST"
-       * parameters - Hash with parameters for the request
-       * silent - Don't show status
-       * success_string - String to be shown after a successfull request
-       * additional_info - Will be passed directly into the success and error callbacks
-       * success - function to be called after request. Parameters: (info_element, data, request, additional_info)
-       * error - function to be called on error. Parameters: (info_element, data, request, raw_response, exception, additional_info)
-       * dataType - override for jQuerys dataType used in the AJAX call. Defaults to "json"
-       * return_response - returns the raw responseText
- */
-function simple_twitter_request(url, options) {
-    var message = {
-        action: "https://api.twitter.com/1/" + url,
-        method: options.method || "POST",
-        parameters: options.parameters
-    }
-    
-    var account = options.account || current_account || 0;
-    var keys = {
-        consumerKey: settings.twitter.consumerKey,
-        consumerSecret: settings.twitter.consumerSecret,
-        token: settings.twitter.users[account].token,
-        tokenSecret: settings.twitter.users[account].tokenSecret
-    }
-
-    var verbose = !(!!options.silent && true);
-
-    if (verbose) $('#form').fadeTo(500, 0).delay(500);
-
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, keys);
-    OAuth.SignatureMethod.sign(message, keys);
-    var url = 'proxy/api/' + url;
-    var data = OAuth.formEncode(message.parameters);
-
-    var result = $.ajax({
-        url: url,
-        data: data,
-        dataType: options.dataType || "json",
-        async: options.async && true,
-        type: options.method || "POST",
-        success: function(data, textStatus, req) {
-            if (req.status=="200") {
-                if (options.success_string) {
-                    $('#success_info').html(options.success_string);
-                }
-                if (options.success) {
-                    options.success($('#success_info'), data, req, options.additional_info);
-                }
-                if (verbose) $('#success').fadeIn(500).delay(5000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            } else {
-                if (options.error) {
-                    options.error($('#failure_info'), data, req, "", null, options.additional_info);
-                } else {
-                    $('#failure_info').html(data.error);
-                }
-                if (verbose) $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                    $('#form').fadeTo(500, 1);
-                });
-            }
-        },
-        error: function(req, textStatus, exc) {
-            if (options.error) {
-                options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info);
-            } else {
-                $('#failure_info').html('Error ' + req.status + ' (' + req.statusText + ')');
-            }
-            if (verbose) $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
-                $('#form').fadeTo(500, 1);
+          } else {
+            $('#failure_info').html(data.error);
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
             });
-        }
-    });
-
-    if (options.return_response) {
-        return result.responseText;
-    }
-}
-
-/** Quotes a tweet (using the old "RT" syntax). */
-function quote(tweet_id, user, text) {
-    text = 'RT @' + user + ': ' + unescape(text);
-    reply_to_user = user;
-    reply_to_id = tweet_id;
-    $('#text').val(text).focus();
-    $('#reply_to_id').val(tweet_id);
-    updateCounter();
-}
-
-/**
- * Prepares the form to reply to a tweet.
- * Prefills the textarea with "@user ", sets in_reply_to_id and sets the focus to the textarea.
- */
-function replyToTweet(tweet_id, user, isDM) {
-    $('#reply_to_id').val('');
-    sending_dm_to = null;
-    reply_to_user = null;
-    reply_to_id = null;
-    $('#text').val('').focus();
-
-    if (isDM===true) {
-        sending_dm_to = user;
-    } else {
-        reply_to_user = user;
-        reply_to_id = tweet_id;
-        var elm = $('#id_' + tweet_id);
-        if (elm.data('mentions').length > 0 && $('#text')[0].selectionStart!=undefined) {
-            var all_mentions = elm.data('mentions').split(' ');
-            var filtered_mentions = new Array();
-            for(var i in all_mentions) {
-                if (all_mentions[i] == user) continue;
-                if (all_mentions[i] == this_users_name[current_account]) continue;
-                filtered_mentions.push('@' + all_mentions[i]);
-            }
-            var mentions = filtered_mentions.join(' ');
-            var text = '@' + user + ' ' + mentions + ' ';
-            $('#text').val(text.trim() + ' ');
-            $('#text')[0].selectionStart = user.length+2;
-            $('#text')[0].selectionEnd = user.length+2+mentions.length+1;
-        } else {
-            $('#text').val('@' + user + ' ');
-        }
-        $('#text').focus();
-        //$('#text').val('@' + user + ' ').focus();
-        $('#reply_to_id').val(tweet_id);
-    }
-
-    $('#text').focus();
-    updateCounter();
-    update_form_display();
-}
-
-/** Gets the length of the tweet, remaining chars to twitter's 140 char limit and displays it. */
-function updateCounter() {
-    var text = $('#text').val();
-
-    var dm_match = text.match(/^d @?(\w+) (.*)$/i);
-    if (!sending_dm_to && dm_match) {
-        sending_dm_to = dm_match[1];
-        reply_to_id = null;
-        reply_to_user = null;
-        text = dm_match[2];
-        $('#text').val(text);
-        update_form_display();
-    }
-
-    var parts = splitTweet(text);
-
-    var lengths = "";
-    var color = "#0b0";
-    if (parts.length==0)
-        lengths = "140+";
-    for (var i=0; i<parts.length; i++) {
-        var text = parts[i];
-        var len = 140 - text.length;
-        if ($('#file')[0].files[0]) len -= characters_reserved_per_media;
-        var matches = text.match(regexp_url);
-        if (matches) for (var i=0; i<matches.length; i++) {
-            var m = matches[i].trim();
-            if (m.length < short_url_length) continue;
-            len += m.length;
-            if (m.slice(0, 5)=="https") len -= short_url_length_https;
-            else len -= short_url_length;
-        }
-        if (len<0) color="#f00";
-        lengths += len+'+';
-    }
-    lengths = lengths.substr(0, lengths.length-1);
-
-    $('#counter').html(lengths);
-    $('#counter').css("color", color);
-
-    if (reply_to_id != null) {
-        var re = new RegExp("(^| )@" + reply_to_user + "([\.:, ]|$)");
-        if (re.test(text)) {
-            $('#reply_warning').fadeOut();
-        } else {
-            $('#reply_warning').fadeIn();
-        }
-    } else {
-        $('#reply_to_id').val('');
-        $('#reply_warning').fadeOut();
-    }
-}
-
-/** Updated the visibility of the different fields in the form area. */
-function update_form_display() {
-    if (sending_dm_to!=null) {
-        toggle_file(true);
-        $('#dm_info_text').html('DM @' + sending_dm_to);
-    }
-    $('#dm_info').toggle(sending_dm_to!=null);
-    $('#place').toggle(sending_dm_to==null);
-    $('#file_choose').toggle(sending_dm_to==null);
-}
-
-/** "Cancel" sending a DM - Reverts the DM to a normal Tweet */
-function cancel_dm() {
-    $('#text').val('@' + sending_dm_to + ' ' + $('#text').val());
-    sending_dm_to = null;
-    updateCounter();
-    update_form_display();
-}
-
-/**
- * Gets called if the user removed a mention and klicked the link in the appearing warning message.
- * Especially removes the in_reply_to_id value.
- */
-function removeReplyWarning() {
-    $('#reply_to_id').val('');
-    $('#reply_warning').fadeOut();
-    reply_to_user = null;
-    reply_to_id = null;
-}
-
-/** Gets the max read ID from the server. */
-function getMaxReadID() {
-    value = $.ajax({
-        method: 'GET',
-        url: settings.get_maxreadid_url || 'maxreadid/get.php',
-        async: false,
-        dataType: 'text'
-    }).responseText;
-    log_message("getMaxReadID", "result: " + value);
-    
-    return $.parseJSON(value);
-}
-
-/** Sets the max read ID on the server. */
-function setMaxReadID(id, account_id) {
-    $.ajax({
-        method: 'GET',
-        url: settings.set_maxreadid_url || 'maxreadid/set.php',
-        async: false,
-        dataType: 'text',
-        data: {id: id, account_id: account_id},
+          }
+        },
         error: function(req) {
-            var html = '<div class="status"><b>Fehler in setMaxReadID():</b><br />';
-            html += 'Error ' + req.status + ' (' + req.responseText + ')';
-            html += '</div>';
-            addHTML(html);
+          var additional, info;
+          info = "Error " + req.status + " (" + req.statusText + ")";
+          try {
+            additional = $.parseJSON(req.responseText);
+          } catch (_error) {}
+          if ((additional != null ? additional.error : void 0) != null) {
+            info += "<br /><strong>" + additional.error + "</strong>";
+          }
+          $('#failure_info').html(info);
+          return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
         }
-    });
-}
-
-/** Sets the max read ID by using setmaxReadID and marks all tweets as read. */
-function markAllRead() {
-    // get the id of the first visible tweet
-    var elms = $('#content_'+current_account+' .tweet.new');
-    var id = null;
-    var offset = $(document).scrollTop() + $('#top').height();
-    for (var i=0; i<elms.length; i++) {
-        if ($(elms[i]).offset().top >= offset) {
-            id = $(elms[i]).attr('data-id');
-            break;
-        }
+      });
+      return false;
     }
-    log_message('markAllAsRead', 'Gefundene ID: '+id);
-    if (id && biggerThan(id,maxreadid[current_account])) {
-        log_message('markAllRead', 'Updating.');
-        setMaxReadID(id, current_account);
-        maxreadid[current_account] = id;
-        var elm = $('.new');
-        for(var i=0; i<elm.length; i++) {
-            if (!biggerThan($(elm[i]).attr('data-id'), id)) {
-                $(elm[i]).removeClass('new');
-            }
-        }
-    }
-    update_user_counter(current_account);
-}
+  };
 
-/** Scrolls to the last tweet written by the current user. */
-function goToMyLastTweet() {
-    if (mylasttweetid[current_account] > 0)
-        scroll_to(mylasttweetid[current_account]);
-}
+  return Tweet;
 
-/** Scrolls to a tweet specified by it's id. */
-function scroll_to(tweet_id) {
-    var element_top = $('#id_'+tweet_id).offset().top;
-    // Just scrolling to a tweet doesn't show it because it will be hidden behind
-    // the form on the top. So we use this as an offset.
-    var topheight = parseInt($('#content_template').css("padding-top"));
-    $(document).scrollTop(element_top-topheight);
-    return;
-}
+})(TwitterMessage);
 
-/** Sets a status message. The colors are actually class names. */
-function setStatus(message, color, account_id) {
-    $('#user_'+account_id).removeClass('red green yellow orange').addClass(color);
-    $('#user_'+account_id).data('status', message);
-}
+DirectMessage = (function(_super) {
 
-/** Scrolls down to the last read tweet. */
-function goToLastRead(){
-    scroll_to(maxreadid[current_account]);
-}
+  __extends(DirectMessage, _super);
 
-/** Check the time between two presses of Enter and send the tweet if the time is lower than settings.timings.max_double_enter_time. */
-function checkEnter(event) {
-    var d = new Date();
-    if (d.getTime() - timeOfLastEnter <= settings.timings.max_double_enter_time) {
-        if (event) event.preventDefault();
-        $('#text').val(textBeforeEnter);
-        sendTweet();
-    }
-    textBeforeEnter = $('#text').val();
-    timeOfLastEnter = d.getTime();
-}
+  function DirectMessage() {
+    DirectMessage.__super__.constructor.apply(this, arguments);
+  }
 
-/** Compares two number-strings. True, if a is bigger than b. Else returns false. */
-function biggerThan(a, b) {
-    var l1 = a? a.length : 0;
-    var l2 = b? b.length : 0;
-    if (l1>l2) return true;
-    if (l1<l2) return false;
-    return a>b;
-}
+  DirectMessage.prototype.fill_user_variables = function() {
+    this.sender = new User(this.data.sender);
+    return this.recipient = new User(this.data.recipient);
+  };
 
-/** Checks for blacklisted words. */
-function check_blacklist(text){
-    for (var i=0; i<settings.blacklist.length; i++)
-    {
-        if(text.indexOf(settings.blacklist[i]) != -1)
-            return true;
-    }
-    return false;
-}
+  DirectMessage.prototype.save_as_last_message = function() {
+    return DirectMessage.last = this;
+  };
 
-/** Checks for highlighted words. */
-function check_highlight(text){
-    for (var i=0; i<settings.highlight.length; i++)
-    {
-        if(text.indexOf(settings.highlight[i]) != -1)
-            return true;
-    }
-    return false;
-}
+  DirectMessage.prototype.get_classes = function() {
+    return ["dm", "by_" + (this.sender.get_screen_name())];
+  };
 
-function check_muted(user)
-{
+  DirectMessage.prototype.reply = function() {
+    $('#text').val('').focus();
+    return Application.set_dm_recipient_name(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
+  };
 
-    for (var i=0; i<settings.muted.length; i++)
-    {
-        if(user == settings.muted[i])
-            return true;
-    }
-    return false;
-}
+  DirectMessage.prototype.get_buttons_html = function() {
+    return "<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  };
 
-function check_troll(text,user)
-{
-if (settings.troll.length == settings.trigger.length)
-{
-
-	for (var i=0; i<settings.troll.length; i++)
-		{
-			if(user == settings.troll[i]   && (text.indexOf(settings.trigger[i]) != -1))
-					return true;
-		}
-		return false;
-}
-}
-
-/** Adds a term to the list of usable autocompletions. */
-function addToAutoCompletion(term) {
-    if ($.inArray(term, autocompletes)==-1) {
-        autocompletes.push(term);
-        autocompletes.sort();
-    }
-}
-
-/** Adds an entry to the debug log if enabled in settings.js. */
-function log_message(place, s, account_id) {
-    if (settings.debug && typeof console != "undefined" && console.log) {
-        if (account_id==null) account_id=" ";
-        var str = "[ " + account_id + " ] ";
-        str += "[ " + place;
-        for(var i=0; i<(20-place.length); i++) str += " ";
-        str += " ] " + s;
-        console.log(str);
-     }
-}
-
-function update_user_counter(account_id) {
-    var count = $('#content_' + account_id + ' .tweet.new').not('.by_this_user').length;
-    var str = count>0? '('+count+')' : '';
-    $('#user_' + account_id + ' .count').html(str);
-}
-
-function addUser() {
-    infoarea_show("Add User", '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>');
-    var parameters = {
-        oauth_callback: "oob"
-    }
-
-    var message = {
-        action: "https://api.twitter.com/oauth/request_token",
-        method: "POST",
-        parameters: parameters
-    }
-
-    var keys = {
-        consumerKey: settings.twitter.consumerKey,
-        consumerSecret: settings.twitter.consumerSecret
-    }
-
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, keys);
-    OAuth.SignatureMethod.sign(message, keys);
-    var url = 'proxy/oauth/request_token';
-    var data = OAuth.formEncode(message.parameters);
-
-    var request = $.ajax({
+  DirectMessage.hooks = {
+    get_tweet: function(element) {
+      var tweet_div;
+      tweet_div = $(element).parents('.dm');
+      return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
+    },
+    send: function() {
+      var data, parameters, url;
+      if (typeof event !== "undefined" && event !== null) event.preventDefault();
+      parameters = {
+        text: $('#text').val().trim(),
+        wrap_links: true,
+        screen_name: Application.get_dm_recipient_name()
+      };
+      data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
+      url = "proxy/api/direct_messages/new.json";
+      $('#form').fadeTo(500, 0);
+      return $.ajax({
         url: url,
         data: data,
-        dataType: "text",
-        async: false,
-        type: "POST"
+        async: true,
+        dataType: "json",
+        type: "POST",
+        success: function(data) {
+          if (data.recipient) {
+            $('#text').val('');
+            Application.reply_to(null);
+            Application.set_dm_recipient_name(null);
+            Hooks.toggle_file(false);
+            $('#success_info').html("DM erfolgreich verschickt.");
+            return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          } else {
+            $('#failure_info').html(data.error);
+            return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+              return $('#form').fadeTo(500, 1);
+            });
+          }
+        },
+        error: function(req) {
+          var additional, info;
+          info = "Error " + req.status + " (" + req.statusText + ")";
+          try {
+            additional = $.parseJSON(req.responseText);
+          } catch (_error) {}
+          if ((additional != null ? additional.error : void 0) != null) {
+            info += "<br /><strong>" + additional.error + "</strong>";
+          }
+          $('#failure_info').html(info);
+          return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
+            return $('#form').fadeTo(500, 1);
+          });
+        }
+      });
+    },
+    reply: function(elm) {
+      this.get_tweet(elm).reply();
+      return false;
+    }
+  };
+
+  return DirectMessage;
+
+})(Tweet);
+
+User = (function() {
+
+  function User(data) {
+    this.data = data;
+    users[this.data.id] = this;
+    this.screen_name = this.data.screen_name;
+    Application.add_to_autocomplete("@" + this.screen_name);
+    this.permalink = "https://twitter.com/" + this.screen_name;
+    this.id = this.data.id_str;
+  }
+
+  User.prototype.id = function() {
+    return this.data.id_str;
+  };
+
+  User.prototype.get_avatar_html = function() {
+    return "<span class='avatar'>			<span class='tooltip_info'>				<strong>" + this.data.name + "</strong><br /><br />				" + this.data.followers_count + " Follower<br />				" + this.data.friends_count + " Friends<br />				" + this.data.statuses_count + " Tweets			</span>			<a href='https://twitter.com/account/profile_image/" + this.data.screen_name + "' target='_blank'>				<img class='user_avatar' src='" + this.data.profile_image_url + "' />			</a>		</span>";
+  };
+
+  User.prototype.get_link_html = function(show_full_name) {
+    if (show_full_name == null) show_full_name = false;
+    return "		<span class='poster'>			<a href='https://twitter.com/" + this.data.screen_name + "' target='_blank'>				" + this.data.screen_name + "			</a>			" + (show_full_name ? " (" + this.data.name + ")" : "") + "			</span>";
+  };
+
+  User.prototype.get_screen_name = function() {
+    return this.data.screen_name;
+  };
+
+  User.prototype.report_as_spam = function(account) {
+    if (!confirm("Wirklich " + this.screen_name + " als Spammer melden?")) return;
+    return account.twitter_request("report_spam.json", {
+      parameters: {
+        screen_name: this.screen_name
+      },
+      success_string: "Als Spammer gemeldet.",
+      success: function() {
+        return $(".by_" + this.screen_name).remove;
+      }
     });
-    if (request.status!=200) throw new Exception("o_O");
-    var result = request.responseText;
-    oauth_results = {};
-    result = result.split("&");
-    for (var i=0; i<result.length; i++) {
-        var parts = result[i].split("=");
-        oauth_results[parts[0]] = parts[1];
-    }
-    
-    var url = "https://api.twitter.com/oauth/authorize?oauth_token="+oauth_results.oauth_token+"&force_login=true";
-    var html = "Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />";
-    html += '<a href="'+url+'" target="_blank">Geotweeter authorisieren</a><br /><br />';
-    html += '<input type="text" name="pin" id="pin" />';
-    html += '<input type="button" value="OK" onClick="addUser2(); return false;" />';
-    $('#info_spinner').before(html);
-    $('#info_spinner').hide();
-}
+  };
 
-function addUser2() {
-    var pin = $('#pin').val();
-    infoarea_show("Add User", '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>');
-    var parameters = {
-        oauth_token: oauth_results.oauth_token,
-        oauth_verifier: pin
-    }
-    var message = {
-        action: "https://api.twitter.com/oauth/access_token",
-        method: "POST",
-        parameters: parameters
-    }
+  return User;
 
-    var keys = {
-        consumerKey: settings.twitter.consumerKey,
-        consumerSecret: settings.twitter.consumerSecret
+})();
+
+Request = (function() {
+
+  Request.prototype.account = null;
+
+  Request.prototype.last_data_received_at = null;
+
+  function Request(account) {
+    this.account = account;
+  }
+
+  return Request;
+
+})();
+
+StreamRequest = (function(_super) {
+
+  __extends(StreamRequest, _super);
+
+  StreamRequest.prototype.connected = false;
+
+  StreamRequest.prototype.buffer = "";
+
+  StreamRequest.prototype.response_offset = 0;
+
+  StreamRequest.prototype.request = null;
+
+  StreamRequest.prototype.processing = false;
+
+  StreamRequest.prototype.connection_started_at = null;
+
+  StreamRequest.prototype.last_data_received_at = null;
+
+  StreamRequest.prototype.timeout_timer = null;
+
+  StreamRequest.prototype.last_event_times = [];
+
+  StreamRequest.prototype.opera_interval = null;
+
+  function StreamRequest(account) {
+    this.timeout = __bind(this.timeout, this);    StreamRequest.__super__.constructor.call(this, account);
+  }
+
+  StreamRequest.prototype.toString = function() {
+    return "StreamReq " + this.account.user.screen_name;
+  };
+
+  StreamRequest.prototype.clear_timeout = function() {
+    if (this.timeout_timer != null) {
+      window.clearTimeout(this.timeout_timer);
+      return this.timeout_timer = null;
     }
+  };
 
-    OAuth.setTimestampAndNonce(message);
-    OAuth.completeRequest(message, keys);
-    OAuth.SignatureMethod.sign(message, keys);
-    var url = 'proxy/oauth/access_token';
-    var data = OAuth.formEncode(message.parameters);
+  StreamRequest.prototype.set_timeout = function(delay) {
+    this.clear_timeout();
+    this.timeout_timer = window.setTimeout(this.timeout, delay);
+    return Application.log(this, "set_timeout", "Delay: " + delay);
+  };
 
-    var request = $.ajax({
-        url: url,
-        data: data,
-        dataType: "text",
-        async: false,
-        type: "POST"
+  StreamRequest.prototype.stop_request = function() {
+    return this.request.abort();
+  };
+
+  StreamRequest.prototype.start_request = function() {
+    var data, url,
+      _this = this;
+    this.account.set_status("Connecting to stream...", "orange");
+    this.last_event_times = [];
+    this.set_timeout(settings.timeout_maximum_delay * 1000);
+    this.processing = false;
+    this.buffer = "";
+    this.response_offset = 0;
+    this.connected = false;
+    this.connection_started_at = new Date();
+    this.last_data_received_at = new Date();
+    data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
+      delimited: "length",
+      include_entities: "1",
+      include_rts: "1"
     });
-    if (request.status!=200) throw new Exception("o_O");
-    var result = request.responseText;
-    oauth_results = {};
-    result = result.split("&");
-    for (var i=0; i<result.length; i++) {
-        var parts = result[i].split("=");
-        oauth_results[parts[0]] = parts[1];
+    url = "user_proxy?" + data;
+    this.request = new XMLHttpRequest();
+    this.request.open("GET", url, true);
+    this.request.onreadystatechange = function() {
+      _this.last_data_received_at = new Date();
+      switch (_this.request.readyState) {
+        case 3:
+          if (!_this.connected) _this.account.set_status("Connected.", "green");
+          _this.connected = true;
+          break;
+        case 4:
+          _this.account.set_status("Disconnected", "red");
+          _this.connected = false;
+          if ((new Date()).getTime() - _this.connection_started_at.getTime() > 10000) {
+            _this.delay = settings.timings.mindelay;
+          }
+          window.setTimeout(_this.account.fill_list, _this.delay * 1000);
+          _this.delay = _this.delay * 2;
+      }
+      _this.buffer += _this.request.responseText.substr(_this.response_offset);
+      _this.response_offset = _this.request.responseText.length;
+      return _this.process_buffer();
+    };
+    this.request.send(null);
+    if (this.opera_interval != null) window.clearInterval(this.opera_interval);
+    if (window.opera) {
+      return this.opera_interval = window.setInterval(this.request.onreadystatechange, 5000);
     }
-    var code = "{ // " + oauth_results.screen_name + "\n";
-    code += "    token: \"" + oauth_results.oauth_token + "\",\n";
-    code += "    tokenSecret: \"" + oauth_results.oauth_token_secret + "\"\n";
-    code += "}";
-    var html = "Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />";
-    html += '<textarea cols="100" rows="4">'+code+'</textarea><br />';
-    html += "Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden.";
-    $('#info_spinner').before(html);
-    $('#info_spinner').hide();
-}
+  };
 
-function reload_current_account() {
-    if (settings.twitter.users[current_account].stream) {
-        req[current_account].abort();
+  StreamRequest.prototype.timeout = function() {
+    Application.log(this, "Timeout", "Timeout reached.");
+    this.account.add_status_html("Timeout vermutet.");
+    return this.account.fill_list();
+  };
+
+  StreamRequest.prototype.process_buffer = function() {
+    var average_tweet_delay, len, parseable_text, regex, res, targeted_delay;
+    if (this.processing) return;
+    this.processing = true;
+    regex = /^[\r\n]*([0-9]+)\r\n([\s\S]+)$/;
+    while (res = this.buffer.match(regex)) {
+      len = parseInt(res[1]);
+      if (res[2].length < len) break;
+      parseable_text = res[2].substr(0, len);
+      this.buffer = res[2].substr(len);
+      try {
+        this.account.parse_data(parseable_text);
+      } catch (_error) {}
+      this.last_event_times.unshift(new Date());
+      if (this.last_event_times.length > (settings.timeout_detect_tweet_count + 1)) {
+        this.last_event_times.pop();
+      }
+      if (this.last_event_times.length >= 2) {
+        average_tweet_delay = (this.last_event_times[0] - this.last_event_times[this.last_event_times.length - 1]) / (this.last_event_times.length - 1);
+        targeted_delay = average_tweet_delay * settings.timeout_detect_factor;
+        if (settings.timeout_minimum_delay * 1000 > targeted_delay) {
+          targeted_delay = settings.timeout_minimum_delay * 1000;
+        }
+        if (settings.timeout_maximum_delay * 1000 < targeted_delay) {
+          targeted_delay = settings.timeout_maximum_delay * 1000;
+        }
+        this.set_timeout(this.last_event_times[0].getTime() + targeted_delay - (new Date()).getTime());
+      } else {
+        this.set_timeout(settings.timeout_maximum_delay * 1000);
+      }
+    }
+    return this.processing = false;
+  };
+
+  return StreamRequest;
+
+})(Request);
+
+PullRequest = (function(_super) {
+
+  __extends(PullRequest, _super);
+
+  function PullRequest() {
+    PullRequest.__super__.constructor.apply(this, arguments);
+  }
+
+  PullRequest.prototype.start_request = function() {
+    return window.setTimeout(this.account.fill_list, 300000);
+  };
+
+  PullRequest.prototype.stop_request = function() {
+    return this.account.fill_list();
+  };
+
+  return PullRequest;
+
+})(Request);
+
+event = (function(_super) {
+
+  __extends(event, _super);
+
+  event.prototype.get_user_data = function() {
+    return this.source;
+  };
+
+  event.prototype.get_html = function() {
+    return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + (this.get_inner_html()) + "		</div>	";
+  };
+
+  event.prototype.get_inner_html = function() {
+    return alert("get_inner_html should be overwritten!");
+  };
+
+  event.prototype.id = null;
+
+  function event(data, account) {
+    this.data = data;
+    this.account = account;
+    this.target = new User(this.data.target);
+    this.source = new User(this.data.source);
+    this.date = new Date(this.data.created_at);
+  }
+
+  event.get_object = function(data, account) {
+    switch (data.event) {
+      case "follow":
+        return new FollowEvent(data, account);
+      case "favorite":
+        return new FavoriteEvent(data, account);
+      case "list_member_added":
+        return new ListMemberAddedEvent(data, account);
+      case "list_member_removed":
+        return new ListMemberRemovedEvent(data, account);
+      case "block":
+      case "user_update":
+      case "unfavorite":
+        return new HiddenEvent(data, account);
+      default:
+        return new UnknownElement(data, account);
+    }
+  };
+
+  return event;
+
+})(TwitterMessage);
+
+FollowEvent = (function(_super) {
+
+  __extends(FollowEvent, _super);
+
+  function FollowEvent() {
+    FollowEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  FollowEvent.prototype.get_inner_html = function() {
+    return "Neuer Follower: " + (this.source.get_link_html(true));
+  };
+
+  return FollowEvent;
+
+})(Event);
+
+FavoriteEvent = (function(_super) {
+
+  __extends(FavoriteEvent, _super);
+
+  function FavoriteEvent() {
+    FavoriteEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  FavoriteEvent.prototype.get_inner_html = function() {
+    return "" + (this.source.get_link_html(true)) + " favorisierte:<br />" + this.data.text;
+  };
+
+  return FavoriteEvent;
+
+})(Event);
+
+ListMemberAddedEvent = (function(_super) {
+
+  __extends(ListMemberAddedEvent, _super);
+
+  function ListMemberAddedEvent() {
+    ListMemberAddedEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  ListMemberAddedEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " fügte dich zu einer Liste hinzu:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+  };
+
+  return ListMemberAddedEvent;
+
+})(Event);
+
+ListMemberRemovedEvent = (function(_super) {
+
+  __extends(ListMemberRemovedEvent, _super);
+
+  function ListMemberRemovedEvent() {
+    ListMemberRemovedEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  ListMemberRemovedEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " entfernte dich von einer Liste:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+  };
+
+  return ListMemberRemovedEvent;
+
+})(Event);
+
+HiddenEvent = (function(_super) {
+
+  __extends(HiddenEvent, _super);
+
+  function HiddenEvent() {
+    HiddenEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  HiddenEvent.prototype.get_html = function() {
+    return "";
+  };
+
+  return HiddenEvent;
+
+})(Event);
+
+UnknownEvent = (function(_super) {
+
+  __extends(UnknownEvent, _super);
+
+  function UnknownEvent() {
+    UnknownEvent.__super__.constructor.apply(this, arguments);
+  }
+
+  UnknownEvent.prototype.get_inner_html = function() {
+    return "		" + (this.source.get_link_html(true)) + " löste folgendes, unbekanntes Event namens " + this.data.event + " aus:<br />		" + (this.data.toString());
+  };
+
+  return UnknownEvent;
+
+})(Event);
+
+Application = (function() {
+
+  function Application() {}
+
+  Application.users = {};
+
+  Application.accounts = [];
+
+  Application.expected_settings_version = 12;
+
+  Application.current_account = null;
+
+  Application.twitter_config = {};
+
+  Application.autocompletes = [];
+
+  Application.start = function() {
+    Application.log(this, "", "Starting...");
+    if (!this.is_settings_version_okay()) return;
+    this.fill_places();
+    this.attach_hooks();
+    this.initialize_accounts();
+    this.get_twitter_configuration();
+    return this.accounts[0].activate();
+  };
+
+  Application.is_settings_version_okay = function() {
+    if (settings.version !== this.expected_settings_version) {
+      alert("settings.js veraltet.\nErwartet: " + expected_settings_version + "\nGegeben: " + settings.version);
+      return false;
+    }
+    return true;
+  };
+
+  Application.fill_places = function() {
+    var id, p, place, _len, _ref;
+    if (settings.places.length === 0) {
+      return $('#place').remove();
     } else {
-        fillList(current_account);
+      p = $('#place')[0];
+      p.options[0] = new Option("-- leer --", 0);
+      _ref = settings.places;
+      for (id = 0, _len = _ref.length; id < _len; id++) {
+        place = _ref[id];
+        p.options[p.options.length] = new Option(place.name, id + 1);
+      }
+      if ($.cookie('last_place')) {
+        return $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
+      }
     }
-}
+  };
+
+  Application.attach_hooks = function() {
+    var _this = this;
+    $('#place').change(function() {
+      return $.cookie('last_place', $('#place option:selected').val(), {
+        expires: 365
+      });
+    });
+    $('#file').change(Hooks.check_file);
+    return $('#text').autocomplete({
+      minLength: 1,
+      source: function(request, response) {
+        var word;
+        word = request.term.split(/\s+/).pop();
+        if (request.term.match(/^d @?[a-z0-9_]+$/i)) word = '@' + word;
+        if (word[0] !== "@" && word[0] !== "#") {
+          return response(new Array());
+        } else {
+          return response($.ui.autocomplete.filter(_this.autocompletes, word));
+        }
+      },
+      focus: function() {
+        return false;
+      },
+      autoFocus: true,
+      delay: 0,
+      appendTo: "#autocomplete_area",
+      select: function(event, ui) {
+        var term;
+        term = this.value.split(/\s+/).pop();
+        this.value = this.value.substring(0, this.value.length - term.length) + ui.item.value + " ";
+        return false;
+      }
+    });
+  };
+
+  Application.initialize_accounts = function() {
+    var acct, data, id, _len, _ref, _results;
+    _ref = settings.twitter.users;
+    _results = [];
+    for (id = 0, _len = _ref.length; id < _len; id++) {
+      data = _ref[id];
+      acct = new Account(id);
+      _results.push(this.accounts[id] = acct);
+    }
+    return _results;
+  };
+
+  Application.get_twitter_configuration = function() {
+    return this.accounts[0].get_twitter_configuration();
+  };
+
+  Application.get_dm_recipient_name = function() {
+    return this.sending_dm_to;
+  };
+
+  Application.set_dm_recipient_name = function(recipient_name) {
+    this.sending_dm_to = recipient_name;
+    if (recipient_name != null) {
+      Hooks.toggle_file(false);
+      $('#dm_info_text').html("DM @" + recipient_name);
+      $('#dm_info').show();
+      $('#place').hide();
+      return $('#file_choose').hide();
+    } else {
+      $('#dm_info').hide();
+      $('#place').show();
+      return $('#file_choose').show();
+    }
+  };
+
+  Application.reply_to = function(tweet) {
+    if (tweet == null) return this.reply_to_tweet;
+    return this.reply_to_tweet = tweet;
+  };
+
+  Application.toString = function() {
+    return "Application";
+  };
+
+  Application.is_sending_dm = function() {
+    return this.sending_dm_to != null;
+  };
+
+  Application.log = function(place, category, message) {
+    var place_str;
+    if (!(settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
+      return;
+    }
+    place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
+    return console.log("[" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
+  };
+
+  Application.add_to_autocomplete = function(term) {
+    if ($.inArray(term, this.autocompletes) === -1) {
+      this.autocompletes.push(term);
+      return this.autocompletes.sort();
+    }
+  };
+
+  Application.infoarea = {
+    visible: false,
+    show: function(title, content) {
+      Application.infoarea.visible = true;
+      $('#infoarea_title').html(title);
+      $('#infoarea_content').html(content);
+      $('#infoarea').show();
+      return false;
+    },
+    hide: function() {
+      Application.infoarea.visible = false;
+      $('#infoarea').hide();
+      return false;
+    }
+  };
+
+  return Application;
+
+})();
