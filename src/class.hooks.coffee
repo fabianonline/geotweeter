@@ -24,7 +24,7 @@ class Hooks
 		urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig)
 		for url in urls ? []
 			length -= url.length
-			length += if url.slice(0,5)=="https" then Application.twitter_config.short_url_length_https else Application.twitter_config.short_url_length_http
+			length += if url.slice(0,5)=="https" then Application.twitter_config.short_url_length_https else Application.twitter_config.short_url_length
 		color = '#f00' if length>140
 		$('#counter').html(140-length)
 		$('#counter').css('color', color)

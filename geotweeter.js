@@ -583,7 +583,7 @@ Hooks = (function() {
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       url = _ref[_i];
       length -= url.length;
-      length += url.slice(0, 5) === "https" ? Application.twitter_config.short_url_length_https : Application.twitter_config.short_url_length_http;
+      length += url.slice(0, 5) === "https" ? Application.twitter_config.short_url_length_https : Application.twitter_config.short_url_length;
     }
     if (length > 140) color = '#f00';
     $('#counter').html(140 - length);
