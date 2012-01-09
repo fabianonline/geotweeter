@@ -52,7 +52,6 @@ class Application
 			$('#place').hide()
 			$('#file_choose').hide()
 		else
-			Hooks.toggle_file(true)
 			$('#dm_info').hide()
 			$('#place').show()
 			$('#file_choose').show()

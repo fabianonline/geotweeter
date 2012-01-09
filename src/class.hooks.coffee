@@ -34,6 +34,9 @@ class Hooks
 		
 	@send: -> if Application.get_dm_recipient_name()? then DirectMessage.hooks.send() else Tweet.hooks.send()
 	@cancel_dm: ->
+		receiver = Application.get_dm_recipient_name()
+		Application.set_dm_recipient_name(null)
+		$('#text').val("@#{receiver} #{$('#text').val()}")
 	
 	@toggle_file: (new_value) ->
 		if new_value?

@@ -516,7 +516,12 @@ Hooks = (function() {
     }
   };
 
-  Hooks.cancel_dm = function() {};
+  Hooks.cancel_dm = function() {
+    var receiver;
+    receiver = Application.get_dm_recipient_name();
+    Application.set_dm_recipient_name(null);
+    return $('#text').val("@" + receiver + " " + ($('#text').val()));
+  };
 
   Hooks.toggle_file = function(new_value) {
     if (new_value != null) {
@@ -1477,7 +1482,6 @@ Application = (function() {
       $('#place').hide();
       return $('#file_choose').hide();
     } else {
-      Hooks.toggle_file(true);
       $('#dm_info').hide();
       $('#place').show();
       return $('#file_choose').show();
