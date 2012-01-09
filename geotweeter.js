@@ -312,7 +312,7 @@ Account = (function() {
       count: 200,
       include_entities: true,
       page: 1,
-      since_id: this.max_known_id !== "0" ? this.max_known_id : void 0
+      since_id: this.max_known_tweet_id !== "0" ? this.max_known_tweet_id : void 0
     };
     requests = [
       {

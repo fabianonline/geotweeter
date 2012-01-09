@@ -197,7 +197,7 @@ class Account
 			count: 200
 			include_entities: true
 			page: 1
-			since_id: @max_known_id unless @max_known_id=="0"
+			since_id: @max_known_tweet_id unless @max_known_tweet_id=="0"
 		}
 		
 		requests = [
