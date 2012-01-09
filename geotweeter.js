@@ -108,11 +108,11 @@ Account = (function() {
     };
     $.ajax({
       type: 'POST',
-      url: "proxy/tweetmarker/lastread?collection=timeline&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
+      url: "proxy/tweetmarker/lastread?collection=timeline,mentions&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
       headers: header,
       contentType: "text/plain",
       dataType: 'text',
-      data: "" + id,
+      data: "" + id + "," + id,
       processData: false,
       error: function(req) {
         var html;

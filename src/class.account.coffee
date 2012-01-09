@@ -46,11 +46,11 @@ class Account
 		
 		$.ajax({
 			type: 'POST'
-			url: "proxy/tweetmarker/lastread?collection=timeline&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
+			url: "proxy/tweetmarker/lastread?collection=timeline,mentions&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
 			headers: header
 			contentType: "text/plain"
 			dataType: 'text'
-			data: "#{id}"
+			data: "#{id},#{id}"
 			processData: false
 			error: (req) =>
 				html = "
