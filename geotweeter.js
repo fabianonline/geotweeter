@@ -36,6 +36,8 @@ String.prototype.is_bigger_than = function(id) {
 
 Account = (function() {
 
+  Account.first = null;
+
   Account.prototype.screen_name = null;
 
   Account.prototype.max_read_id = "0";
@@ -62,6 +64,7 @@ Account = (function() {
 
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);    this.id = settings_id;
+    if (settings_id === 0) Account.first = this;
     this.keys = {
       consumerKey: settings.twitter.consumerKey,
       consumerSecret: settings.twitter.consumerSecret,

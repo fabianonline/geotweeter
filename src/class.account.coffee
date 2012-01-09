@@ -1,4 +1,7 @@
 class Account
+	# static variables
+	@first: null
+	
 	screen_name: null
 	max_read_id: "0"
 	max_known_tweet_id: "0"
@@ -14,6 +17,7 @@ class Account
 	
 	constructor: (settings_id) ->
 		@id=settings_id
+		Account.first = this if settings_id==0
 		@keys = {
 			consumerKey: settings.twitter.consumerKey
 			consumerSecret: settings.twitter.consumerSecret
