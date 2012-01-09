@@ -39,7 +39,7 @@ Account = (function() {
 
   Account.prototype.max_read_id = "0";
 
-  Account.prototype.max_known_id = "0";
+  Account.prototype.max_known_tweet_id = "0";
 
   Account.prototype.max_known_dm_id = "0";
 
@@ -403,6 +403,16 @@ Account = (function() {
       if (array.length === 0) responses.splice(newest_index, 1);
       this_id = object.id;
       if (this_id !== old_id) html += object.get_html();
+      if (object.constructor === Tweet) {
+        if (object.id.is_bigger_than(this.max_known_tweet_id)) {
+          this.max_known_tweet_id = object.id;
+        }
+      }
+      if (object.constructor === DirectMessage) {
+        if (object.id.is_bigger_than(this.max_known_dm_id)) {
+          this.max_known_dm_id = object.id;
+        }
+      }
       old_id = this_id;
     }
     this.add_html(html);

@@ -1,7 +1,7 @@
 class Account
 	screen_name: null
 	max_read_id: "0"
-	max_known_id: "0"
+	max_known_tweet_id: "0"
 	max_known_dm_id: "0"
 	tweets: {}
 	id: null
@@ -23,7 +23,7 @@ class Account
 		@get_followers()
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
-		
+	
 	get_my_element: -> $("#content_#{@id}")
 	
 	set_max_read_id: (id) -> 
@@ -267,6 +267,10 @@ class Account
 			responses.splice(newest_index, 1) if array.length==0
 			this_id = object.id
 			html += object.get_html() unless this_id==old_id
+			if object.constructor==Tweet
+				@max_known_tweet_id=object.id if object.id.is_bigger_than(@max_known_tweet_id)
+			if object.constructor==DirectMessage
+				@max_known_dm_id=object.id if object.id.is_bigger_than(@max_known_dm_id)
 			old_id = this_id
 		@add_html(html)
 		@update_user_counter()
