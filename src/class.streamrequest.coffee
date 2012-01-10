@@ -26,7 +26,7 @@ class StreamRequest extends Request
 		Application.log(this, "set_timeout", "Delay: #{delay}")
 	
 	stop_request: ->
-		@request.abort()
+		@request.abort() if @request?
 	
 	start_request: ->
 		@account.set_status("Connecting to stream...", "orange")

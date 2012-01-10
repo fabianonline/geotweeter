@@ -1337,7 +1337,7 @@ StreamRequest = (function(_super) {
   };
 
   StreamRequest.prototype.stop_request = function() {
-    return this.request.abort();
+    if (this.request != null) return this.request.abort();
   };
 
   StreamRequest.prototype.start_request = function() {
