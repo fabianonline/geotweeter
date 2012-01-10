@@ -2,7 +2,7 @@ class Account
 	# static variables
 	@first: null
 	
-	screen_name: null
+	screen_name: "unknown"
 	max_read_id: "0"
 	max_known_tweet_id: "0"
 	max_known_dm_id: "0"
@@ -24,11 +24,26 @@ class Account
 			token: settings.twitter.users[settings_id].token
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
-		@validate_credentials()
-		@get_max_read_id()
-		@get_followers()
+		new_area = $('#content_template').clone()
+		new_area.attr('id', @get_content_div_id())
+		$('body').append(new_area);
+		$('#users').append("
+			<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
+				<a href='#' onClick='return Account.hooks.change_current_account(this);'>
+					<img src='icons/spinner.gif' />
+					<span class='count'></span>
+				</a>
+			</div>
+		")
+		$("#user_#{@id}").tooltip({
+			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}"
+			track: true
+			showURL: false
+			left: 5
+		})
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
-		@fill_list()
+		@validate_credentials()
+		
 	
 	get_my_element: -> $("#content_#{@id}")
 	
@@ -96,31 +111,22 @@ class Account
 		@twitter_request('account/verify_credentials.json', {
 			method: "GET"
 			silent: true
-			async: false
+			async: true
 			success: (element, data) =>
 				unless data.screen_name
-					@add_html("Unknown error in validate_credentials. Exiting. #{data}")
+					@add_status_html("Unknown error in validate_credentials. Exiting. #{data}")
+					$("#user_#{@id} img").attr('src', "icons/exclamation.png")
 					return
 				@user = new User(data)
 				@screen_name = @user.screen_name
-				new_area = $('#content_template').clone()
-				new_area.attr('id', @get_content_div_id())
-				$('body').append(new_area);
-				html = '';
-				$('#users').append("
-					<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
-						<a href='#' onClick='return Account.hooks.change_current_account(this);'>
-							<img src='#{data.profile_image_url}' />
-							<span class='count'></span>
-						</a>
-					</div>
-				")
-				$("#user_#{@id}").tooltip({
-					bodyHandler: => "<strong>@#{@user.screen_name}</strong><br />#{@status_text}"
-					track: true
-					showURL: false
-					left: 5
-				})
+				$("#user_#{@id} img").attr('src', data.profile_image_url)
+				@get_max_read_id()
+				@get_followers()
+				@fill_list()
+			error: =>
+				@add_status_html("Unknown error in validate_credentials. Exiting.")
+				$("#user_#{@id} img").attr('src', "icons/exclamation.png")
+				@set_status("Error!", "red")
 		})
 	
 	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
@@ -148,7 +154,8 @@ class Account
 	get_twitter_configuration: ->
 		@twitter_request('help/configuration.json', {
 			silent: true
-			async: false
+			async: true
+			method: "GET"
 			success: (element, data) -> Application.twitter_config = data
 		})
 	

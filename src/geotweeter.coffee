@@ -57,7 +57,6 @@ class Application
 	@initialize_accounts: ->
 		for data, id in settings.twitter.users
 			acct = new Account(id) # new Account calls validateCredentials.
-			# TODO
 			@accounts[id] = acct
 
 	@get_twitter_configuration: -> @accounts[0].get_twitter_configuration()

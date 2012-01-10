@@ -55,7 +55,7 @@ Account = (function() {
 
   Account.first = null;
 
-  Account.prototype.screen_name = null;
+  Account.prototype.screen_name = "unknown";
 
   Account.prototype.max_read_id = "0";
 
@@ -80,7 +80,10 @@ Account = (function() {
   Account.prototype.status_text = "";
 
   function Account(settings_id) {
-    this.fill_list = __bind(this.fill_list, this);    this.id = settings_id;
+    this.fill_list = __bind(this.fill_list, this);
+    var new_area,
+      _this = this;
+    this.id = settings_id;
     if (settings_id === 0) Account.first = this;
     this.keys = {
       consumerKey: settings.twitter.consumerKey,
@@ -88,11 +91,20 @@ Account = (function() {
       token: settings.twitter.users[settings_id].token,
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
-    this.validate_credentials();
-    this.get_max_read_id();
-    this.get_followers();
+    new_area = $('#content_template').clone();
+    new_area.attr('id', this.get_content_div_id());
+    $('body').append(new_area);
+    $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/spinner.gif' />					<span class='count'></span>				</a>			</div>		");
+    $("#user_" + this.id).tooltip({
+      bodyHandler: function() {
+        return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text;
+      },
+      track: true,
+      showURL: false,
+      left: 5
+    });
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
-    this.fill_list();
+    this.validate_credentials();
   }
 
   Account.prototype.get_my_element = function() {
@@ -182,28 +194,24 @@ Account = (function() {
     return this.twitter_request('account/verify_credentials.json', {
       method: "GET",
       silent: true,
-      async: false,
+      async: true,
       success: function(element, data) {
-        var html, new_area;
         if (!data.screen_name) {
-          _this.add_html("Unknown error in validate_credentials. Exiting. " + data);
+          _this.add_status_html("Unknown error in validate_credentials. Exiting. " + data);
+          $("#user_" + _this.id + " img").attr('src', "icons/exclamation.png");
           return;
         }
         _this.user = new User(data);
         _this.screen_name = _this.user.screen_name;
-        new_area = $('#content_template').clone();
-        new_area.attr('id', _this.get_content_div_id());
-        $('body').append(new_area);
-        html = '';
-        $('#users').append("					<div class='user' id='user_" + _this.id + "' data-account-id='" + _this.id + "'>						<a href='#' onClick='return Account.hooks.change_current_account(this);'>							<img src='" + data.profile_image_url + "' />							<span class='count'></span>						</a>					</div>				");
-        return $("#user_" + _this.id).tooltip({
-          bodyHandler: function() {
-            return "<strong>@" + _this.user.screen_name + "</strong><br />" + _this.status_text;
-          },
-          track: true,
-          showURL: false,
-          left: 5
-        });
+        $("#user_" + _this.id + " img").attr('src', data.profile_image_url);
+        _this.get_max_read_id();
+        _this.get_followers();
+        return _this.fill_list();
+      },
+      error: function() {
+        _this.add_status_html("Unknown error in validate_credentials. Exiting.");
+        $("#user_" + _this.id + " img").attr('src', "icons/exclamation.png");
+        return _this.set_status("Error!", "red");
       }
     });
   };
@@ -251,7 +259,8 @@ Account = (function() {
   Account.prototype.get_twitter_configuration = function() {
     return this.twitter_request('help/configuration.json', {
       silent: true,
-      async: false,
+      async: true,
+      method: "GET",
       success: function(element, data) {
         return Application.twitter_config = data;
       }
