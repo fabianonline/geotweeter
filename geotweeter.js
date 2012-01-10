@@ -82,7 +82,6 @@ Account = (function() {
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
     this.validate_credentials();
-    this.get_max_read_id();
     this.get_followers();
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
     this.fill_list();

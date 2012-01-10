@@ -25,7 +25,6 @@ class Account
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
 		@validate_credentials()
-		@get_max_read_id()
 		@get_followers()
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
 		@fill_list()
