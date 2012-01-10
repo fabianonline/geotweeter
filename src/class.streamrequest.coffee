@@ -9,9 +9,11 @@ class StreamRequest extends Request
 	timeout_timer: null
 	last_event_times: []
 	opera_interval: null
+	delay: 300
 	
 	constructor: (account) ->
 		super(account)
+		@delay = settings.timings.mindelay
 	
 	toString: -> "StreamReq #{@account.user.screen_name}"
 	
@@ -30,6 +32,7 @@ class StreamRequest extends Request
 	
 	start_request: ->
 		@account.set_status("Connecting to stream...", "orange")
+		Application.log(this, "start_request", "Delay: #{@delay}")
 		@last_event_times = []
 		@set_timeout(settings.timeout_maximum_delay*1000)
 		@processing = false
@@ -37,7 +40,6 @@ class StreamRequest extends Request
 		@response_offset = 0
 		@connected = false
 		@connection_started_at = new Date()
-		@last_data_received_at = new Date()
 		data = @account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {delimited: "length", include_entities: "1", include_rts: "1"})
 		url = "user_proxy?#{data}"
 		@request = new XMLHttpRequest();
@@ -51,8 +53,10 @@ class StreamRequest extends Request
 				when 4
 					@account.set_status("Disconnected", "red")
 					@connected = false
-					@delay = settings.timings.mindelay if (new Date()).getTime() - @connection_started_at.getTime() > 10000
-					# TODO: Fehlermeldung
+					# Delay auf Minimum zurücksetzen, wenn die Verbindung länger als 60 Sekunden stand.
+					@delay = settings.timings.mindelay if (new Date()).getTime() - @connection_started_at.getTime() > 60000
+					@account.add_status_html("Disconnect.<br>Grund: #{@request.statusText}<br>Delay: #{@delay} Sekunden")
+					Application.log(@, "onreadystatechange", "Disconnect. Delay jetzt: #{@delay}")
 					window.setTimeout(@account.fill_list, @delay*1000)
 					@delay = @delay * 2
 			@buffer += @request.responseText.substr(@response_offset)

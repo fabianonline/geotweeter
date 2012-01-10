@@ -1315,8 +1315,11 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.opera_interval = null;
 
+  StreamRequest.prototype.delay = 300;
+
   function StreamRequest(account) {
     this.timeout = __bind(this.timeout, this);    StreamRequest.__super__.constructor.call(this, account);
+    this.delay = settings.timings.mindelay;
   }
 
   StreamRequest.prototype.toString = function() {
@@ -1344,6 +1347,7 @@ StreamRequest = (function(_super) {
     var data, url,
       _this = this;
     this.account.set_status("Connecting to stream...", "orange");
+    Application.log(this, "start_request", "Delay: " + this.delay);
     this.last_event_times = [];
     this.set_timeout(settings.timeout_maximum_delay * 1000);
     this.processing = false;
@@ -1351,7 +1355,6 @@ StreamRequest = (function(_super) {
     this.response_offset = 0;
     this.connected = false;
     this.connection_started_at = new Date();
-    this.last_data_received_at = new Date();
     data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
       delimited: "length",
       include_entities: "1",
@@ -1370,9 +1373,11 @@ StreamRequest = (function(_super) {
         case 4:
           _this.account.set_status("Disconnected", "red");
           _this.connected = false;
-          if ((new Date()).getTime() - _this.connection_started_at.getTime() > 10000) {
+          if ((new Date()).getTime() - _this.connection_started_at.getTime() > 60000) {
             _this.delay = settings.timings.mindelay;
           }
+          _this.account.add_status_html("Disconnect.<br>Grund: " + _this.request.statusText + "<br>Delay: " + _this.delay + " Sekunden");
+          Application.log(_this, "onreadystatechange", "Disconnect. Delay jetzt: " + _this.delay);
           window.setTimeout(_this.account.fill_list, _this.delay * 1000);
           _this.delay = _this.delay * 2;
       }
