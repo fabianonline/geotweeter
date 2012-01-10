@@ -1,4 +1,8 @@
 class User
+	@id: "0"
+	@permalink: ""
+	@screen_name: ""
+	
 	constructor: (@data) ->
 		users[@data.id] = this
 		@screen_name = @data.screen_name

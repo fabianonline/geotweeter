@@ -7,6 +7,7 @@ class StreamRequest extends Request
 	connection_started_at: null
 	last_data_received_at: null
 	timeout_timer: null
+	timeout_at: null
 	last_event_times: []
 	opera_interval: null
 	delay: 300
@@ -26,7 +27,8 @@ class StreamRequest extends Request
 	set_timeout: (delay) ->
 		@clear_timeout()
 		@timeout_timer = window.setTimeout(@timeout, delay)
-		Application.log(this, "set_timeout", "Delay: #{delay}")
+		@timeout_at = new Date(new Date().getTime() + delay)
+		Application.log(this, "set_timeout", "Delay: #{delay}, target: #{@timeout_at.format("%H:%M:%S")}")
 	
 	stop_request: ->
 		@stopped = true

@@ -1,4 +1,6 @@
 class DirectMessage extends Tweet
+	recipient: null
+	
 	fill_user_variables: -> 
 		@sender = new User(@data.sender)
 		@recipient = new User(@data.recipient)

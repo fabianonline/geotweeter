@@ -7,6 +7,11 @@ class Tweet extends TwitterMessage
 	thumbs: []
 	id: null
 	permalink: ""
+	data: {}
+	text: ""
+	entities: {}
+	date: null
+	retweeted_by: null
 	
 	constructor: (data, @account) ->
 		@data = data

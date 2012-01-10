@@ -719,6 +719,16 @@ Tweet = (function(_super) {
 
   Tweet.prototype.permalink = "";
 
+  Tweet.prototype.data = {};
+
+  Tweet.prototype.text = "";
+
+  Tweet.prototype.entities = {};
+
+  Tweet.prototype.date = null;
+
+  Tweet.prototype.retweeted_by = null;
+
   function Tweet(data, account) {
     this.account = account;
     this.data = data;
@@ -1136,6 +1146,8 @@ DirectMessage = (function(_super) {
     DirectMessage.__super__.constructor.apply(this, arguments);
   }
 
+  DirectMessage.prototype.recipient = null;
+
   DirectMessage.prototype.fill_user_variables = function() {
     this.sender = new User(this.data.sender);
     return this.recipient = new User(this.data.recipient);
@@ -1234,6 +1246,12 @@ DirectMessage = (function(_super) {
 
 User = (function() {
 
+  User.id = "0";
+
+  User.permalink = "";
+
+  User.screen_name = "";
+
   function User(data) {
     this.data = data;
     users[this.data.id] = this;
@@ -1311,6 +1329,8 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.timeout_timer = null;
 
+  StreamRequest.prototype.timeout_at = null;
+
   StreamRequest.prototype.last_event_times = [];
 
   StreamRequest.prototype.opera_interval = null;
@@ -1338,7 +1358,8 @@ StreamRequest = (function(_super) {
   StreamRequest.prototype.set_timeout = function(delay) {
     this.clear_timeout();
     this.timeout_timer = window.setTimeout(this.timeout, delay);
-    return Application.log(this, "set_timeout", "Delay: " + delay);
+    this.timeout_at = new Date(new Date().getTime() + delay);
+    return Application.log(this, "set_timeout", "Delay: " + delay + ", target: " + (this.timeout_at.format("%H:%M:%S")));
   };
 
   StreamRequest.prototype.stop_request = function() {
