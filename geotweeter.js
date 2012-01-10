@@ -559,7 +559,7 @@ Account = (function() {
     },
     reload: function() {
       Application.current_account.get_max_read_id();
-      Application.current_account.request.stop_request();
+      Application.current_account.request.restart();
       return false;
     }
   };
@@ -1317,6 +1317,8 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.delay = 300;
 
+  StreamRequest.prototype.stopped = false;
+
   function StreamRequest(account) {
     this.timeout = __bind(this.timeout, this);    StreamRequest.__super__.constructor.call(this, account);
     this.delay = settings.timings.mindelay;
@@ -1340,12 +1342,19 @@ StreamRequest = (function(_super) {
   };
 
   StreamRequest.prototype.stop_request = function() {
+    this.stopped = true;
+    if (this.request != null) return this.request.abort();
+  };
+
+  StreamRequest.prototype.restart = function() {
     if (this.request != null) return this.request.abort();
   };
 
   StreamRequest.prototype.start_request = function() {
     var data, url,
       _this = this;
+    this.stop_request();
+    this.stopped = false;
     this.account.set_status("Connecting to stream...", "orange");
     Application.log(this, "start_request", "Delay: " + this.delay);
     this.last_event_times = [];
@@ -1376,10 +1385,15 @@ StreamRequest = (function(_super) {
           if ((new Date()).getTime() - _this.connection_started_at.getTime() > 60000) {
             _this.delay = settings.timings.mindelay;
           }
-          _this.account.add_status_html("Disconnect.<br>Grund: " + _this.request.statusText + "<br>Delay: " + _this.delay + " Sekunden");
+          if (!_this.stopped) {
+            _this.account.add_status_html("Disconnect.<br>Grund: " + _this.request.statusText + "<br>Delay: " + _this.delay + " Sekunden");
+          }
           Application.log(_this, "onreadystatechange", "Disconnect. Delay jetzt: " + _this.delay);
-          window.setTimeout(_this.account.fill_list, _this.delay * 1000);
+          if (!_this.stopped) {
+            window.setTimeout(_this.account.fill_list, _this.delay * 1000);
+          }
           _this.delay = _this.delay * 2;
+          _this.stopped = false;
       }
       _this.buffer += _this.request.responseText.substr(_this.response_offset);
       _this.response_offset = _this.request.responseText.length;
@@ -1395,6 +1409,7 @@ StreamRequest = (function(_super) {
   StreamRequest.prototype.timeout = function() {
     Application.log(this, "Timeout", "Timeout reached.");
     this.account.add_status_html("Timeout vermutet.");
+    this.stop_request();
     return this.account.fill_list();
   };
 
@@ -1450,6 +1465,10 @@ PullRequest = (function(_super) {
 
   PullRequest.prototype.stop_request = function() {
     return this.account.fill_list();
+  };
+
+  PullRequest.prototype.restart = function() {
+    return this.stop_request();
   };
 
   return PullRequest;

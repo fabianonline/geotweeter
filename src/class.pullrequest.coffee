@@ -4,3 +4,5 @@ class PullRequest extends Request
 	
 	stop_request: ->
 		@account.fill_list()
+	
+	restart: -> @stop_request()

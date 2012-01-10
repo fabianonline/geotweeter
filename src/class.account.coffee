@@ -375,6 +375,6 @@ class Account
 		
 		reload: ->
 			Application.current_account.get_max_read_id()
-			Application.current_account.request.stop_request()
+			Application.current_account.request.restart()
 			return false
 	}

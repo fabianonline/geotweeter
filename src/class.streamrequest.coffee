@@ -10,6 +10,7 @@ class StreamRequest extends Request
 	last_event_times: []
 	opera_interval: null
 	delay: 300
+	stopped: false
 	
 	constructor: (account) ->
 		super(account)
@@ -28,9 +29,15 @@ class StreamRequest extends Request
 		Application.log(this, "set_timeout", "Delay: #{delay}")
 	
 	stop_request: ->
+		@stopped = true
+		@request.abort() if @request?
+	
+	restart: ->
 		@request.abort() if @request?
 	
 	start_request: ->
+		@stop_request()
+		@stopped = false
 		@account.set_status("Connecting to stream...", "orange")
 		Application.log(this, "start_request", "Delay: #{@delay}")
 		@last_event_times = []
@@ -55,10 +62,11 @@ class StreamRequest extends Request
 					@connected = false
 					# Delay auf Minimum zurücksetzen, wenn die Verbindung länger als 60 Sekunden stand.
 					@delay = settings.timings.mindelay if (new Date()).getTime() - @connection_started_at.getTime() > 60000
-					@account.add_status_html("Disconnect.<br>Grund: #{@request.statusText}<br>Delay: #{@delay} Sekunden")
+					@account.add_status_html("Disconnect.<br>Grund: #{@request.statusText}<br>Delay: #{@delay} Sekunden") unless @stopped
 					Application.log(@, "onreadystatechange", "Disconnect. Delay jetzt: #{@delay}")
-					window.setTimeout(@account.fill_list, @delay*1000)
+					window.setTimeout(@account.fill_list, @delay*1000) unless @stopped
 					@delay = @delay * 2
+					@stopped = false
 			@buffer += @request.responseText.substr(@response_offset)
 			@response_offset = @request.responseText.length
 			@process_buffer()
@@ -70,6 +78,7 @@ class StreamRequest extends Request
 	timeout: =>
 		Application.log(this, "Timeout", "Timeout reached.")
 		@account.add_status_html("Timeout vermutet.")
+		@stop_request()
 		@account.fill_list()
 	
 	process_buffer: ->
