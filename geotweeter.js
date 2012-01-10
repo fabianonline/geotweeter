@@ -89,6 +89,7 @@ Account = (function() {
       tokenSecret: settings.twitter.users[settings_id].tokenSecret
     };
     this.validate_credentials();
+    this.get_max_read_id();
     this.get_followers();
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
     this.fill_list();
@@ -544,6 +545,7 @@ Account = (function() {
       return false;
     },
     reload: function() {
+      Application.current_account.get_max_read_id();
       Application.current_account.request.stop_request();
       return false;
     }
@@ -1331,7 +1333,6 @@ StreamRequest = (function(_super) {
     this.account.set_status("Connecting to stream...", "orange");
     this.last_event_times = [];
     this.set_timeout(settings.timeout_maximum_delay * 1000);
-    this.account.get_max_read_id();
     this.processing = false;
     this.buffer = "";
     this.response_offset = 0;
@@ -1426,7 +1427,6 @@ PullRequest = (function(_super) {
   }
 
   PullRequest.prototype.start_request = function() {
-    this.account.get_max_read_id();
     return window.setTimeout(this.account.fill_list, 300000);
   };
 
