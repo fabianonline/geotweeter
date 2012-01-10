@@ -74,18 +74,19 @@ class Account
 			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
 			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
-		value = $.ajax({
+		$.ajax({
 			method: 'GET'
-			async: false
+			async: true
 			url: "proxy/tweetmarker/lastread?collection=timeline&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
 			headers: header
 			dataType: 'text'
-		}).responseText ? "0"
-		
-		@max_read_id = value
-		Application.log(this, "getMaxReadID", "result: " + value)
-		@update_read_tweet_status()
-		return value
+			success: (data, textStatus, req) =>
+				if req.status==200 && data?
+					@max_read_id = data
+					Application.log(@, "get_max_read_id", "result: #{data}")
+					@update_read_tweet_status()
+		})
+		return
 	
 	toString: -> "Account #{@user.screen_name}"
 	
