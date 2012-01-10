@@ -57,7 +57,7 @@ class Tweet extends TwitterMessage
 	
 	get_temporary_info_html: ->
 		"<div class='info'>" +
-		"<a href='#{@permalink}' target='_blank'>#{@date.format_nice()}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
+		"<a href='#{@permalink}' target='_blank'>#{@date.format("%d.%m.%Y %H:%M")}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
 		"</div>"
 			
 	get_buttons_html: ->

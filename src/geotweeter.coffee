@@ -86,7 +86,7 @@ class Application
 	@log: (place, category, message) ->
 		return unless settings.debug && console? && console.log?
 		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
-		console.log("[#{place_str.pad(25)}][#{category.pad(15)}] #{message}")
+		console.log("#{(new Date()).format("%H:%M:%S")} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}")
 	
 	@add_to_autocomplete: (term) ->
 		if $.inArray(term, @autocompletes)==-1

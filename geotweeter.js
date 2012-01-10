@@ -14,8 +14,15 @@ var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
   __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-Date.prototype.format_nice = function() {
-  return "" + (this.getDate().add_null()) + "." + ((this.getMonth() + 1).add_null()) + "." + (this.getYear() + 1900) + " " + (this.getHours().add_null()) + ":" + (this.getMinutes().add_null());
+Date.prototype.format = function(format) {
+  format = format.replace(/%d/g, this.getDate().add_null());
+  format = format.replace(/%H/g, this.getHours().add_null());
+  format = format.replace(/%m/g, (this.getMonth() + 1).add_null());
+  format = format.replace(/%M/g, this.getMinutes().add_null());
+  format = format.replace(/%S/g, this.getSeconds().add_null());
+  format = format.replace(/%y/g, ((this.getYear() + 1900) % 100).add_null());
+  format = format.replace(/%Y/g, this.getYear() + 1900);
+  return format;
 };
 
 Number.prototype.add_null = function() {
@@ -751,7 +758,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_temporary_info_html = function() {
-    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format_nice()) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
+    return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format("%d.%m.%Y %H:%M")) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
   };
 
   Tweet.prototype.get_buttons_html = function() {
@@ -1717,7 +1724,7 @@ Application = (function() {
       return;
     }
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
-    return console.log("[" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
+    return console.log("" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
   };
 
   Application.add_to_autocomplete = function(term) {
