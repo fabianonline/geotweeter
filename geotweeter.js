@@ -115,7 +115,7 @@ Account = (function() {
     var header,
       _this = this;
     if (id == null) {
-      Aplication.log(this, "set_max_read_id", "Falscher Wert: " + id);
+      Application.log(this, "set_max_read_id", "Falscher Wert: " + id);
       return;
     }
     this.max_read_id = id;

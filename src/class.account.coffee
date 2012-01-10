@@ -49,7 +49,7 @@ class Account
 	
 	set_max_read_id: (id) -> 
 		unless id?
-			Aplication.log(this, "set_max_read_id", "Falscher Wert: #{id}")
+			Application.log(this, "set_max_read_id", "Falscher Wert: #{id}")
 			return
 		
 		@max_read_id = id
