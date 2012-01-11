@@ -695,6 +695,9 @@ TwitterMessage = (function() {
     if ((data.text != null) && (data.recipient != null)) {
       return new DirectMessage(data, account);
     }
+    if (data.direct_message != null) {
+      return new DirectMessage(data.direct_message, account);
+    }
     if (data.text != null) return new Tweet(data, account);
     if (data.event != null) return Event.get_object(data, account);
   };
