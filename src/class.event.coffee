@@ -1,4 +1,4 @@
-class event extends TwitterMessage
+class Event extends TwitterMessage
 	get_user_data: -> @source
 	get_html: -> "
 		<div class='status'>

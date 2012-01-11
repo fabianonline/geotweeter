@@ -8,7 +8,7 @@ to this file will be overwritten!
 
 DO NOT MODIFY THIS FILE
 */
-var Account, Application, DirectMessage, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User, event,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
@@ -1499,25 +1499,25 @@ PullRequest = (function(_super) {
 
 })(Request);
 
-event = (function(_super) {
+Event = (function(_super) {
 
-  __extends(event, _super);
+  __extends(Event, _super);
 
-  event.prototype.get_user_data = function() {
+  Event.prototype.get_user_data = function() {
     return this.source;
   };
 
-  event.prototype.get_html = function() {
+  Event.prototype.get_html = function() {
     return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + (this.get_inner_html()) + "		</div>	";
   };
 
-  event.prototype.get_inner_html = function() {
+  Event.prototype.get_inner_html = function() {
     return alert("get_inner_html should be overwritten!");
   };
 
-  event.prototype.id = null;
+  Event.prototype.id = null;
 
-  function event(data, account) {
+  function Event(data, account) {
     this.data = data;
     this.account = account;
     this.target = new User(this.data.target);
@@ -1525,7 +1525,7 @@ event = (function(_super) {
     this.date = new Date(this.data.created_at);
   }
 
-  event.get_object = function(data, account) {
+  Event.get_object = function(data, account) {
     switch (data.event) {
       case "follow":
         return new FollowEvent(data, account);
@@ -1544,7 +1544,7 @@ event = (function(_super) {
     }
   };
 
-  return event;
+  return Event;
 
 })(TwitterMessage);
 
