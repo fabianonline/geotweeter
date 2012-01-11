@@ -158,6 +158,7 @@ Account = (function() {
   Account.prototype.get_max_read_id = function() {
     var header,
       _this = this;
+    $("#user_" + this.id + " .count").html('(?)');
     header = {
       "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
       "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {

@@ -85,6 +85,7 @@ class Account
 		@update_user_counter()
 	
 	get_max_read_id: ->
+		$("#user_#{@id} .count").html('(?)')
 		header = {
 			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
 			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
