@@ -1,0 +1,40 @@
+<!DOCTYPE html>  <html> <head>   <title>class.user.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="_info.html">                 _info.coffee               </a>                                           <a class="source" href="class.account.html">                 class.account.coffee               </a>                                           <a class="source" href="class.directmessage.html">                 class.directmessage.coffee               </a>                                           <a class="source" href="class.event.html">                 class.event.coffee               </a>                                           <a class="source" href="class.hooks.html">                 class.hooks.coffee               </a>                                           <a class="source" href="class.pullrequest.html">                 class.pullrequest.coffee               </a>                                           <a class="source" href="class.request.html">                 class.request.coffee               </a>                                           <a class="source" href="class.streamrequest.html">                 class.streamrequest.coffee               </a>                                           <a class="source" href="class.thumbnail.html">                 class.thumbnail.coffee               </a>                                           <a class="source" href="class.tweet.html">                 class.tweet.coffee               </a>                                           <a class="source" href="class.twittermessage.html">                 class.twittermessage.coffee               </a>                                           <a class="source" href="class.user.html">                 class.user.coffee               </a>                                           <a class="source" href="extension.date.html">                 extension.date.coffee               </a>                                           <a class="source" href="extension.number.html">                 extension.number.coffee               </a>                                           <a class="source" href="extension.string.html">                 extension.string.coffee               </a>                                           <a class="source" href="geotweeter.html">                 geotweeter.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               class.user.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">User</span>
+	<span class="vi">@id: </span><span class="s2">&quot;0&quot;</span>
+	<span class="vi">@permalink: </span><span class="s2">&quot;&quot;</span>
+	<span class="vi">@screen_name: </span><span class="s2">&quot;&quot;</span>
+	
+	<span class="nv">constructor: </span><span class="nf">(@data) -&gt;</span>
+		<span class="nx">users</span><span class="p">[</span><span class="nx">@data</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span>
+		<span class="vi">@screen_name = </span><span class="nx">@data</span><span class="p">.</span><span class="nx">screen_name</span>
+		<span class="nx">Application</span><span class="p">.</span><span class="nx">add_to_autocomplete</span><span class="p">(</span><span class="s2">&quot;@#{@screen_name}&quot;</span><span class="p">)</span> 
+		<span class="vi">@permalink = </span><span class="s2">&quot;https://twitter.com/#{@screen_name}&quot;</span>
+		<span class="vi">@id = </span><span class="nx">@data</span><span class="p">.</span><span class="nx">id_str</span>
+		
+	<span class="nv">id: </span><span class="o">-&gt;</span> <span class="nx">@data</span><span class="p">.</span><span class="nx">id_str</span>
+	<span class="nv">get_avatar_html: </span><span class="o">-&gt;</span> 
+		<span class="s2">&quot;&lt;span class=&#39;avatar&#39;&gt;</span>
+<span class="s2">			&lt;span class=&#39;tooltip_info&#39;&gt;</span>
+<span class="s2">				&lt;strong&gt;#{@data.name}&lt;/strong&gt;&lt;br /&gt;&lt;br /&gt;</span>
+<span class="s2">				#{@data.followers_count} Follower&lt;br /&gt;</span>
+<span class="s2">				#{@data.friends_count} Friends&lt;br /&gt;</span>
+<span class="s2">				#{@data.statuses_count} Tweets</span>
+<span class="s2">			&lt;/span&gt;</span>
+<span class="s2">			&lt;a href=&#39;https://twitter.com/account/profile_image/#{@data.screen_name}&#39; target=&#39;_blank&#39;&gt;</span>
+<span class="s2">				&lt;img class=&#39;user_avatar&#39; src=&#39;#{@data.profile_image_url}&#39; /&gt;</span>
+<span class="s2">			&lt;/a&gt;</span>
+<span class="s2">		&lt;/span&gt;&quot;</span>
+	
+	<span class="nv">get_link_html: </span><span class="nf">(show_full_name=false)-&gt;</span> <span class="s2">&quot;</span>
+<span class="s2">		&lt;span class=&#39;poster&#39;&gt;</span>
+<span class="s2">			&lt;a href=&#39;https://twitter.com/#{@data.screen_name}&#39; target=&#39;_blank&#39;&gt;</span>
+<span class="s2">				#{@data.screen_name}</span>
+<span class="s2">			&lt;/a&gt;</span>
+<span class="s2">			#{if show_full_name then &quot;</span> <span class="p">(</span><span class="c1">#{@data.name})&quot; else &quot;&quot;}</span>
+			<span class="o">&lt;</span><span class="err">/span&gt;&quot;</span>
+	
+	<span class="nv">get_screen_name: </span><span class="o">-&gt;</span> <span class="nx">@data</span><span class="p">.</span><span class="nx">screen_name</span>
+	<span class="nv">report_as_spam: </span><span class="nf">(account) -&gt;</span>
+		<span class="k">return</span> <span class="nx">unless</span> <span class="nx">confirm</span><span class="p">(</span><span class="s2">&quot;Wirklich #{@screen_name} als Spammer melden?&quot;</span><span class="p">)</span>
+		<span class="nx">account</span><span class="p">.</span><span class="nx">twitter_request</span><span class="p">(</span><span class="s2">&quot;report_spam.json&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nv">parameters: </span><span class="p">{</span><span class="nv">screen_name: </span><span class="nx">@screen_name</span><span class="p">},</span> <span class="nv">success_string: </span><span class="s2">&quot;Als Spammer gemeldet.&quot;</span><span class="p">,</span> <span class="nv">success: </span><span class="o">-&gt;</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.by_#{@screen_name}&quot;</span><span class="p">).</span><span class="nx">remove</span><span class="p">})</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

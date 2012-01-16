@@ -1,0 +1,109 @@
+<!DOCTYPE html>  <html> <head>   <title>class.streamrequest.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="_info.html">                 _info.coffee               </a>                                           <a class="source" href="class.account.html">                 class.account.coffee               </a>                                           <a class="source" href="class.directmessage.html">                 class.directmessage.coffee               </a>                                           <a class="source" href="class.event.html">                 class.event.coffee               </a>                                           <a class="source" href="class.hooks.html">                 class.hooks.coffee               </a>                                           <a class="source" href="class.pullrequest.html">                 class.pullrequest.coffee               </a>                                           <a class="source" href="class.request.html">                 class.request.coffee               </a>                                           <a class="source" href="class.streamrequest.html">                 class.streamrequest.coffee               </a>                                           <a class="source" href="class.thumbnail.html">                 class.thumbnail.coffee               </a>                                           <a class="source" href="class.tweet.html">                 class.tweet.coffee               </a>                                           <a class="source" href="class.twittermessage.html">                 class.twittermessage.coffee               </a>                                           <a class="source" href="class.user.html">                 class.user.coffee               </a>                                           <a class="source" href="extension.date.html">                 extension.date.coffee               </a>                                           <a class="source" href="extension.number.html">                 extension.number.coffee               </a>                                           <a class="source" href="extension.string.html">                 extension.string.coffee               </a>                                           <a class="source" href="geotweeter.html">                 geotweeter.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               class.streamrequest.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">StreamRequest</span> <span class="k">extends</span> <span class="nx">Request</span>
+	<span class="nv">connected: </span><span class="kc">false</span>
+	<span class="nv">buffer: </span><span class="s2">&quot;&quot;</span>
+	<span class="nv">response_offset: </span><span class="mi">0</span>
+	<span class="nv">request: </span><span class="kc">null</span>
+	<span class="nv">processing: </span><span class="kc">false</span>
+	<span class="nv">connection_started_at: </span><span class="kc">null</span>
+	<span class="nv">last_data_received_at: </span><span class="kc">null</span>
+	<span class="nv">timeout_timer: </span><span class="kc">null</span>
+	<span class="nv">timeout_at: </span><span class="kc">null</span>
+	<span class="nv">last_event_times: </span><span class="p">[]</span>
+	<span class="nv">opera_interval: </span><span class="kc">null</span>
+	<span class="nv">delay: </span><span class="mi">300</span>
+	<span class="nv">stopped: </span><span class="kc">false</span>
+	
+	<span class="nv">constructor: </span><span class="nf">(account) -&gt;</span>
+		<span class="k">super</span><span class="p">(</span><span class="nx">account</span><span class="p">)</span>
+		<span class="vi">@delay = </span><span class="nx">settings</span><span class="p">.</span><span class="nx">timings</span><span class="p">.</span><span class="nx">mindelay</span>
+	
+	<span class="nv">toString: </span><span class="o">-&gt;</span> <span class="s2">&quot;StreamReq #{@account.user.screen_name}&quot;</span>
+	
+	<span class="nv">clear_timeout: </span><span class="o">-&gt;</span>
+		<span class="k">if</span> <span class="nx">@timeout_timer</span><span class="o">?</span>
+			<span class="nb">window</span><span class="p">.</span><span class="nx">clearTimeout</span><span class="p">(</span><span class="nx">@timeout_timer</span><span class="p">)</span>
+			<span class="vi">@timeout_timer = </span><span class="kc">null</span>
+	
+	<span class="nv">set_timeout: </span><span class="nf">(delay) -&gt;</span>
+		<span class="nx">@clear_timeout</span><span class="p">()</span>
+		<span class="vi">@timeout_timer = </span><span class="nb">window</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="nx">@timeout</span><span class="p">,</span> <span class="nx">delay</span><span class="p">)</span>
+		<span class="vi">@timeout_at = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">+</span> <span class="nx">delay</span><span class="p">)</span>
+		<span class="nx">Application</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;set_timeout&quot;</span><span class="p">,</span> <span class="s2">&quot;Delay: #{delay}, target: #{@timeout_at.format(&quot;</span><span class="o">%</span><span class="nx">H</span><span class="o">:%</span><span class="nx">M</span><span class="o">:%</span><span class="nx">S</span><span class="s2">&quot;)}&quot;</span><span class="p">)</span>
+	
+	<span class="nv">stop_request: </span><span class="o">-&gt;</span>
+		<span class="vi">@stopped = </span><span class="kc">true</span>
+		<span class="nx">@request</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span> <span class="k">if</span> <span class="nx">@request</span><span class="o">?</span>
+	
+	<span class="nv">restart: </span><span class="o">-&gt;</span>
+		<span class="nx">@request</span><span class="p">.</span><span class="nx">abort</span><span class="p">()</span> <span class="k">if</span> <span class="nx">@request</span><span class="o">?</span>
+	
+	<span class="nv">start_request: </span><span class="o">-&gt;</span>
+		<span class="nx">@stop_request</span><span class="p">()</span>
+		<span class="vi">@stopped = </span><span class="kc">false</span>
+		<span class="nx">@account</span><span class="p">.</span><span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Connecting to stream...&quot;</span><span class="p">,</span> <span class="s2">&quot;orange&quot;</span><span class="p">)</span>
+		<span class="nx">Application</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;start_request&quot;</span><span class="p">,</span> <span class="s2">&quot;Delay: #{@delay}&quot;</span><span class="p">)</span>
+		<span class="vi">@last_event_times = </span><span class="p">[]</span>
+		<span class="nx">@set_timeout</span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_maximum_delay</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span>
+		<span class="vi">@processing = </span><span class="kc">false</span>
+		<span class="vi">@buffer = </span><span class="s2">&quot;&quot;</span>
+		<span class="vi">@response_offset = </span><span class="mi">0</span>
+		<span class="vi">@connected = </span><span class="kc">false</span>
+		<span class="vi">@connection_started_at = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">()</span>
+		<span class="nv">data = </span><span class="nx">@account</span><span class="p">.</span><span class="nx">sign_request</span><span class="p">(</span><span class="s2">&quot;https://userstream.twitter.com/2/user.json&quot;</span><span class="p">,</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nv">delimited: </span><span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="nv">include_entities: </span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="nv">include_rts: </span><span class="s2">&quot;1&quot;</span><span class="p">})</span>
+		<span class="nv">url = </span><span class="s2">&quot;user_proxy?#{data}&quot;</span>
+		<span class="vi">@request = </span><span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">();</span>
+		<span class="nx">@request</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="nx">url</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+		<span class="vi">@request.onreadystatechange = </span><span class="o">=&gt;</span>
+			<span class="vi">@last_data_received_at = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">()</span>
+			<span class="k">switch</span> <span class="nx">@request</span><span class="p">.</span><span class="nx">readyState</span>
+				<span class="k">when</span> <span class="mi">3</span>
+					<span class="nx">@account</span><span class="p">.</span><span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Connected.&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">@connected</span>
+					<span class="vi">@connected = </span><span class="kc">true</span>
+				<span class="k">when</span> <span class="mi">4</span>
+					<span class="nx">@account</span><span class="p">.</span><span class="nx">set_status</span><span class="p">(</span><span class="s2">&quot;Disconnected&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span>
+					<span class="vi">@connected = </span><span class="kc">false</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Delay auf Minimum zurücksetzen, wenn die Verbindung länger als 60 Sekunden stand.</p>             </td>             <td class="code">               <div class="highlight"><pre>					<span class="vi">@delay = </span><span class="nx">settings</span><span class="p">.</span><span class="nx">timings</span><span class="p">.</span><span class="nx">mindelay</span> <span class="k">if</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()).</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@connection_started_at</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">60000</span>
+					<span class="nx">@account</span><span class="p">.</span><span class="nx">add_status_html</span><span class="p">(</span><span class="s2">&quot;Disconnect.&lt;br&gt;Grund: #{@request.statusText}&lt;br&gt;Delay: #{@delay} Sekunden&quot;</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">@stopped</span>
+					<span class="nx">Application</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="err">@</span><span class="p">,</span> <span class="s2">&quot;onreadystatechange&quot;</span><span class="p">,</span> <span class="s2">&quot;Disconnect. Delay jetzt: #{@delay}&quot;</span><span class="p">)</span>
+					<span class="nb">window</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="nx">@account</span><span class="p">.</span><span class="nx">fill_list</span><span class="p">,</span> <span class="nx">@delay</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">@stopped</span>
+					<span class="vi">@delay = </span><span class="nx">@delay</span> <span class="o">*</span> <span class="mi">2</span>
+					<span class="vi">@stopped = </span><span class="kc">false</span>
+			<span class="nx">@buffer</span> <span class="o">+=</span> <span class="nx">@request</span><span class="p">.</span><span class="nx">responseText</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">@response_offset</span><span class="p">)</span>
+			<span class="vi">@response_offset = </span><span class="nx">@request</span><span class="p">.</span><span class="nx">responseText</span><span class="p">.</span><span class="nx">length</span>
+			<span class="nx">@process_buffer</span><span class="p">()</span>
+		
+		<span class="nx">@request</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
+		<span class="nb">window</span><span class="p">.</span><span class="nx">clearInterval</span><span class="p">(</span><span class="nx">@opera_interval</span><span class="p">)</span> <span class="k">if</span> <span class="nx">@opera_interval</span><span class="o">?</span>
+		<span class="vi">@opera_interval = </span><span class="nb">window</span><span class="p">.</span><span class="nx">setInterval</span><span class="p">(</span><span class="nx">@request</span><span class="p">.</span><span class="nx">onreadystatechange</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span> <span class="k">if</span> <span class="nb">window</span><span class="p">.</span><span class="nx">opera</span>
+		
+	<span class="nv">timeout: </span><span class="o">=&gt;</span>
+		<span class="nx">Application</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;Timeout&quot;</span><span class="p">,</span> <span class="s2">&quot;Timeout reached.&quot;</span><span class="p">)</span>
+		<span class="nx">@account</span><span class="p">.</span><span class="nx">add_status_html</span><span class="p">(</span><span class="s2">&quot;Timeout vermutet.&quot;</span><span class="p">)</span>
+		<span class="nx">@stop_request</span><span class="p">()</span>
+		<span class="nx">@account</span><span class="p">.</span><span class="nx">fill_list</span><span class="p">()</span>
+	
+	<span class="nv">process_buffer: </span><span class="o">-&gt;</span>
+		<span class="k">return</span> <span class="k">if</span> <span class="nx">@processing</span>
+		<span class="vi">@processing = </span><span class="kc">true</span>
+		<span class="nv">regex = </span><span class="sr">/^[\r\n]*([0-9]+)\r\n([\s\S]+)$/</span><span class="p">;</span>
+		<span class="k">while</span> <span class="nx">res</span><span class="o">=</span><span class="nx">@buffer</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">regex</span><span class="p">)</span>
+			<span class="nv">len = </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+			<span class="k">break</span> <span class="k">if</span> <span class="nx">res</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">length</span><span class="o">&lt;</span><span class="nx">len</span>
+			<span class="nv">parseable_text = </span><span class="nx">res</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">len</span><span class="p">)</span>
+			<span class="vi">@buffer = </span><span class="nx">res</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">substr</span><span class="p">(</span><span class="nx">len</span><span class="p">)</span>
+			<span class="k">try</span> <span class="nx">@account</span><span class="p">.</span><span class="nx">parse_data</span><span class="p">(</span><span class="nx">parseable_text</span><span class="p">)</span>
+			
+			<span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">())</span>
+			<span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">pop</span><span class="p">()</span> <span class="k">if</span> <span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">length</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_detect_tweet_count</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+				<span class="nv">average_tweet_delay = </span><span class="p">(</span><span class="nx">@last_event_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="nx">@last_event_times</span><span class="p">[</span><span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="nx">@last_event_times</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+				<span class="nv">targeted_delay = </span><span class="nx">average_tweet_delay</span> <span class="o">*</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_detect_factor</span>
+				<span class="nv">targeted_delay = </span><span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_minimum_delay</span><span class="o">*</span><span class="mi">1000</span> <span class="k">if</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_minimum_delay</span><span class="o">*</span><span class="mi">1000</span> <span class="o">&gt;</span> <span class="nx">targeted_delay</span>
+				<span class="nv">targeted_delay = </span><span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_maximum_delay</span><span class="o">*</span><span class="mi">1000</span> <span class="k">if</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_maximum_delay</span><span class="o">*</span><span class="mi">1000</span> <span class="o">&lt;</span> <span class="nx">targeted_delay</span>
+				<span class="nx">@set_timeout</span><span class="p">(</span><span class="nx">@last_event_times</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">getTime</span><span class="p">()</span><span class="o">+</span><span class="nx">targeted_delay</span><span class="o">-</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()).</span><span class="nx">getTime</span><span class="p">())</span>
+			<span class="k">else</span>
+				<span class="nx">@set_timeout</span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">timeout_maximum_delay</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span>
+				
+		<span class="vi">@processing = </span><span class="kc">false</span><span class="p">;</span>
+	
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

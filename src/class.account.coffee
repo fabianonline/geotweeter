@@ -1,5 +1,7 @@
+# Account maps to a single Twitter Account with its keys and so on
 class Account
-	# static variables
+	# Account.first is a shortcut for developing: `Account.first` is much 
+	# easier to type on the console than `Application.accounts[0]`.
 	@first: null
 	
 	screen_name: "unknown"
@@ -15,6 +17,8 @@ class Account
 	followers_ids: []
 	status_text: ""
 	
+	# The constructor is called by Application. `settings_id` is the id of
+	# this account as it appears in `settings.twitter.user`.
 	constructor: (settings_id) ->
 		@id=settings_id
 		Account.first = this if settings_id==0
@@ -24,6 +28,8 @@ class Account
 			token: settings.twitter.users[settings_id].token
 			tokenSecret: settings.twitter.users[settings_id].tokenSecret
 		}
+		# Clone the template-content-area so this account has it's own content
+		# area.
 		new_area = $('#content_template').clone()
 		new_area.attr('id', @get_content_div_id())
 		$('body').append(new_area);
@@ -35,18 +41,22 @@ class Account
 				</a>
 			</div>
 		")
+		# Add a tooltip to this account's selector button at the top of the screen.
 		$("#user_#{@id}").tooltip({
 			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}"
 			track: true
 			showURL: false
 			left: 5
 		})
+		# Initialize an adequate Stream object.
 		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
+		# Try to validate the keys and get informations about this account.
 		@validate_credentials()
 		
-	
+	# Returns the jQuery element of the content area of this account.
 	get_my_element: -> $("#content_#{@id}")
 	
+	# Saves the given `id` to Tweetmarker.
 	set_max_read_id: (id) -> 
 		unless id?
 			Application.log(this, "set_max_read_id", "Falscher Wert: #{id}")
@@ -54,11 +64,18 @@ class Account
 		
 		@max_read_id = id
 		
+		# Tweetmarker uses Oauth echo: To verify our identity, we generate
+		# valid OAuth credentials for our twitter account and send those to
+		# Tweetmarker. They can use them and identify us.
+		# This method is safe: The generated credentials can only be used once
+		# and only for verify_credentials.
 		header = {
 			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
 			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
 		
+		# We are lazy and send the same id for timeline and mentiions collection.
+		# Oh, and please note the super secret api key...
 		$.ajax({
 			type: 'POST'
 			url: "proxy/tweetmarker/lastread?collection=timeline,mentions&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
@@ -77,6 +94,7 @@ class Account
 		})
 		@update_read_tweet_status()
 	
+	# Walks through all "new" tweets and marks them as read, if necessary.
 	update_read_tweet_status: ->
 		elements = $("#content_#{@id} .new")
 		for elm in elements
@@ -84,12 +102,21 @@ class Account
 			element.removeClass('new') unless @is_unread_tweet(element.attr('data-tweet-id'))
 		@update_user_counter()
 	
+	# Gets the current max_read_id from Tweetmarker. The request runs asynchronously
+	# to prevent lockups in case of long reaction times of their site. So it
+	# can take a few seconds to actually change the display of read and unread
+	# tweets.
 	get_max_read_id: ->
 		$("#user_#{@id} .count").html('(?)')
+		
+		# Again OAuth echo stuff. For a better explanation please refer to
+		# `set_max_read_id`.
 		header = {
 			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
 			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
+		
+		# Ignore the mentions collection and just query 
 		$.ajax({
 			method: 'GET'
 			async: true
@@ -107,6 +134,9 @@ class Account
 	toString: -> "Account #{@user.screen_name}"
 	
 	get_content_div_id: -> "content_#{@id}"
+	
+	# Validates the credentials of the current account and also gets some basic
+	# data about this account (e.g. screen_name, id and so on).
 	validate_credentials: ->
 		@set_status("Validating Credentials...", "orange")
 		@twitter_request('account/verify_credentials.json', {
@@ -132,11 +162,14 @@ class Account
 	
 	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
 	get_tweet: (id) -> @tweets[id]
+	
+	# Adds HTML code to this account's content area.
 	add_html: (html) -> 
 		element = document.createElement("div")
 		element.innerHTML = html
 		@get_my_element().prepend(element)
 	
+	# Adds a status message to this account's content area.
 	add_status_html: (message) ->
 		html = "
 			<div class='status'>
@@ -144,14 +177,21 @@ class Account
 			</div>"
 		@add_html(html)
 		return ""
-		
+	
+	# Updates the number of unread tweets at the top of the page.
+	# We count all unread tweets including mentions (even if they aren't)
+	# visibly marked as new, but excluding my own tweets.
 	update_user_counter: ->
 		count = $("#content_#{@id} .tweet.new").not('.by_this_user').length
 		str = if count>0 then "(#{count})" else ""
 		$("#user_#{@id} .count").html(str)
 	
+	# Decides if the given tweet can be considered unread or not.
 	is_unread_tweet: (tweet_id) -> tweet_id.is_bigger_than(@max_read_id)
 	
+	# Get the current twitter configuration (values like "short_link_length",
+	# "max_photo_size" and so on). Gets called on the first account only by
+	# Application at startup.
 	get_twitter_configuration: ->
 		@twitter_request('help/configuration.json', {
 			silent: true
@@ -160,6 +200,14 @@ class Account
 			success: (element, data) -> Application.twitter_config = data
 		})
 	
+	# Signs a request to the Twitter API using the current account's keys.
+	# `options` can contain following options:
+	# 
+	# * `return_type`:
+	#   * `header`: Returns only the oauth_values in a form useful as header
+	#     value. Example: `oauth_key="abc", oauth_nonce="def", ...`
+	#   * `parameters` (default): Returns all parameters as URLencoded string.
+	#     Example: `some_key=some_value&oauth_key=abc&oauth_nonce=def`
 	sign_request: (url, method, parameters, options={}) ->
 		message = {
 			action: url
@@ -177,6 +225,19 @@ class Account
 				return message.parameters
 		return OAuth.formEncode(message.parameters)
 	
+	# Performs a request to the Twitter API. Valid options are:
+	# 
+	# * `silent` (default: `false`): Set to true to skip all outputs. Use for background actions.
+	# * `method` (default: `POST`): `POST` or `GET`
+	# * `parameters`: An object containing parameters for the request.
+	# * `dataType` (default: `json`): The dataType to expect back.
+	# * `async` (default: `true`): Whether to run asynchronously or not.
+	# * `success_string`: String to show after request was successful.
+	# * `success`: Function to be executed after request was successful.
+	# * `error`: Function to be executed after the request either got an error
+	#   code back or the resulting de-JSON-ififed object contained an error.
+	# * `return_response` (default: `false`): Whether to return the responseText
+	#   after the request. Only useful if `async` was set to `false`.
 	twitter_request: (url, options) ->
 		method = options.method ? "POST"
 		verbose = !(!!options.silent && true)

@@ -1,0 +1,108 @@
+<!DOCTYPE html>  <html> <head>   <title>geotweeter.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="_info.html">                 _info.coffee               </a>                                           <a class="source" href="class.account.html">                 class.account.coffee               </a>                                           <a class="source" href="class.directmessage.html">                 class.directmessage.coffee               </a>                                           <a class="source" href="class.event.html">                 class.event.coffee               </a>                                           <a class="source" href="class.hooks.html">                 class.hooks.coffee               </a>                                           <a class="source" href="class.pullrequest.html">                 class.pullrequest.coffee               </a>                                           <a class="source" href="class.request.html">                 class.request.coffee               </a>                                           <a class="source" href="class.streamrequest.html">                 class.streamrequest.coffee               </a>                                           <a class="source" href="class.thumbnail.html">                 class.thumbnail.coffee               </a>                                           <a class="source" href="class.tweet.html">                 class.tweet.coffee               </a>                                           <a class="source" href="class.twittermessage.html">                 class.twittermessage.coffee               </a>                                           <a class="source" href="class.user.html">                 class.user.coffee               </a>                                           <a class="source" href="extension.date.html">                 extension.date.coffee               </a>                                           <a class="source" href="extension.number.html">                 extension.number.coffee               </a>                                           <a class="source" href="extension.string.html">                 extension.string.coffee               </a>                                           <a class="source" href="geotweeter.html">                 geotweeter.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               geotweeter.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">Application</span>
+	<span class="vi">@users: </span><span class="p">{}</span>
+	<span class="vi">@all_tweets: </span><span class="p">{}</span>
+	<span class="vi">@all_dms: </span><span class="p">{}</span>
+	<span class="vi">@accounts: </span><span class="p">[]</span>
+	<span class="vi">@expected_settings_version: </span><span class="mi">12</span>
+	<span class="vi">@current_account: </span><span class="kc">null</span>
+	<span class="vi">@twitter_config: </span><span class="p">{}</span>
+	<span class="vi">@autocompletes: </span><span class="p">[]</span>
+
+	<span class="vi">@start: </span><span class="o">-&gt;</span>
+		<span class="nx">Application</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Starting...&quot;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">unless</span> <span class="nx">@is_settings_version_okay</span><span class="p">()</span>
+		<span class="nx">@fill_places</span><span class="p">()</span>
+		<span class="nx">@attach_hooks</span><span class="p">()</span>
+		<span class="nx">@initialize_accounts</span><span class="p">()</span>
+		<span class="nx">@get_twitter_configuration</span><span class="p">()</span>
+		<span class="nx">@accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">activate</span><span class="p">()</span>
+
+	<span class="vi">@is_settings_version_okay: </span><span class="o">-&gt;</span> 
+		<span class="k">if</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">version</span> <span class="o">!=</span> <span class="nx">@expected_settings_version</span>
+			<span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;settings.js veraltet.\nErwartet: #{expected_settings_version}\nGegeben: #{settings.version}&quot;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="kc">false</span>
+		<span class="k">return</span> <span class="kc">true</span>
+
+	<span class="vi">@fill_places: </span><span class="o">-&gt;</span>
+		<span class="k">if</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">places</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">0</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>remove the dropdown field if there are no places defined</p>             </td>             <td class="code">               <div class="highlight"><pre>			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place&#39;</span><span class="p">).</span><span class="nx">remove</span><span class="p">()</span>
+		<span class="k">else</span>
+			<span class="nv">p = </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="nx">p</span><span class="p">.</span><span class="nx">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Option</span><span class="p">(</span><span class="s2">&quot;-- leer --&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+			<span class="nx">p</span><span class="p">.</span><span class="nx">options</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">length</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Option</span><span class="p">(</span><span class="nx">place</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">id</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="nx">place</span><span class="p">,</span> <span class="nx">id</span> <span class="k">in</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">places</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#place option[value=&#39;#{$.cookie(&#39;last_place&#39;)}&#39;]&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span> <span class="k">if</span> <span class="nx">$</span><span class="p">.</span><span class="nx">cookie</span><span class="p">(</span><span class="s1">&#39;last_place&#39;</span><span class="p">)</span>
+
+	<span class="vi">@attach_hooks: </span><span class="o">-&gt;</span>
+		<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place&#39;</span><span class="p">).</span><span class="nx">change</span><span class="p">(</span> <span class="o">-&gt;</span> <span class="nx">$</span><span class="p">.</span><span class="nx">cookie</span><span class="p">(</span><span class="s1">&#39;last_place&#39;</span><span class="p">,</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place option:selected&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">(),</span> <span class="p">{</span><span class="nv">expires: </span><span class="mi">365</span><span class="p">}))</span>
+		<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#file&#39;</span><span class="p">).</span><span class="nx">change</span><span class="p">(</span> <span class="nx">Hooks</span><span class="p">.</span><span class="nx">check_file</span> <span class="p">)</span>
+		<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#text&#39;</span><span class="p">).</span><span class="nx">autocomplete</span><span class="p">({</span>
+			<span class="nv">minLength: </span><span class="mi">1</span>
+			<span class="nv">source: </span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="o">=&gt;</span>
+				<span class="nv">word = </span><span class="nx">request</span><span class="p">.</span><span class="nx">term</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/\s+/</span><span class="p">).</span><span class="nx">pop</span><span class="p">()</span>
+				<span class="nx">word</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="o">+</span><span class="nx">word</span> <span class="k">if</span> <span class="nx">request</span><span class="p">.</span><span class="nx">term</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^d @?[a-z0-9_]+$/i</span><span class="p">)</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">word</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;@&quot;</span> <span class="o">&amp;&amp;</span> <span class="nx">word</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+					<span class="nx">response</span><span class="p">(</span><span class="k">new</span> <span class="nb">Array</span><span class="p">())</span>
+				<span class="k">else</span>
+					<span class="nx">response</span><span class="p">(</span><span class="nx">$</span><span class="p">.</span><span class="nx">ui</span><span class="p">.</span><span class="nx">autocomplete</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">@autocompletes</span><span class="p">,</span> <span class="nx">word</span><span class="p">));</span>
+			<span class="nv">focus: </span><span class="o">-&gt;</span> <span class="k">return</span> <span class="kc">false</span>
+			<span class="nv">autoFocus: </span><span class="kc">true</span>
+			<span class="nv">delay: </span><span class="mi">0</span>
+			<span class="nv">appendTo: </span><span class="s2">&quot;#autocomplete_area&quot;</span>
+			<span class="nv">select: </span><span class="nf">(event, ui) -&gt;</span>
+				<span class="nv">term = </span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/\s+/</span><span class="p">).</span><span class="nx">pop</span><span class="p">()</span>
+				<span class="k">this</span><span class="p">.</span><span class="nv">value = </span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="nx">term</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="o">+</span> <span class="nx">ui</span><span class="p">.</span><span class="nx">item</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+				<span class="k">return</span> <span class="kc">false</span>
+			
+		<span class="p">});</span>
+
+	<span class="vi">@initialize_accounts: </span><span class="o">-&gt;</span>
+		<span class="k">for</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">id</span> <span class="k">in</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">twitter</span><span class="p">.</span><span class="nx">users</span>
+			<span class="nv">acct = </span><span class="k">new</span> <span class="nx">Account</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="c1"># new Account calls validateCredentials.</span>
+			<span class="nx">@accounts</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">acct</span>
+
+	<span class="vi">@get_twitter_configuration: </span><span class="o">-&gt;</span> <span class="nx">@accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">get_twitter_configuration</span><span class="p">()</span>
+	
+	<span class="vi">@get_dm_recipient_name: </span><span class="o">-&gt;</span> <span class="nx">@sending_dm_to</span>
+	<span class="vi">@set_dm_recipient_name: </span><span class="nf">(recipient_name) -&gt;</span>
+		<span class="vi">@sending_dm_to = </span><span class="nx">recipient_name</span>
+		<span class="k">if</span> <span class="nx">recipient_name</span><span class="o">?</span>
+			<span class="nx">Hooks</span><span class="p">.</span><span class="nx">toggle_file</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#dm_info_text&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="s2">&quot;DM @#{recipient_name}&quot;</span><span class="p">)</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#dm_info&#39;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#file_choose&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+		<span class="k">else</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#dm_info&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#place&#39;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#file_choose&#39;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+	
+	<span class="vi">@reply_to: </span><span class="nf">(tweet) -&gt;</span>
+		<span class="k">return</span> <span class="nx">@reply_to_tweet</span> <span class="nx">unless</span> <span class="nx">tweet</span><span class="o">?</span>
+		<span class="vi">@reply_to_tweet = </span><span class="nx">tweet</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>TODO</p>             </td>             <td class="code">               <div class="highlight"><pre>	
+	<span class="vi">@toString: </span><span class="o">-&gt;</span> <span class="s2">&quot;Application&quot;</span>
+	<span class="vi">@is_sending_dm: </span><span class="o">-&gt;</span> <span class="nx">@sending_dm_to</span><span class="o">?</span>
+	<span class="vi">@log: </span><span class="nf">(place, category, message) -&gt;</span>
+		<span class="k">return</span> <span class="nx">unless</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">debug</span> <span class="o">&amp;&amp;</span> <span class="nx">console</span><span class="o">?</span> <span class="o">&amp;&amp;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="o">?</span>
+		<span class="nv">place_str = </span><span class="k">if</span> <span class="k">typeof</span> <span class="nx">place</span><span class="o">==</span><span class="s2">&quot;string&quot;</span> <span class="k">then</span> <span class="nx">place</span> <span class="k">else</span> <span class="p">(</span><span class="k">if</span> <span class="nx">place</span><span class="p">.</span><span class="nx">toString</span><span class="o">?</span> <span class="k">then</span> <span class="nx">place</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;----&quot;</span><span class="p">)</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;#{(new Date()).format(&quot;</span><span class="o">%</span><span class="nx">H</span><span class="o">:%</span><span class="nx">M</span><span class="o">:%</span><span class="nx">S</span><span class="s2">&quot;)} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}&quot;</span><span class="p">)</span>
+	
+	<span class="vi">@add_to_autocomplete: </span><span class="nf">(term) -&gt;</span>
+		<span class="k">if</span> <span class="nx">$</span><span class="p">.</span><span class="nx">inArray</span><span class="p">(</span><span class="nx">term</span><span class="p">,</span> <span class="nx">@autocompletes</span><span class="p">)</span><span class="o">==-</span><span class="mi">1</span>
+			<span class="nx">@autocompletes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">term</span><span class="p">)</span>
+			<span class="nx">@autocompletes</span><span class="p">.</span><span class="nx">sort</span><span class="p">()</span>
+	
+	<span class="vi">@infoarea: </span><span class="p">{</span>
+		<span class="nv">visible: </span><span class="kc">false</span>
+		<span class="nv">show: </span><span class="nf">(title, content) -&gt;</span>
+			<span class="nv">Application.infoarea.visible = </span><span class="kc">true</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#infoarea_title&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">title</span><span class="p">)</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#infoarea_content&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">content</span><span class="p">)</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#infoarea&#39;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+			<span class="k">return</span> <span class="kc">false</span>
+			
+		<span class="nv">hide: </span><span class="o">-&gt;</span>
+			<span class="nv">Application.infoarea.visible = </span><span class="kc">false</span>
+			<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#infoarea&#39;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+			<span class="k">return</span> <span class="kc">false</span>
+	<span class="p">}</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
