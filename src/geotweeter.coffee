@@ -1,5 +1,7 @@
 class Application
 	@users: {}
+	@all_tweets: {}
+	@all_dms: {}
 	@accounts: []
 	@expected_settings_version: 12
 	@current_account: null

@@ -297,6 +297,7 @@ class Account
 			try temp = $.parseJSON(json_data)
 			continue unless temp?
 			if temp.constructor == Array
+				temp = temp.reverse()
 				if temp.length>0
 					temp_elements = []
 					temp_elements.push(TwitterMessage.get_object(data, this)) for data in temp
@@ -308,18 +309,18 @@ class Account
 		html = ""
 		last_id = ""
 		while responses.length > 0
-			newest_date = null
-			newest_index = null
+			oldest_date = null
+			oldest_index = null
 			for index, array of responses
 				object = array[0]
-				if newest_date==null || object.get_date()>newest_date
-					newest_date = object.get_date()
-					newest_index = index
-			array = responses[newest_index]
+				if oldest_date==null || object.get_date()<oldest_date
+					oldest_date = object.get_date()
+					oldest_index = index
+			array = responses[oldest_index]
 			object = array.shift()
-			responses.splice(newest_index, 1) if array.length==0
+			responses.splice(oldest_index, 1) if array.length==0
 			this_id = object.id
-			html += object.get_html() unless this_id==old_id
+			html = object.get_html() + html unless this_id==old_id
 			if object.constructor==Tweet
 				@max_known_tweet_id=object.id if object.id.is_bigger_than(@max_known_tweet_id)
 				@my_last_tweet_id=object.id if object.sender.id==@user.id && object.id.is_bigger_than(@my_last_tweet_id)

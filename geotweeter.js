@@ -446,7 +446,7 @@ Account = (function() {
   };
 
   Account.prototype.parse_data = function(json) {
-    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
+    var array, data, html, index, json_data, last_id, object, old_id, oldest_date, oldest_index, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
     if (json.constructor !== Array) json = [json];
     responses = [];
     for (_i = 0, _len = json.length; _i < _len; _i++) {
@@ -456,6 +456,7 @@ Account = (function() {
       } catch (_error) {}
       if (temp == null) continue;
       if (temp.constructor === Array) {
+        temp = temp.reverse();
         if (temp.length > 0) {
           temp_elements = [];
           for (_j = 0, _len2 = temp.length; _j < _len2; _j++) {
@@ -472,21 +473,21 @@ Account = (function() {
     html = "";
     last_id = "";
     while (responses.length > 0) {
-      newest_date = null;
-      newest_index = null;
+      oldest_date = null;
+      oldest_index = null;
       for (index in responses) {
         array = responses[index];
         object = array[0];
-        if (newest_date === null || object.get_date() > newest_date) {
-          newest_date = object.get_date();
-          newest_index = index;
+        if (oldest_date === null || object.get_date() < oldest_date) {
+          oldest_date = object.get_date();
+          oldest_index = index;
         }
       }
-      array = responses[newest_index];
+      array = responses[oldest_index];
       object = array.shift();
-      if (array.length === 0) responses.splice(newest_index, 1);
+      if (array.length === 0) responses.splice(oldest_index, 1);
       this_id = object.id;
-      if (this_id !== old_id) html += object.get_html();
+      if (this_id !== old_id) html = object.get_html() + html;
       if (object.constructor === Tweet) {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
           this.max_known_tweet_id = object.id;
@@ -715,6 +716,8 @@ Tweet = (function(_super) {
 
   Tweet.prototype.mentions = [];
 
+  Tweet.prototype.replies = [];
+
   Tweet.prototype.account = null;
 
   Tweet.prototype.thumbs = [];
@@ -733,8 +736,13 @@ Tweet = (function(_super) {
 
   Tweet.prototype.retweeted_by = null;
 
+  Tweet.prototype.in_reply_to = null;
+
   function Tweet(data, account) {
     this.account = account;
+    this.mentions = [];
+    this.replies = [];
+    this.thumbs = [];
     this.data = data;
     this.id = data.id_str;
     this.fill_user_variables();
@@ -744,10 +752,20 @@ Tweet = (function(_super) {
     this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
     this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
     this.linkify_text();
-    this.thumbs = [];
     this.get_thumbnails();
     this.date = new Date(this.data.created_at);
+    this.add_to_collections();
   }
+
+  Tweet.prototype.add_to_collections = function() {
+    var tweet;
+    Application.all_tweets[this.id] = this;
+    if (this.data.in_reply_to_status_id_str) {
+      tweet = Application.all_tweets[this.data.in_reply_to_status_id_str];
+      this.in_reply_to = tweet;
+      if (tweet != null) return tweet.replies.push(this);
+    }
+  };
 
   Tweet.prototype.fill_user_variables = function() {
     if (this.data.retweeted_status != null) {
@@ -839,7 +857,6 @@ Tweet = (function(_super) {
 
   Tweet.prototype.linkify_text = function() {
     var all_entities, entities, entity, entity_type, _i, _j, _len, _len2, _ref;
-    this.mentions = [];
     if (this.entities != null) {
       all_entities = [];
       _ref = this.entities;
@@ -1151,6 +1168,10 @@ DirectMessage = (function(_super) {
   }
 
   DirectMessage.prototype.recipient = null;
+
+  DirectMessage.prototype.add_to_collections = function() {
+    return Application.all_dms[this.id] = this;
+  };
 
   DirectMessage.prototype.fill_user_variables = function() {
     this.sender = new User(this.data.sender);
@@ -1650,6 +1671,10 @@ Application = (function() {
   function Application() {}
 
   Application.users = {};
+
+  Application.all_tweets = {};
+
+  Application.all_dms = {};
 
   Application.accounts = [];
 

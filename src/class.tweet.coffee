@@ -3,6 +3,7 @@ class Tweet extends TwitterMessage
 	@last: null
 	
 	mentions: []
+	replies: []
 	account: null
 	thumbs: []
 	id: null
@@ -12,8 +13,12 @@ class Tweet extends TwitterMessage
 	entities: {}
 	date: null
 	retweeted_by: null
+	in_reply_to: null
 	
 	constructor: (data, @account) ->
+		@mentions = []
+		@replies = []
+		@thumbs = []
 		@data = data
 		@id = data.id_str
 		@fill_user_variables()
@@ -23,9 +28,16 @@ class Tweet extends TwitterMessage
 		@text = if data.retweeted_status? then data.retweeted_status.text else data.text
 		@entities = if data.retweeted_status? then data.retweeted_status.entities else data.entities
 		@linkify_text()
-		@thumbs = [] # Keine Ahnung, warum man das hier braucht... Lässt man es weg. sammeln sich die Thumbnails an.
 		@get_thumbnails()
 		@date = new Date(@data.created_at)
+		@add_to_collections()
+		
+	add_to_collections: ->
+		Application.all_tweets[@id] = this
+		if @data.in_reply_to_status_id_str
+			tweet = Application.all_tweets[@data.in_reply_to_status_id_str]
+			@in_reply_to = tweet
+			tweet.replies.push(this) if tweet?
 	
 	fill_user_variables: -> 
 		if @data.retweeted_status?
@@ -35,6 +47,7 @@ class Tweet extends TwitterMessage
 			@sender = new User(@data.user)
 	
 	save_as_last_message: -> Tweet.last = this
+		
 	get_date: -> @date
 	div_id: -> "#tweet_#{@id}"
 	get_html: ->
@@ -105,7 +118,6 @@ class Tweet extends TwitterMessage
 		"<a href='#' onClick='return Tweet.hooks.show_replies(this);'>in reply to...</a> "
 	
 	linkify_text: ->
-		@mentions = [] # hack to prevent semi-static array mentions from filling up
 		if @entities?
 			all_entities = []
 			for entity_type, entities of @entities

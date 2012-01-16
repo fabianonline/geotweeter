@@ -1,11 +1,15 @@
 class DirectMessage extends Tweet
 	recipient: null
-	
+
+	add_to_collections: -> 
+		Application.all_dms[@id] = this
+		
 	fill_user_variables: -> 
 		@sender = new User(@data.sender)
 		@recipient = new User(@data.recipient)
 	
 	save_as_last_message: -> DirectMessage.last = this
+	
 	get_classes: -> ["dm", "by_#{@sender.get_screen_name()}"]
 	
 	reply: ->
