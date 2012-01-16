@@ -24,7 +24,10 @@ class Event extends TwitterMessage
 			else return new UnknownElement(data, account)
 
 class FollowEvent extends Event
-	get_inner_html: -> "Neuer Follower: #{@source.get_link_html(true)}"
+	get_inner_html: ->
+		return "" if @source.id == @account.user.id
+		"Neuer Follower: #{@source.get_link_html(true)}"
+
 
 class FavoriteEvent extends Event
 	get_inner_html: -> "#{@source.get_link_html(true)} favorisierte:<br />#{@data.text}"

@@ -1579,6 +1579,7 @@ FollowEvent = (function(_super) {
   }
 
   FollowEvent.prototype.get_inner_html = function() {
+    if (this.source.id === this.account.user.id) return "";
     return "Neuer Follower: " + (this.source.get_link_html(true));
   };
 
