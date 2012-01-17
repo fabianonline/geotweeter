@@ -1279,11 +1279,11 @@ User = (function() {
 
   function User(data) {
     this.data = data;
-    users[this.data.id] = this;
+    this.id = this.data.id_str;
+    Application.users[this.id] = this;
     this.screen_name = this.data.screen_name;
     Application.add_to_autocomplete("@" + this.screen_name);
     this.permalink = "https://twitter.com/" + this.screen_name;
-    this.id = this.data.id_str;
   }
 
   User.prototype.id = function() {
