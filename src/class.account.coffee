@@ -74,7 +74,7 @@ class Account
 			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
 		
-		# We are lazy and send the same id for timeline and mentiions collection.
+		# We are lazy and send the same id for timeline and mentions collection.
 		# Oh, and please note the super secret api key...
 		$.ajax({
 			type: 'POST'
@@ -102,7 +102,7 @@ class Account
 			element.removeClass('new') unless @is_unread_tweet(element.attr('data-tweet-id'))
 		@update_user_counter()
 	
-	# Gets the current max_read_id from Tweetmarker. The request runs asynchronously
+	# Gets the current `max_read_id` from Tweetmarker. The request runs asynchronously
 	# to prevent lockups in case of long reaction times of their site. So it
 	# can take a few seconds to actually change the display of read and unread
 	# tweets.
@@ -136,7 +136,7 @@ class Account
 	get_content_div_id: -> "content_#{@id}"
 	
 	# Validates the credentials of the current account and also gets some basic
-	# data about this account (e.g. screen_name, id and so on).
+	# data about this account (e.g. `screen_name`, `id` and so on).
 	validate_credentials: ->
 		@set_status("Validating Credentials...", "orange")
 		@twitter_request('account/verify_credentials.json', {
@@ -163,7 +163,9 @@ class Account
 	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
 	get_tweet: (id) -> @tweets[id]
 	
-	# Adds HTML code to this account's content area.
+	# Adds HTML code to this account's content area. The HTML code is added
+	# to a new `div` element which is then added to the DOM. That method is
+	# much, much, much, much faster than adding the html directly.
 	add_html: (html) -> 
 		element = document.createElement("div")
 		element.innerHTML = html
@@ -189,8 +191,8 @@ class Account
 	# Decides if the given tweet can be considered unread or not.
 	is_unread_tweet: (tweet_id) -> tweet_id.is_bigger_than(@max_read_id)
 	
-	# Get the current twitter configuration (values like "short_link_length",
-	# "max_photo_size" and so on). Gets called on the first account only by
+	# Get the current twitter configuration (values like `short_link_length`,
+	# `max_photo_size` and so on). Gets called on the first account only by
 	# Application at startup.
 	get_twitter_configuration: ->
 		@twitter_request('help/configuration.json', {
@@ -271,40 +273,68 @@ class Account
 		})
 		return result.responseText if options.return_response
 	
+	# fill_list performs all necessary request to fill your timeline.
+	# Requests done by this function are:
+	# 
+	# * `home_timeline` twice to get 2x200 tweets
+	# * `mentions` to get mentions from people you don't follow
+	# * `direct_messages` to get direct messages sent to you
+	# * `direct_messages/sent` to get direct messages sent from you
+	# 
+	# This code gets called by `validate_credentials` and by timeouts in this
+	# account's `Request` object.
 	fill_list: =>
 		@set_status("Filling List...", "orange")
+		
+		# This method is supposed to run multiple requests asynchronously, so
+		# we have to fiddle with it a bit.
+		# We will be starting 5 "threads" (a.k.a. requests).
 		threads_running = 5
 		threads_errored = 0
 		responses = []
 		
+		# `after_run` is run after the last request finished.
 		after_run = =>
 			if threads_errored == 0
+				# if we were successful, we parse the returned data and start
+				# the request.
 				@set_status("", "")
 				@parse_data(responses)
 				@request.start_request() 
 			else
+				# otherwise we ouptput an error and try again some time later.
 				setTimeout(@fill_list, 30000)
 				@add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
 		
+		# `success` is run whenever a request finished successfully.
 		success = (element, data) ->
 			responses.push(data)
 			threads_running -= 1
 			after_run() if threads_running == 0
 		
+		# `error` is run whenever a request finished with an error.
 		error = (element, data) ->
 			threads_running -= 1
 			threads_errored += 1
 			# TODO: Dokumentation
 			after_run() if threads_running == 0
 		
+		# Set some default parameters for all request.
 		default_parameters = {
+			# We want to get RTs in the timeline
 			include_rts: true
 			count: 200
+			# Entities contain information about unshortened t.co-Links and
+			# so on. Naturally, we want those, too.
 			include_entities: true
 			page: 1
+			# If `@max_known_tweet_id` is set, we already know some tweets.
+			# So we set `since_id` to only get new tweets.
 			since_id: @max_known_tweet_id unless @max_known_tweet_id=="0"
 		}
 		
+		# Define all the necessary requests to be made. `extra_parameters` can
+		# be set to override the `default_parameters` for this request.
 		requests = [
 			{
 				url: "statuses/home_timeline.json"
@@ -323,7 +353,11 @@ class Account
 				url: "direct_messages.json"
 				name: "Received DMs"
 				extra_parameters: {
+					# You (at least I) don't get soo much DMs, so 100 is
+					# enough.
 					count: 100
+					# DMs have their own IDs, so we use `@max_known_dm_id`
+					# here.
 					since_id: @max_known_dm_id if @max_known_dm_id?
 				}
 			}
@@ -337,8 +371,11 @@ class Account
 			}
 		]
 		
+		# Do the actual requests.
 		for request in requests
 			parameters = {}
+			# Construct a new parameters object with `default_parameters`
+			# extended by `extra_parameters`.
 			parameters[key] = value for key, value of default_parameters when value
 			parameters[key] = value for key, value of request.extra_parameters when value
 			@twitter_request(request.url, {
@@ -351,25 +388,45 @@ class Account
 				error: error
 			})
 	
-	parse_data: (json) -> #TODO
+	# `parse_data` gets an array of (arrays of) responses from the Twitter API
+	# (generated by `fill_list` and `StreamRequest`), sorts them, gets matching
+	# objects, calls `get_html` on them and outputs the HTML.
+	parse_data: (json) ->
+		# If we didn't get an array of responses, we create one.
 		json = [json] unless json.constructor==Array
 		responses = []
+		# We still have only JSON code, no real object. So we go through the
+		# array and parse all the JSON.
 		for json_data in json
 			try temp = $.parseJSON(json_data)
 			continue unless temp?
 			if temp.constructor == Array
+				# Reverse the array in order to get the oldest tweets at the top.
 				temp = temp.reverse()
+				# Did we get an array of messages or just one?
 				if temp.length>0
 					temp_elements = []
+					# `TwitterMessage.get_object` will determine the type of
+					# an object and return a matching "real" object.
+					# This is done for alle elements of this array.
 					temp_elements.push(TwitterMessage.get_object(data, this)) for data in temp
 					responses.push(temp_elements)
 			else
+				# Just one message... So parse it and done.
 				responses.push([TwitterMessage.get_object(temp, this)])
 		return if responses.length==0
 		
+		# By now we have all requests in a 2-dimensional array `responses`.
+		# The first dimension comes from multiple requests in `fill_array`.
+		# Data from a `StreamRequest` will always have just one element in
+		# the first dimension.
+		# Anyway, we have to get through the multiple arrays and sort the
+		# tweets in there. Let's go.
 		html = ""
 		last_id = ""
 		while responses.length > 0
+			# Save the Date and the index of the array holding the oldest
+			# element.
 			oldest_date = null
 			oldest_index = null
 			for index, array of responses
@@ -377,20 +434,32 @@ class Account
 				if oldest_date==null || object.get_date()<oldest_date
 					oldest_date = object.get_date()
 					oldest_index = index
+			# Retrieve the first object of the winning array (a.k.a. the oldest
+			# element).
 			array = responses[oldest_index]
 			object = array.shift()
+			# If this array has become empty, we remove it from `responses`.
 			responses.splice(oldest_index, 1) if array.length==0
 			this_id = object.id
+			# Add the html to the temporary html code. But look out for duplicate
+			# tweets (e.g. mentions from friends will be in `home_timeline` as
+			# well as in `mentions`).
 			html = object.get_html() + html unless this_id==old_id
+			# If we have a `Tweet` or `DirectMessage`, note it's `id`, if
+			# necessary.
 			if object.constructor==Tweet
 				@max_known_tweet_id=object.id if object.id.is_bigger_than(@max_known_tweet_id)
 				@my_last_tweet_id=object.id if object.sender.id==@user.id && object.id.is_bigger_than(@my_last_tweet_id)
 			if object.constructor==DirectMessage
 				@max_known_dm_id=object.id if object.id.is_bigger_than(@max_known_dm_id)
+			# Save this id for recognizing duplicates in the next round.
 			old_id = this_id
+		# After we are done with all tweets, add the collected html to the DOM.
 		@add_html(html)
+		# Update the counter to display the right number of unread tweets.
 		@update_user_counter()
 	
+	# Scrolls down to a specified tweet.
 	scroll_to: (tweet_id) ->
 		element_top = $("##{tweet_id}").offset().top
 		# Just scrolling to a tweet doesn't show it because it will be hidden behind
@@ -399,6 +468,7 @@ class Account
 		$(document).scrollTop(element_top - topheight);
 		return false
 	
+	# Set this Account as the active (show this Account's tweets and so on).
 	activate: ->
 		$('.content').hide()
 		$("#content_#{@id}").show()
@@ -406,10 +476,15 @@ class Account
 		$("#user_#{@id}").addClass('active')
 		Application.current_account = this
 	
+	# Sets the current status of this account. `color` is actually the name of
+	# a CSS class setting the background-color and so on. Currently available
+	# colors are `red`, `green`, `yellow` and `orange`.
 	set_status: (message, color) ->
 		$("#user_#{@id}").removeClass('red green yellow orange').addClass(color)
 		@status_text = message
 	
+	# Some static hooks to be called from the HTML via buttons and stuff.
+	# Mostly self-explenatory.
 	@hooks: {
 		change_current_account: (elm) ->
 			account_id = $(elm).parents('.user').data('account-id')
@@ -417,10 +492,16 @@ class Account
 			acct.activate()
 			return false
 		
+		# Marks all tweets up to upperst completety visible tweet as read.
 		mark_as_read: (elm) ->
+			# First, get all "new" tweets.
 			elements = $("#content_#{Application.current_account.id} .tweet.new")
 			id = null
+			# Get the height of the top area as offset.
 			offset = $(document).scrollTop() + $('#top').height()
+			# Go through all elements until we find the first tweet which's
+			# top is bigger than the `offset`. This means the tweet begins
+			# under the top area and so is completely visible.
 			for element in elements
 				if $(element).offset().top >= offset
 					id = $(element).attr('data-tweet-id')
