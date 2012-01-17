@@ -1442,6 +1442,9 @@ StreamRequest = (function(_super) {
           _this.stopped = false;
       }
       _this.buffer += _this.request.responseText.substr(_this.response_offset);
+      if (_this.buffer.charAt(_this.buffer.length - 1) === "\r") {
+        _this.buffer += "\n";
+      }
       _this.response_offset = _this.request.responseText.length;
       return _this.process_buffer();
     };

@@ -70,6 +70,13 @@ class StreamRequest extends Request
 					@delay = @delay * 2
 					@stopped = false
 			@buffer += @request.responseText.substr(@response_offset)
+			# Ugly hack for (at least) Opera under Mac OS: The responseText
+			# ends with \r instead of \r\n. Since this is problematic (the
+			# length given as delimiter ist one too short and so on), we
+			# hack-fix it here.
+			# As far as I can tell now, this code should be pretty
+			# harmless anyway.
+			@buffer += "\n" if @buffer.charAt(@buffer.length-1)=="\r"
 			@response_offset = @request.responseText.length
 			@process_buffer()
 		
