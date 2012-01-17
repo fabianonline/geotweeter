@@ -1311,7 +1311,7 @@ User = (function() {
       },
       success_string: "Als Spammer gemeldet.",
       success: function() {
-        return $(".by_" + this.screen_name).remove;
+        return $(".by_" + this.screen_name).remove();
       }
     });
   };
