@@ -467,10 +467,13 @@ Account = (function() {
           responses.push(temp_elements);
         }
       } else {
-        responses.push([TwitterMessage.get_object(temp, this)]);
+        object = TwitterMessage.get_object(temp, this);
+        if (object == null) continue;
+        responses.push(object);
       }
     }
     if (responses.length === 0) return;
+    if (responses.length === 1 && responses[0][0] === null) return;
     html = "";
     last_id = "";
     while (responses.length > 0) {

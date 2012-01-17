@@ -413,9 +413,15 @@ class Account
 					temp_elements.push(TwitterMessage.get_object(data, this)) for data in temp
 					responses.push(temp_elements)
 			else
-				# Just one message... So parse it and done.
-				responses.push([TwitterMessage.get_object(temp, this)])
+				# Just one message... So let's try to parse it.
+				object = TwitterMessage.get_object(temp, this)
+				# We could get an `undefined` back (this happens e.g. to that
+				# friends array you get on connecting to the Streaming API).
+				# Since that would be the only object, we just go on.
+				continue unless object?
+				responses.push(object)
 		return if responses.length==0
+		return if responses.length==1 && responses[0][0]==null
 		
 		# By now we have all requests in a 2-dimensional array `responses`.
 		# The first dimension comes from multiple requests in `fill_array`.
