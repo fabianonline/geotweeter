@@ -143,9 +143,10 @@ class Account
 			method: "GET"
 			silent: true
 			async: true
-			success: (element, data) =>
+			success: (element, data, req) =>
 				unless data.screen_name
-					@add_status_html("Unknown error in validate_credentials. Exiting. #{data}")
+					@add_status_html("Unknown error in validate_credentials. Exiting. #{req.responseText}")
+					
 					$("#user_#{@id} img").attr('src', "icons/exclamation.png")
 					return
 				@user = new User(data)
@@ -154,8 +155,8 @@ class Account
 				@get_max_read_id()
 				@get_followers()
 				@fill_list()
-			error: =>
-				@add_status_html("Unknown error in validate_credentials. Exiting.")
+			error: (req) =>
+				@add_status_html("Unknown error in validate_credentials. Exiting. #{req.responseText}")
 				$("#user_#{@id} img").attr('src', "icons/exclamation.png")
 				@set_status("Error!", "red")
 		})
@@ -313,10 +314,10 @@ class Account
 			after_run() if threads_running == 0
 		
 		# `error` is run whenever a request finished with an error.
-		error = (element, data) ->
+		error = (req, textStatus, exc, additional_info) ->
 			threads_running -= 1
 			threads_errored += 1
-			# TODO: Dokumentation
+			@add_status_html("Fehler in #{additional_info.name}:<br />#{textStatus}")
 			after_run() if threads_running == 0
 		
 		# Set some default parameters for all request.
