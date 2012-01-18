@@ -419,7 +419,7 @@ class Account
 				# friends array you get on connecting to the Streaming API).
 				# Since that would be the only object, we just go on.
 				continue unless object?
-				responses.push(object)
+				responses.push([object])
 		return if responses.length==0
 		return if responses.length==1 && responses[0][0]==null
 		

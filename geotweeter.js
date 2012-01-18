@@ -469,7 +469,7 @@ Account = (function() {
       } else {
         object = TwitterMessage.get_object(temp, this);
         if (object == null) continue;
-        responses.push(object);
+        responses.push([object]);
       }
     }
     if (responses.length === 0) return;
