@@ -15,7 +15,7 @@ class Application
 		@attach_hooks()
 		@initialize_accounts()
 		@get_twitter_configuration()
-		@accounts[0].activate()
+		@accounts[0].show()
 
 	@is_settings_version_okay: -> 
 		if settings.version != @expected_settings_version

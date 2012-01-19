@@ -16,6 +16,7 @@ class Account
 	keys: {}
 	followers_ids: []
 	status_text: ""
+	scroll_top: 0
 	
 	# The constructor is called by Application. `settings_id` is the id of
 	# this account as it appears in `settings.twitter.user`.
@@ -476,12 +477,18 @@ class Account
 		return false
 	
 	# Set this Account as the active (show this Account's tweets and so on).
-	activate: ->
-		$('.content').hide()
+	show: ->
+		Application.current_account.hide() if Application.current_account?
 		$("#content_#{@id}").show()
-		$('#users .user').removeClass('active')
 		$("#user_#{@id}").addClass('active')
+		$(window).scrollTop(@scroll_top)
 		Application.current_account = this
+	
+	# Hide this account (as in "don't show it's tweets).
+	hide: ->
+		@scroll_top = $(window).scrollTop()
+		$("#content_#{@id}").hide()
+		$("#user_#{@id}").removeClass('active')
 	
 	# Sets the current status of this account. `color` is actually the name of
 	# a CSS class setting the background-color and so on. Currently available
@@ -496,7 +503,7 @@ class Account
 		change_current_account: (elm) ->
 			account_id = $(elm).parents('.user').data('account-id')
 			acct = Application.accounts[account_id]
-			acct.activate()
+			acct.show()
 			return false
 		
 		# Marks all tweets up to upperst completety visible tweet as read.

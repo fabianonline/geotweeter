@@ -79,6 +79,8 @@ Account = (function() {
 
   Account.prototype.status_text = "";
 
+  Account.prototype.scroll_top = 0;
+
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);
     var new_area,
@@ -519,12 +521,18 @@ Account = (function() {
     return false;
   };
 
-  Account.prototype.activate = function() {
-    $('.content').hide();
+  Account.prototype.show = function() {
+    if (Application.current_account != null) Application.current_account.hide();
     $("#content_" + this.id).show();
-    $('#users .user').removeClass('active');
     $("#user_" + this.id).addClass('active');
+    $(window).scrollTop(this.scroll_top);
     return Application.current_account = this;
+  };
+
+  Account.prototype.hide = function() {
+    this.scroll_top = $(window).scrollTop();
+    $("#content_" + this.id).hide();
+    return $("#user_" + this.id).removeClass('active');
   };
 
   Account.prototype.set_status = function(message, color) {
@@ -537,7 +545,7 @@ Account = (function() {
       var account_id, acct;
       account_id = $(elm).parents('.user').data('account-id');
       acct = Application.accounts[account_id];
-      acct.activate();
+      acct.show();
       return false;
     },
     mark_as_read: function(elm) {
@@ -1701,7 +1709,7 @@ Application = (function() {
     this.attach_hooks();
     this.initialize_accounts();
     this.get_twitter_configuration();
-    return this.accounts[0].activate();
+    return this.accounts[0].show();
   };
 
   Application.is_settings_version_okay = function() {
