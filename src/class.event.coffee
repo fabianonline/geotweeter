@@ -13,6 +13,7 @@ class Event extends TwitterMessage
 		@target = new User(@data.target)
 		@source = new User(@data.source)
 		@date = new Date(@data.created_at)
+		Application.all_events.push(this)
 	
 	@get_object: (data, account) ->
 		switch data.event

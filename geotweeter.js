@@ -1561,6 +1561,7 @@ Event = (function(_super) {
     this.target = new User(this.data.target);
     this.source = new User(this.data.source);
     this.date = new Date(this.data.created_at);
+    Application.all_events.push(this);
   }
 
   Event.get_object = function(data, account) {
@@ -1692,6 +1693,8 @@ Application = (function() {
   Application.all_tweets = {};
 
   Application.all_dms = {};
+
+  Application.all_events = [];
 
   Application.accounts = [];
 
