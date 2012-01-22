@@ -211,8 +211,8 @@ Account = (function() {
         _this.get_followers();
         return _this.fill_list();
       },
-      error: function(req) {
-        _this.add_status_html("Unknown error in validate_credentials. Exiting. " + req.responseText);
+      error: function(element, data, req, textStatus) {
+        _this.add_status_html("Unknown error in validate_credentials. Exiting.<br />" + req.status + " - " + req.statusText);
         $("#user_" + _this.id + " img").attr('src', "icons/exclamation.png");
         return _this.set_status("Error!", "red");
       }
@@ -378,10 +378,10 @@ Account = (function() {
       threads_running -= 1;
       if (threads_running === 0) return after_run();
     };
-    error = function(req, textStatus, exc, additional_info) {
+    error = function(object, data, req, textStatus, exc, additional_info) {
       threads_running -= 1;
       threads_errored += 1;
-      this.add_status_html("Fehler in " + additional_info.name + ":<br />" + textStatus);
+      _this.add_status_html("Fehler in " + additional_info.name + ":<br />" + req.status + " - " + exc);
       if (threads_running === 0) return after_run();
     };
     default_parameters = {

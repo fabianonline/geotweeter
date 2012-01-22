@@ -156,8 +156,8 @@ class Account
 				@get_max_read_id()
 				@get_followers()
 				@fill_list()
-			error: (req) =>
-				@add_status_html("Unknown error in validate_credentials. Exiting. #{req.responseText}")
+			error: (element, data, req, textStatus) =>
+				@add_status_html("Unknown error in validate_credentials. Exiting.<br />#{req.status} - #{req.statusText}")
 				$("#user_#{@id} img").attr('src', "icons/exclamation.png")
 				@set_status("Error!", "red")
 		})
@@ -309,16 +309,16 @@ class Account
 				@add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
 		
 		# `success` is run whenever a request finished successfully.
-		success = (element, data) ->
+		success = (element, data) =>
 			responses.push(data)
 			threads_running -= 1
 			after_run() if threads_running == 0
 		
 		# `error` is run whenever a request finished with an error.
-		error = (req, textStatus, exc, additional_info) ->
+		error = (object, data, req, textStatus, exc, additional_info) =>
 			threads_running -= 1
 			threads_errored += 1
-			@add_status_html("Fehler in #{additional_info.name}:<br />#{textStatus}")
+			@add_status_html("Fehler in #{additional_info.name}:<br />#{req.status} - #{exc}")
 			after_run() if threads_running == 0
 		
 		# Set some default parameters for all request.
