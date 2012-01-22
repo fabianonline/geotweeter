@@ -1316,6 +1316,7 @@ User = (function() {
   };
 
   User.prototype.report_as_spam = function(account) {
+    var _this = this;
     if (!confirm("Wirklich " + this.screen_name + " als Spammer melden?")) return;
     return account.twitter_request("report_spam.json", {
       parameters: {
@@ -1323,7 +1324,7 @@ User = (function() {
       },
       success_string: "Als Spammer gemeldet.",
       success: function() {
-        return $(".by_" + this.screen_name).remove();
+        return $(".by_" + _this.screen_name).remove();
       }
     });
   };

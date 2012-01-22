@@ -35,4 +35,4 @@ class User
 	get_screen_name: -> @data.screen_name
 	report_as_spam: (account) ->
 		return unless confirm("Wirklich #{@screen_name} als Spammer melden?")
-		account.twitter_request("report_spam.json", {parameters: {screen_name: @screen_name}, success_string: "Als Spammer gemeldet.", success: -> $(".by_#{@screen_name}").remove()})
+		account.twitter_request("report_spam.json", {parameters: {screen_name: @screen_name}, success_string: "Als Spammer gemeldet.", success: => $(".by_#{@screen_name}").remove()})
