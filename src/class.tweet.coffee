@@ -280,6 +280,7 @@ class Tweet extends TwitterMessage
 							Follower: #{data.user.followers_count}<br />
 							Friends: #{data.user.friends_count}<br />"
 						$('#text').val('')
+						Hooks.update_counter()
 						Application.reply_to(null)
 						Hooks.toggle_file(false)
 						$('#success_info').html(html)

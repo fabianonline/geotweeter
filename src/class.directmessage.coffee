@@ -53,6 +53,7 @@ class DirectMessage extends Tweet
 				success: (data) ->
 					if data.recipient
 						$('#text').val('')
+						Hooks.update_counter()
 						Application.reply_to(null)
 						Application.set_dm_recipient_name(null)
 						Hooks.toggle_file(false)

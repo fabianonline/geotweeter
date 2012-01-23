@@ -1135,6 +1135,7 @@ Tweet = (function(_super) {
           if (data.text) {
             html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";
             $('#text').val('');
+            Hooks.update_counter();
             Application.reply_to(null);
             Hooks.toggle_file(false);
             $('#success_info').html(html);
@@ -1241,6 +1242,7 @@ DirectMessage = (function(_super) {
         success: function(data) {
           if (data.recipient) {
             $('#text').val('');
+            Hooks.update_counter();
             Application.reply_to(null);
             Application.set_dm_recipient_name(null);
             Hooks.toggle_file(false);
