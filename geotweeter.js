@@ -797,7 +797,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.div_id = function() {
-    return "#tweet_" + this.id;
+    return "#" + this.id;
   };
 
   Tweet.prototype.get_html = function() {
@@ -821,7 +821,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_buttons_html = function() {
-    return "<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+    return "<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + (this.data.favorited ? "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star.png' class='favorite_button' title='Favorisierung entfernen' /></a>" : "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star_gray.png' class='favorite_button' title='Favorisieren' /></a>") + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
   };
 
   Tweet.prototype.get_single_thumb_html = function() {
@@ -913,7 +913,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.get_classes = function() {
     var classes, mention, _i, _len, _ref, _ref2;
-    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.id) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.sender.screen_name ? "by_this_user" : void 0];
+    classes = ["tweet", "by_" + this.data.user.screen_name, this.account.is_unread_tweet(this.id) ? "new" : void 0, (_ref = this.account.screen_name, __indexOf.call(this.mentions, _ref) >= 0) ? "mentions_this_user" : void 0, this.account.screen_name === this.sender.screen_name ? "by_this_user" : void 0, this.data.favorited ? "favorited" : void 0];
     _ref2 = this.mentions;
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       mention = _ref2[_i];
@@ -942,6 +942,29 @@ Tweet = (function(_super) {
         return $(this.div_id()).remove();
       }
     });
+  };
+
+  Tweet.prototype.toggle_favorite = function() {
+    var _this = this;
+    if (this.data.favorited) {
+      return this.account.twitter_request("favorites/destroy/" + this.id + ".json", {
+        silent: true,
+        success: function() {
+          $(_this.div_id()).removeClass('favorited');
+          $("" + (_this.div_id()) + " .favorite_button").attr('title', 'Favorisieren').attr('src', 'icons/star_gray.png');
+          return _this.data.favorited = false;
+        }
+      });
+    } else {
+      return this.account.twitter_request("favorites/create/" + this.id + ".json", {
+        silent: true,
+        success: function() {
+          $(_this.div_id()).addClass('favorited');
+          $("" + (_this.div_id()) + " .favorite_button").attr('title', 'Favorisierung entfernen').attr('src', 'icons/star.png');
+          return _this.data.favorited = true;
+        }
+      });
+    }
   };
 
   Tweet.prototype.report_as_spam = function() {
@@ -1075,6 +1098,10 @@ Tweet = (function(_super) {
     },
     quote: function(elm) {
       this.get_tweet(elm).quote();
+      return false;
+    },
+    toggle_favorite: function(elm) {
+      this.get_tweet(elm).toggle_favorite();
       return false;
     },
     "delete": function(elm) {

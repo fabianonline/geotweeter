@@ -49,7 +49,7 @@ class Tweet extends TwitterMessage
 	save_as_last_message: -> Tweet.last = this
 		
 	get_date: -> @date
-	div_id: -> "#tweet_#{@id}"
+	div_id: -> "##{@id}"
 	get_html: ->
 		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
 		@get_single_thumb_html() +
@@ -82,6 +82,7 @@ class Tweet extends TwitterMessage
 		"<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
 		"<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" +
 		"<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" +
+		(if @data.favorited then "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star.png' class='favorite_button' title='Favorisierung entfernen' /></a>" else "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star_gray.png' class='favorite_button' title='Favorisieren' /></a>") +
 		"<a href='#{@permalink}' target='_blank'><img src='icons/link.png' title='Permalink' /></a>" +
 		(if @data.coordinates? then "<a href='http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" else "") +
 		(if @data.coordinates? then "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" else "") +
@@ -149,6 +150,7 @@ class Tweet extends TwitterMessage
 			"new" if @account.is_unread_tweet(@id)
 			"mentions_this_user" if @account.screen_name in @mentions
 			"by_this_user" if @account.screen_name == @sender.screen_name
+			"favorited" if @data.favorited
 		]
 		classes.push("mentions_#{mention}") for mention in @mentions
 		classes
@@ -164,6 +166,24 @@ class Tweet extends TwitterMessage
 	delete: ->
 		return unless confirm("Wirklich diesen Tweet löschen?")
 		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
+	
+	toggle_favorite: ->
+		if @data.favorited
+			@account.twitter_request("favorites/destroy/#{@id}.json", {
+				silent: true
+				success: => 
+					$(@div_id()).removeClass('favorited')
+					$("#{@div_id()} .favorite_button").attr('title', 'Favorisieren').attr('src', 'icons/star_gray.png')
+					@data.favorited = false
+			})	
+		else
+			@account.twitter_request("favorites/create/#{@id}.json", {
+				silent: true
+				success: => 
+					$(@div_id()).addClass('favorited')
+					$("#{@div_id()} .favorite_button").attr('title', 'Favorisierung entfernen').attr('src', 'icons/star.png')
+					@data.favorited = true
+			})
 	
 	report_as_spam: -> @sender.report_as_spam(@account)
 	
@@ -231,6 +251,7 @@ class Tweet extends TwitterMessage
 		reply:          (elm) -> @get_tweet(elm).reply(); return false
 		retweet:        (elm) -> @get_tweet(elm).retweet(); return false
 		quote:          (elm) -> @get_tweet(elm).quote(); return false
+		toggle_favorite:(elm) -> @get_tweet(elm).toggle_favorite(); return false
 		delete:         (elm) -> @get_tweet(elm).delete(); return false
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
 		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
