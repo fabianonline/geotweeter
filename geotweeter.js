@@ -1020,7 +1020,7 @@ Tweet = (function(_super) {
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         entity = _ref2[_j];
         url = (_ref3 = entity.expanded_url) != null ? _ref3 : entity.url;
-        if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
+        if ((res = url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
           this.thumbs.push(new Thumbnail("//img.youtube.com/" + res[1] + "/1.jpg", url));
         }
         if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {

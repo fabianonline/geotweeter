@@ -212,7 +212,7 @@ class Tweet extends TwitterMessage
 				# Geotweeter is used via HTTPS, this links will lead to the HTTPS versions
 				# of the files, otherwise the HTTP version will be used. Automagically. :D
 				# Note that not all of the services offer HTTPS versions, hence the differences.
-				@thumbs.push(new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
+				@thumbs.push(new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
 				@thumbs.push(new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
 				@thumbs.push(new Thumbnail("//yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
 				@thumbs.push(new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
