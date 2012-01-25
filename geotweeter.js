@@ -1019,16 +1019,16 @@ Tweet = (function(_super) {
         entity = _ref2[_j];
         url = (_ref3 = entity.expanded_url) != null ? _ref3 : entity.url;
         if ((res = url.match(/(?:http:\/\/(?:www\.)youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
-          this.thumbs.push(new Thumbnail("http://img.youtube.com/" + res[1] + "/1.jpg", url));
+          this.thumbs.push(new Thumbnail("//img.youtube.com/" + res[1] + "/1.jpg", url));
         }
         if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
-          this.thumbs.push(new Thumbnail("http://twitpic.com/show/mini/" + res[1], url));
+          this.thumbs.push(new Thumbnail("//twitpic.com/show/mini/" + res[1], url));
         }
         if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
-          this.thumbs.push(new Thumbnail("http://yfrog.com/" + res[1] + ".th.jpg", url));
+          this.thumbs.push(new Thumbnail("//yfrog.com/" + res[1] + ".th.jpg", url));
         }
         if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
-          this.thumbs.push(new Thumbnail("http://api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
+          this.thumbs.push(new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
         }
         if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
           this.thumbs.push(new Thumbnail("http://moby.to/" + res[1] + ":square", url));
