@@ -357,10 +357,11 @@ Account = (function() {
   };
 
   Account.prototype.fill_list = function() {
-    var after_run, default_parameters, error, key, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _results,
+    var after_run, default_parameters, error, home_timeline_pages, key, page, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _ref2, _ref3, _results,
       _this = this;
     this.set_status("Filling List...", "orange");
-    threads_running = 5;
+    home_timeline_pages = (_ref = (_ref2 = settings.fill_list) != null ? _ref2.home_timeline_pages : void 0) != null ? _ref : 2;
+    threads_running = 3 + home_timeline_pages;
     threads_errored = 0;
     responses = [];
     after_run = function() {
@@ -393,15 +394,6 @@ Account = (function() {
     };
     requests = [
       {
-        url: "statuses/home_timeline.json",
-        name: "home_timeline 1"
-      }, {
-        url: "statuses/home_timeline.json",
-        name: "home_timeline 2",
-        extra_parameters: {
-          page: 2
-        }
-      }, {
         url: "statuses/mentions.json",
         name: "mentions"
       }, {
@@ -420,6 +412,15 @@ Account = (function() {
         }
       }
     ];
+    for (page = 1; 1 <= home_timeline_pages ? page <= home_timeline_pages : page >= home_timeline_pages; 1 <= home_timeline_pages ? page++ : page--) {
+      requests.push({
+        url: "statuses/home_timeline.json",
+        name: "home_timeline " + page,
+        extra_parameters: {
+          page: page
+        }
+      });
+    }
     _results = [];
     for (_i = 0, _len = requests.length; _i < _len; _i++) {
       request = requests[_i];
@@ -428,9 +429,9 @@ Account = (function() {
         value = default_parameters[key];
         if (value) parameters[key] = value;
       }
-      _ref = request.extra_parameters;
-      for (key in _ref) {
-        value = _ref[key];
+      _ref3 = request.extra_parameters;
+      for (key in _ref3) {
+        value = _ref3[key];
         if (value) parameters[key] = value;
       }
       _results.push(this.twitter_request(request.url, {

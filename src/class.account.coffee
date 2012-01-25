@@ -288,10 +288,14 @@ class Account
 	fill_list: =>
 		@set_status("Filling List...", "orange")
 		
+		# If settings.fill_list.home_timeline_pages is set, use that.
+		# Otherwise use 2.
+		home_timeline_pages = settings.fill_list?.home_timeline_pages ? 2
+		
 		# This method is supposed to run multiple requests asynchronously, so
 		# we have to fiddle with it a bit.
-		# We will be starting 5 "threads" (a.k.a. requests).
-		threads_running = 5
+		# We will be starting 3+home_timeline_pages "threads" (a.k.a. requests).
+		threads_running = 3+home_timeline_pages
 		threads_errored = 0
 		responses = []
 		
@@ -339,15 +343,6 @@ class Account
 		# be set to override the `default_parameters` for this request.
 		requests = [
 			{
-				url: "statuses/home_timeline.json"
-				name: "home_timeline 1"
-			}
-			{
-				url: "statuses/home_timeline.json"
-				name: "home_timeline 2"
-				extra_parameters: {page: 2}
-			}
-			{
 				url: "statuses/mentions.json"
 				name: "mentions"
 			}
@@ -372,6 +367,8 @@ class Account
 				}
 			}
 		]
+		
+		requests.push({url: "statuses/home_timeline.json", name: "home_timeline #{page}", extra_parameters: {page: page}}) for page in [1..home_timeline_pages]
 		
 		# Do the actual requests.
 		for request in requests

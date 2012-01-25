@@ -19,6 +19,10 @@ var settings = {
             }
         ]
     },
+
+	fill_list: {
+		home_timeline_pages: 2
+	},
     
     //Array for blacklisted words
     blacklist: ["Test1", "Test2"],
