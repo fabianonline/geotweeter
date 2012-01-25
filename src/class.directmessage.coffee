@@ -3,6 +3,7 @@ class DirectMessage extends Tweet
 
 	add_to_collections: -> 
 		Application.all_dms[@id] = this
+		@account.dms[@id] = this
 		
 	fill_user_variables: -> 
 		@sender = new User(@data.sender)
@@ -30,7 +31,7 @@ class DirectMessage extends Tweet
 	@hooks: {
 		get_tweet: (element) ->
 			tweet_div = $(element).parents('.dm')
-			Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'))
+			Application.accounts[tweet_div.attr('data-account-id')].get_dm(tweet_div.attr('data-tweet-id'))
 		
 		send: ->
 			# event is a global variable. preventDefault() prevents the form from being submitted after this function returned

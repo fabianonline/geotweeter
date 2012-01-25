@@ -10,6 +10,7 @@ class Account
 	max_known_dm_id: "0"
 	my_last_tweet_id: "0"
 	tweets: {}
+	dms: {}
 	id: null
 	user: null
 	request: null
@@ -164,6 +165,7 @@ class Account
 	
 	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
 	get_tweet: (id) -> @tweets[id]
+	get_dm: (id) -> @dms[id]
 	
 	# Adds HTML code to this account's content area. The HTML code is added
 	# to a new `div` element which is then added to the DOM. That method is

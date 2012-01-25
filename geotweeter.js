@@ -67,6 +67,8 @@ Account = (function() {
 
   Account.prototype.tweets = {};
 
+  Account.prototype.dms = {};
+
   Account.prototype.id = null;
 
   Account.prototype.user = null;
@@ -232,6 +234,10 @@ Account = (function() {
 
   Account.prototype.get_tweet = function(id) {
     return this.tweets[id];
+  };
+
+  Account.prototype.get_dm = function(id) {
+    return this.dms[id];
   };
 
   Account.prototype.add_html = function(html) {
@@ -761,7 +767,6 @@ Tweet = (function(_super) {
     this.fill_user_variables();
     this.save_as_last_message();
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
-    this.account.tweets[this.id] = this;
     this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
     this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
     this.linkify_text();
@@ -772,6 +777,7 @@ Tweet = (function(_super) {
 
   Tweet.prototype.add_to_collections = function() {
     var tweet;
+    this.account.tweets[this.id] = this;
     Application.all_tweets[this.id] = this;
     if (this.data.in_reply_to_status_id_str) {
       tweet = Application.all_tweets[this.data.in_reply_to_status_id_str];
@@ -1211,7 +1217,8 @@ DirectMessage = (function(_super) {
   DirectMessage.prototype.recipient = null;
 
   DirectMessage.prototype.add_to_collections = function() {
-    return Application.all_dms[this.id] = this;
+    Application.all_dms[this.id] = this;
+    return this.account.dms[this.id] = this;
   };
 
   DirectMessage.prototype.fill_user_variables = function() {
@@ -1248,7 +1255,7 @@ DirectMessage = (function(_super) {
     get_tweet: function(element) {
       var tweet_div;
       tweet_div = $(element).parents('.dm');
-      return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
+      return Application.accounts[tweet_div.attr('data-account-id')].get_dm(tweet_div.attr('data-tweet-id'));
     },
     send: function() {
       var data, parameters, url;

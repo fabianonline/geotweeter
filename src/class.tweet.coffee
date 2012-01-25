@@ -24,7 +24,6 @@ class Tweet extends TwitterMessage
 		@fill_user_variables()
 		@save_as_last_message()
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
-		@account.tweets[@id] = this
 		@text = if data.retweeted_status? then data.retweeted_status.text else data.text
 		@entities = if data.retweeted_status? then data.retweeted_status.entities else data.entities
 		@linkify_text()
@@ -33,6 +32,7 @@ class Tweet extends TwitterMessage
 		@add_to_collections()
 		
 	add_to_collections: ->
+		@account.tweets[@id] = this
 		Application.all_tweets[@id] = this
 		if @data.in_reply_to_status_id_str
 			tweet = Application.all_tweets[@data.in_reply_to_status_id_str]
