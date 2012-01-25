@@ -208,7 +208,7 @@ Account = (function() {
         }
         _this.user = new User(data);
         _this.screen_name = _this.user.screen_name;
-        $("#user_" + _this.id + " img").attr('src', data.profile_image_url);
+        $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
         _this.get_followers();
         return _this.fill_list();
@@ -1340,7 +1340,15 @@ User = (function() {
   };
 
   User.prototype.get_avatar_html = function() {
-    return "<span class='avatar'>			<span class='tooltip_info'>				<strong>" + this.data.name + "</strong><br /><br />				" + this.data.followers_count + " Follower<br />				" + this.data.friends_count + " Friends<br />				" + this.data.statuses_count + " Tweets			</span>			<a href='https://twitter.com/account/profile_image/" + this.data.screen_name + "' target='_blank'>				<img class='user_avatar' src='" + this.data.profile_image_url + "' />			</a>		</span>";
+    return "<span class='avatar'>			<span class='tooltip_info'>				<strong>" + this.data.name + "</strong><br /><br />				" + this.data.followers_count + " Follower<br />				" + this.data.friends_count + " Friends<br />				" + this.data.statuses_count + " Tweets			</span>			<a href='https://twitter.com/account/profile_image/" + this.data.screen_name + "' target='_blank'>				<img class='user_avatar' src='" + (this.get_avatar_image()) + "' />			</a>		</span>";
+  };
+
+  User.prototype.get_avatar_image = function() {
+    if (location.protocol === "https:") {
+      return this.data.profile_image_url_https;
+    } else {
+      return this.data.profile_image_url;
+    }
   };
 
   User.prototype.get_link_html = function(show_full_name) {

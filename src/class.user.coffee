@@ -20,9 +20,11 @@ class User
 				#{@data.statuses_count} Tweets
 			</span>
 			<a href='https://twitter.com/account/profile_image/#{@data.screen_name}' target='_blank'>
-				<img class='user_avatar' src='#{@data.profile_image_url}' />
+				<img class='user_avatar' src='#{@get_avatar_image()}' />
 			</a>
 		</span>"
+	
+	get_avatar_image: -> if location.protocol=="https:" then @data.profile_image_url_https else @data.profile_image_url
 	
 	get_link_html: (show_full_name=false)-> "
 		<span class='poster'>

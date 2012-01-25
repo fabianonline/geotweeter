@@ -153,7 +153,7 @@ class Account
 					return
 				@user = new User(data)
 				@screen_name = @user.screen_name
-				$("#user_#{@id} img").attr('src', data.profile_image_url)
+				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
 				@get_followers()
 				@fill_list()
