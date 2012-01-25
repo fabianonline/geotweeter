@@ -44,7 +44,7 @@ class Account
 			</div>
 		")
 		# Add a tooltip to this account's selector button at the top of the screen.
-		$("#user_#{@id}").tooltip({
+		$("#user_#{@id}").tooltip?({
 			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}"
 			track: true
 			showURL: false

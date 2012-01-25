@@ -85,7 +85,7 @@ Account = (function() {
 
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);
-    var new_area,
+    var new_area, _base,
       _this = this;
     this.id = settings_id;
     if (settings_id === 0) Account.first = this;
@@ -99,14 +99,16 @@ Account = (function() {
     new_area.attr('id', this.get_content_div_id());
     $('body').append(new_area);
     $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/spinner.gif' />					<span class='count'></span>				</a>			</div>		");
-    $("#user_" + this.id).tooltip({
-      bodyHandler: function() {
-        return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text;
-      },
-      track: true,
-      showURL: false,
-      left: 5
-    });
+    if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
+      _base.tooltip({
+        bodyHandler: function() {
+          return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text;
+        },
+        track: true,
+        showURL: false,
+        left: 5
+      });
+    }
     this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
     this.validate_credentials();
   }
