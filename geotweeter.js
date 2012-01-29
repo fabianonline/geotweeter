@@ -1007,7 +1007,8 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_thumbnails = function() {
-    var entity, media, res, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _results;
+    var entity, media, thumb, url, _i, _j, _len, _len2, _ref, _ref2, _ref3, _results;
+    this.thumbs = [];
     if (this.data.entities == null) return;
     if (this.data.entities.media != null) {
       _ref = this.data.entities.media;
@@ -1022,35 +1023,44 @@ Tweet = (function(_super) {
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         entity = _ref2[_j];
         url = (_ref3 = entity.expanded_url) != null ? _ref3 : entity.url;
-        if ((res = url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
-          this.thumbs.push(new Thumbnail("//img.youtube.com/" + res[1] + "/1.jpg", url));
-        }
-        if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
-          this.thumbs.push(new Thumbnail("//twitpic.com/show/mini/" + res[1], url));
-        }
-        if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
-          this.thumbs.push(new Thumbnail("//yfrog.com/" + res[1] + ".th.jpg", url));
-        }
-        if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
-          this.thumbs.push(new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url));
-        }
-        if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
-          this.thumbs.push(new Thumbnail("http://moby.to/" + res[1] + ":square", url));
-        }
-        if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
-          this.thumbs.push(new Thumbnail("http://ragefac.es/" + res[1] + "/i", url));
-        }
-        if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
-          this.thumbs.push(new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url));
-        }
-        if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
-          _results.push(this.thumbs.push(new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url)));
+        thumb = Tweet.url_to_thumbnail(url);
+        if (thumb != null) {
+          _results.push(this.thumbs.push(thumb));
         } else {
           _results.push(void 0);
         }
       }
       return _results;
     }
+  };
+
+  Tweet.url_to_thumbnail = function(url) {
+    var res;
+    if ((res = url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/))) {
+      return new Thumbnail("//img.youtube.com/" + res[1] + "/1.jpg", url);
+    }
+    if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
+      return new Thumbnail("//twitpic.com/show/mini/" + res[1], url);
+    }
+    if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
+      return new Thumbnail("//yfrog.com/" + res[1] + ".th.jpg", url);
+    }
+    if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
+      return new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url);
+    }
+    if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
+      return new Thumbnail("http://moby.to/" + res[1] + ":square", url);
+    }
+    if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
+      return new Thumbnail("http://ragefac.es/" + res[1] + "/i", url);
+    }
+    if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
+      return new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url);
+    }
+    if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
+      return new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url);
+    }
+    return null;
   };
 
   Tweet.prototype.show_replies = function() {

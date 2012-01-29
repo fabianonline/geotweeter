@@ -199,6 +199,7 @@ class Tweet extends TwitterMessage
 		$('#text').focus()
 	
 	get_thumbnails: ->
+		@thumbs = []
 		return unless @data.entities?
 		if @data.entities.media?
 			for media in @data.entities.media
@@ -206,20 +207,25 @@ class Tweet extends TwitterMessage
 		if @data.entities.urls?
 			for entity in @data.entities.urls
 				url = entity.expanded_url ? entity.url
-				# Definitions for the thumbnails.
-				# The "//something.com" notation is actually valid HTTP: The double-slash
-				# at the beginning means as much as "us the current protocol". So, if the
-				# Geotweeter is used via HTTPS, this links will lead to the HTTPS versions
-				# of the files, otherwise the HTTP version will be used. Automagically. :D
-				# Note that not all of the services offer HTTPS versions, hence the differences.
-				@thumbs.push(new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
-				@thumbs.push(new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
-				@thumbs.push(new Thumbnail("//yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
-				@thumbs.push(new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
-				@thumbs.push(new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
-				@thumbs.push(new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
-				@thumbs.push(new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
-				@thumbs.push(new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
+				thumb = Tweet.url_to_thumbnail(url)
+				@thumbs.push(thumb) if thumb?
+	
+	@url_to_thumbnail: (url) ->
+		# Definitions for the thumbnails.
+		# The "//something.com" notation is actually valid HTTP: The double-slash
+		# at the beginning means as much as "us the current protocol". So, if the
+		# Geotweeter is used via HTTPS, this links will lead to the HTTPS versions
+		# of the files, otherwise the HTTP version will be used. Automagically. :D
+		# Note that not all of the services offer HTTPS versions, hence the differences.
+		return (new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
+		return (new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
+		return (new Thumbnail("//yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
+		return (new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
+		return (new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
+		return (new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
+		return (new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
+		return (new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
+		return null
 	
 	show_replies: ->
 		html = ""
