@@ -1822,7 +1822,8 @@ FavoriteEvent = (function(_super) {
   }
 
   FavoriteEvent.prototype.get_inner_html = function() {
-    return "" + (this.source.get_link_html(true)) + " favorisierte:<br />" + this.data.text;
+    if (this.source.id === this.account.user.id) return "";
+    return "" + (this.source.get_link_html(true)) + " favorisierte:<br />" + this.data.target_object.text;
   };
 
   return FavoriteEvent;
@@ -1838,7 +1839,8 @@ ListMemberAddedEvent = (function(_super) {
   }
 
   ListMemberAddedEvent.prototype.get_inner_html = function() {
-    return "		" + (this.source.get_link_html(true)) + " fügte dich zu einer Liste hinzu:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+    if (this.source.id === this.account.user.id) return "";
+    return "{@source.get_link_html(true)} fügte dich zu einer Liste hinzu:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
   };
 
   return ListMemberAddedEvent;
@@ -1854,7 +1856,8 @@ ListMemberRemovedEvent = (function(_super) {
   }
 
   ListMemberRemovedEvent.prototype.get_inner_html = function() {
-    return "		" + (this.source.get_link_html(true)) + " entfernte dich von einer Liste:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
+    if (this.source.id === this.account.user.id) return "";
+    return "" + (this.source.get_link_html(true)) + " entfernte dich von einer Liste:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
   };
 
   return ListMemberRemovedEvent;
@@ -1886,7 +1889,7 @@ UnknownEvent = (function(_super) {
   }
 
   UnknownEvent.prototype.get_inner_html = function() {
-    return "		" + (this.source.get_link_html(true)) + " löste folgendes, unbekanntes Event namens " + this.data.event + " aus:<br />		" + (this.data.toString());
+    return "" + (this.source.get_link_html(true)) + " löste folgendes, unbekanntes Event namens " + this.data.event + " aus:<br />		" + (this.data.toString());
   };
 
   return UnknownEvent;
