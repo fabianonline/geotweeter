@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "$1" = "specs" ]; then
-	coffee --bare --output specs/ --compile specs/src/
+	coffee --bare --output specs/ --compile specs/src/*.coffee
 else
 	coffee $@ --bare --join geotweeter.js --compile \
 		src/_info.coffee \
