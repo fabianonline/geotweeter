@@ -1,4 +1,4 @@
 
 Account.prototype.validate_credentials = function() {
-  return true;
+  return this.screen_name = "fabianonline";
 };

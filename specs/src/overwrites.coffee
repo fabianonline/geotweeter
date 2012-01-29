@@ -1,1 +1,2 @@
-Account::validate_credentials = -> true
+Account::validate_credentials = -> 
+	@screen_name = "fabianonline"
