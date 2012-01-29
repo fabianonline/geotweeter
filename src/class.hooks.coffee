@@ -20,7 +20,7 @@ class Hooks
 		color = '#0b0'
 		text = text.trim()
 		length = text.length
-		length += characters_reserved_per_media + 1 if $('#file')[0].files[0]
+		length += Application.twitter_config.characters_reserved_per_media + 1 if $('#file')[0].files[0]
 		urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig)
 		for url in urls ? []
 			length -= url.length

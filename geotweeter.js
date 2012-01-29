@@ -621,7 +621,9 @@ Hooks = (function() {
     color = '#0b0';
     text = text.trim();
     length = text.length;
-    if ($('#file')[0].files[0]) length += characters_reserved_per_media + 1;
+    if ($('#file')[0].files[0]) {
+      length += Application.twitter_config.characters_reserved_per_media + 1;
+    }
     urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig);
     _ref = urls != null ? urls : [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
