@@ -8,7 +8,7 @@ to this file will be overwritten!
 
 DO NOT MODIFY THIS FILE
 */
-var Account, Application, DirectMessage, Event, FavoriteEvent, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = Object.prototype.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
@@ -549,6 +549,15 @@ Account = (function() {
     return this.status_text = message;
   };
 
+  Account.prototype.destroy = function() {
+    this.request.stop_request();
+    if (Application.current_account === this) Account.first.show();
+    $("#" + (this.get_content_div_id())).remove();
+    $("#user_" + this.id).mouseout();
+    $("#user_" + this.id).remove();
+    return delete Application.accounts[this.id];
+  };
+
   Account.hooks = {
     change_current_account: function(elm) {
       var account_id, acct;
@@ -584,12 +593,97 @@ Account = (function() {
       Application.current_account.get_max_read_id();
       Application.current_account.request.restart();
       return false;
+    },
+    destroy: function(elm) {
+      var account_id, acct;
+      account_id = $(elm).parents('.user').data('account-id');
+      acct = Application.accounts[account_id];
+      acct.destroy();
+      return false;
     }
   };
 
   return Account;
 
 })();
+
+FilterAccount = (function(_super) {
+
+  __extends(FilterAccount, _super);
+
+  FilterAccount.prototype.parent = null;
+
+  function FilterAccount(parent, keywords) {
+    var new_area, _base,
+      _this = this;
+    this.parent = parent;
+    this.keywords = keywords;
+    this.fill_list = __bind(this.fill_list, this);
+    this.id = "fake_" + ((new Date()).getTime());
+    this.keys = this.parent.keys;
+    this.screen_name = "Suche: " + this.keywords;
+    this.user = this.parent.user;
+    new_area = $('#content_template').clone();
+    new_area.attr('id', this.get_content_div_id());
+    $('body').append(new_area);
+    $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/magnifier.png' />					<span class='count'></span>				</a>				<a href='#' onClick='return Account.hooks.destroy(this);'>					<img src='icons/cross.png' />				</a>			</div>		");
+    if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
+      _base.tooltip({
+        bodyHandler: function() {
+          return "<strong>" + _this.screen_name + "</strong><br />" + _this.status_text;
+        },
+        track: true,
+        showURL: false,
+        left: 5
+      });
+    }
+    this.request = new FilterRequest(this, this.keywords);
+    this.request.start_request();
+  }
+
+  FilterAccount.prototype.set_max_read_id = function(id) {
+    if (id == null) {
+      Application.log(this, "set_max_read_id", "Falscher Wert: " + id);
+      return;
+    }
+    this.max_read_id = id;
+    return this.update_read_tweet_status();
+  };
+
+  FilterAccount.prototype.update_read_tweet_status = function() {
+    var element, elements, elm, _i, _len;
+    elements = $("#content_" + this.id + " .new");
+    for (_i = 0, _len = elements.length; _i < _len; _i++) {
+      elm = elements[_i];
+      element = $(elm);
+      if (!this.is_unread_tweet(element.attr('data-tweet-id'))) {
+        element.removeClass('new');
+      }
+    }
+    return this.update_user_counter();
+  };
+
+  FilterAccount.prototype.get_max_read_id = function() {};
+
+  FilterAccount.prototype.toString = function() {
+    return "FilterAccount " + this.keywords;
+  };
+
+  FilterAccount.prototype.validate_credentials = function() {
+    return $("#user_" + this.id + " img").attr('src', 'icons/magnifier.png');
+  };
+
+  FilterAccount.prototype.get_followers = function() {};
+
+  FilterAccount.prototype.get_twitter_configuration = function() {};
+
+  FilterAccount.prototype.fill_list = function() {
+    return this.request.start_request();
+  };
+
+  return FilterAccount;
+
+})(Account);
 
 Hooks = (function() {
 
@@ -675,6 +769,27 @@ Hooks = (function() {
       error = true;
     }
     if (error) return $('#file').val('');
+  };
+
+  Hooks.add = function() {
+    var html;
+    html = "			<ul>				<li><a href='#' onClick='return Hooks.add_user();'>User</a><br />					Fügt einen weiteren User zum Geotweeter hinzu.</li>				<li><a href='#' onClick='return Hooks.add_filter_stream();'>Suche</a><br />					Fügt einen Stream mit einer Echtzeit-Suche hinzu.</li>			</ul>		";
+    Application.infoarea.show("Hinzufügen", html);
+    return false;
+  };
+
+  Hooks.add_filter_stream = function() {
+    var html;
+    html = "			Nach welchen Begriffen soll gesucht werden?<br />			Leerzeichen stellen AND, Kommas OR dar.<br />			Beispiel: 'top gear, topgear'.<br /><br />			<input type='text' id='filter_keyword' /> 			<input type='button' value='Go!' onClick='return Hooks.add_filter_stream_2();' />		";
+    return Application.infoarea.show("Such-Stream hinzufügen", html);
+  };
+
+  Hooks.add_filter_stream_2 = function() {
+    var acct, keywords;
+    keywords = $('#filter_keyword').val();
+    acct = new FilterAccount(Application.current_account, keywords);
+    Application.accounts[acct.id] = acct;
+    return Application.infoarea.hide();
   };
 
   return Hooks;
@@ -1468,8 +1583,18 @@ StreamRequest = (function(_super) {
     if (this.request != null) return this.request.abort();
   };
 
+  StreamRequest.prototype.get_url = function() {
+    var data, url;
+    data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
+      delimited: "length",
+      include_entities: "1",
+      include_rts: "1"
+    });
+    return url = "user_proxy?" + data;
+  };
+
   StreamRequest.prototype.start_request = function() {
-    var data, url,
+    var url,
       _this = this;
     this.stop_request();
     this.stopped = false;
@@ -1482,12 +1607,7 @@ StreamRequest = (function(_super) {
     this.response_offset = 0;
     this.connected = false;
     this.connection_started_at = new Date();
-    data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
-      delimited: "length",
-      include_entities: "1",
-      include_rts: "1"
-    });
-    url = "user_proxy?" + data;
+    url = this.get_url();
     this.request = new XMLHttpRequest();
     this.request.open("GET", url, true);
     this.request.onreadystatechange = function() {
@@ -1571,6 +1691,36 @@ StreamRequest = (function(_super) {
   return StreamRequest;
 
 })(Request);
+
+FilterRequest = (function(_super) {
+
+  __extends(FilterRequest, _super);
+
+  function FilterRequest(account, keywords) {
+    this.keywords = keywords;
+    FilterRequest.__super__.constructor.call(this, account);
+  }
+
+  FilterRequest.prototype.toString = function() {
+    return "FilterReq " + this.account.user.screen_name;
+  };
+
+  FilterRequest.prototype.clear_timeout = function() {};
+
+  FilterRequest.prototype.set_timeout = function(delay) {};
+
+  FilterRequest.prototype.get_url = function() {
+    var data, url;
+    data = this.account.sign_request("https://stream.twitter.com/1/statuses/filter.json", "GET", {
+      delimited: "length",
+      track: this.keywords
+    });
+    return url = "proxy/stream/statuses/filter.json?" + data;
+  };
+
+  return FilterRequest;
+
+})(StreamRequest);
 
 PullRequest = (function(_super) {
 

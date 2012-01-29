@@ -57,3 +57,31 @@ class Hooks
 			alert("Der Dateityp #{file.type} wird von Twitter nicht akzeptiert.")
 			error = true
 		$('#file').val('') if error
+	
+	@add: ->
+		html = "
+			<ul>
+				<li><a href='#' onClick='return Hooks.add_user();'>User</a><br />
+					Fügt einen weiteren User zum Geotweeter hinzu.</li>
+				<li><a href='#' onClick='return Hooks.add_filter_stream();'>Suche</a><br />
+					Fügt einen Stream mit einer Echtzeit-Suche hinzu.</li>
+			</ul>
+		"
+		Application.infoarea.show("Hinzufügen", html)
+		return false
+	
+	@add_filter_stream: ->
+		html = "
+			Nach welchen Begriffen soll gesucht werden?<br />
+			Leerzeichen stellen AND, Kommas OR dar.<br />
+			Beispiel: 'top gear, topgear'.<br /><br />
+			<input type='text' id='filter_keyword' /> 
+			<input type='button' value='Go!' onClick='return Hooks.add_filter_stream_2();' />
+		"
+		Application.infoarea.show("Such-Stream hinzufügen", html)
+	
+	@add_filter_stream_2: ->
+		keywords = $('#filter_keyword').val()
+		acct = new FilterAccount(Application.current_account, keywords)
+		Application.accounts[acct.id] = acct
+		Application.infoarea.hide()

@@ -37,6 +37,10 @@ class StreamRequest extends Request
 	restart: ->
 		@request.abort() if @request?
 	
+	get_url: ->
+		data = @account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {delimited: "length", include_entities: "1", include_rts: "1"})
+		url = "user_proxy?#{data}"
+	
 	start_request: ->
 		@stop_request()
 		@stopped = false
@@ -49,8 +53,7 @@ class StreamRequest extends Request
 		@response_offset = 0
 		@connected = false
 		@connection_started_at = new Date()
-		data = @account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {delimited: "length", include_entities: "1", include_rts: "1"})
-		url = "user_proxy?#{data}"
+		url = @get_url()
 		@request = new XMLHttpRequest();
 		@request.open("GET", url, true);
 		@request.onreadystatechange = =>

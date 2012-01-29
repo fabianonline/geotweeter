@@ -8,6 +8,7 @@ else
 		src/extension.number.coffee \
 		src/extension.string.coffee \
 		src/class.account.coffee \
+		src/class.filteraccount.coffee \
 		src/class.hooks.coffee \
 		src/class.thumbnail.coffee \
 		src/class.twittermessage.coffee \
@@ -16,6 +17,7 @@ else
 		src/class.user.coffee \
 		src/class.request.coffee \
 		src/class.streamrequest.coffee \
+		src/class.filterrequest.coffee \
 		src/class.pullrequest.coffee \
 		src/class.event.coffee \
 		src/geotweeter.coffee

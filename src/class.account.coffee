@@ -496,6 +496,16 @@ class Account
 		$("#user_#{@id}").removeClass('red green yellow orange').addClass(color)
 		@status_text = message
 	
+	# Removes this account. Currently only used by FilterAccounts.
+	destroy: ->
+		@request.stop_request()
+		Account.first.show() if Application.current_account==this
+		$("##{@get_content_div_id()}").remove()
+		# Call mouseout to remove the tooltip
+		$("#user_#{@id}").mouseout()
+		$("#user_#{@id}").remove()
+		delete Application.accounts[@id]
+	
 	# Some static hooks to be called from the HTML via buttons and stuff.
 	# Mostly self-explenatory.
 	@hooks: {
@@ -533,5 +543,11 @@ class Account
 		reload: ->
 			Application.current_account.get_max_read_id()
 			Application.current_account.request.restart()
+			return false
+		
+		destroy: (elm) ->
+			account_id = $(elm).parents('.user').data('account-id')
+			acct = Application.accounts[account_id]
+			acct.destroy()
 			return false
 	}
