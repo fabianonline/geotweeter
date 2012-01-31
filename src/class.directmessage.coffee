@@ -25,6 +25,7 @@ class DirectMessage extends Tweet
 		array = []
 		array.push {name: "Reply", icon: "icons/comments.png", action: (elm) -> DirectMessage.hooks.reply(elm) }
 		array.push {name: "Als Spammer melden", icon: "icon/exclamation.png", action: (elm) -> DirectMessage.hooks.report_as_spam(elm) } unless @account.user.id==@sender.id
+		array.push {name: "DM debuggen", icon: "icons/bug.png", action: (elm) -> DirectMessage.hooks.debug(elm) }
 		return array
 
 	get_sender_html: -> 
@@ -79,4 +80,5 @@ class DirectMessage extends Tweet
 		
 		reply: (elm) -> @get_tweet(elm).reply(); return false;
 		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
+		debug: (elm) -> @get_tweet(elm).debug(); return false;
 	}

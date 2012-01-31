@@ -1022,6 +1022,13 @@ Tweet = (function(_super) {
         }
       });
     }
+    array.push({
+      name: "Tweet debuggen",
+      icon: "icons/bug.png",
+      action: function(elm) {
+        return Tweet.hooks.debug(elm);
+      }
+    });
     return array;
   };
 
@@ -1296,6 +1303,10 @@ Tweet = (function(_super) {
     });
   };
 
+  Tweet.prototype.debug = function() {
+    debugger;
+  };
+
   Tweet.hooks = {
     get_tweet: function(element) {
       var tweet_div;
@@ -1332,6 +1343,10 @@ Tweet = (function(_super) {
     },
     get_menu_items: function(elm) {
       return this.get_tweet(elm).get_menu_items();
+    },
+    debug: function(elm) {
+      this.get_tweet(elm).debug();
+      return false;
     },
     send: function() {
       var content_type, data, key, parameters, place, placeindex, url, value;
@@ -1472,6 +1487,13 @@ DirectMessage = (function(_super) {
         }
       });
     }
+    array.push({
+      name: "DM debuggen",
+      icon: "icons/bug.png",
+      action: function(elm) {
+        return DirectMessage.hooks.debug(elm);
+      }
+    });
     return array;
   };
 
@@ -1546,6 +1568,10 @@ DirectMessage = (function(_super) {
     },
     get_menu_items: function(elm) {
       return this.get_tweet(elm).get_menu_items();
+    },
+    debug: function(elm) {
+      this.get_tweet(elm).debug();
+      return false;
     }
   };
 

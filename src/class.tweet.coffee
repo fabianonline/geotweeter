@@ -84,6 +84,7 @@ class Tweet extends TwitterMessage
 		array.push {name: "Alle Geotags",               icon: "icons/world_add.png",                 url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250"} if @data.coordinates?
 		array.push {name: "Tweet löschen",              icon: "icons/cross.png",                     action: (elm) -> Tweet.hooks.delete(elm)} if @account.user.id==@sender.id
 		array.push {name: "Als Spammer melden",         icon: "icons/exclamation.png",               action: (elm) -> Tweet.hooks.report_as_spam(elm)} unless @account.user.id==@sender.id
+		array.push {name: "Tweet debuggen",             icon: "icons/bug.png",                       action: (elm) -> Tweet.hooks.debug(elm)}
 		return array
 	
 	get_single_thumb_html: ->
@@ -254,6 +255,8 @@ class Tweet extends TwitterMessage
 				debugger;
 		})
 	
+	debug: -> debugger
+
 	@hooks: {
 		get_tweet: (element) -> 
 			tweet_div = if element.filter? && element.filter(".tweet").length==1 then element else $(element).parents('.tweet')
@@ -267,6 +270,7 @@ class Tweet extends TwitterMessage
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
 		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
 		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
+		debug:          (elm) -> @get_tweet(elm).debug(); return false
 		
 		# called by the tweet button
 		send: ->
