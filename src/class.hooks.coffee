@@ -10,8 +10,9 @@ class Hooks
 				$('#text').val(@text_before_enter)
 				Hooks.send()
 				return
-			@text_before_enter = $('#text').val()
 			@time_of_last_enter = now
+		else
+			@text_before_enter = $('#text').val()
 		text = $('#text').val() # don't trim just yet
 		if !Application.get_dm_recipient_name()? && parts=text.match(/^d @?(\w+) (.*)$/i)
 			Application.set_dm_recipient_name(parts[1])

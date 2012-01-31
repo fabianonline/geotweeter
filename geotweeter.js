@@ -703,8 +703,9 @@ Hooks = (function() {
         Hooks.send();
         return;
       }
-      this.text_before_enter = $('#text').val();
       this.time_of_last_enter = now;
+    } else {
+      this.text_before_enter = $('#text').val();
     }
     text = $('#text').val();
     if (!(Application.get_dm_recipient_name() != null) && (parts = text.match(/^d @?(\w+) (.*)$/i))) {
