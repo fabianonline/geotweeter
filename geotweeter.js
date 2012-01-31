@@ -927,7 +927,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_overlay_html() + "<div style='clear: both;'></div>" + "</div>";
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>";
   };
 
   Tweet.prototype.get_sender_html = function() {
@@ -938,16 +938,90 @@ Tweet = (function(_super) {
     return this.get_retweet_html() + this.get_place_html();
   };
 
-  Tweet.prototype.get_overlay_html = function() {
-    return "<div class='overlay'>" + this.get_temporary_info_html() + this.get_buttons_html() + "</div>";
-  };
-
   Tweet.prototype.get_temporary_info_html = function() {
     return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format("%d.%m.%Y %H:%M")) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
   };
 
-  Tweet.prototype.get_buttons_html = function() {
-    return "<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + "<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" + "<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" + (this.data.favorited ? "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star.png' class='favorite_button' title='Favorisierung entfernen' /></a>" : "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star_gray.png' class='favorite_button' title='Favorisieren' /></a>") + ("<a href='" + this.permalink + "' target='_blank'><img src='icons/link.png' title='Permalink' /></a>") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0] + "' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" : "") + (this.data.coordinates != null ? "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" : "") + (this.account.screen_name === this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" : "") + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
+  Tweet.prototype.get_menu_items = function() {
+    var array;
+    array = [];
+    array.push({
+      name: "Reply",
+      icon: "icons/comments.png",
+      action: function(elm) {
+        return Tweet.hooks.reply(elm);
+      }
+    });
+    array.push({
+      name: "Retweet",
+      icon: "icons/arrow_rotate_clockwise.png",
+      action: function(elm) {
+        return Tweet.hooks.retweet(elm);
+      }
+    });
+    array.push({
+      name: "Quote",
+      icon: "icons/tag.png",
+      action: function(elm) {
+        return Tweet.hooks.quote(elm);
+      }
+    });
+    if (!this.data.favorited) {
+      array.push({
+        name: "Favorisieren",
+        icon: "icons/star_gray.png",
+        action: function(elm) {
+          return Tweet.hooks.toggle_favorite(elm);
+        }
+      });
+    }
+    if (this.data.favorited) {
+      array.push({
+        name: "Favorisierung entfernen",
+        icon: "icons/star.png",
+        action: function(elm) {
+          return Tweet.hooks.toggle_favorite(elm);
+        }
+      });
+    }
+    array.push({
+      name: "Permalink",
+      icon: "icons/link.png",
+      url: this.permalink
+    });
+    if (this.data.coordinates != null) {
+      array.push({
+        name: "Geotag",
+        icon: "icons/world.png",
+        url: "http://maps.google.com/?q=" + this.data.coordinates.coordinates[1] + "," + this.data.coordinates.coordinates[0]
+      });
+    }
+    if (this.data.coordinates != null) {
+      array.push({
+        name: "Alle Geotags",
+        icon: "icons/world_add.png",
+        url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250"
+      });
+    }
+    if (this.account.user.id === this.sender.id) {
+      array.push({
+        name: "Tweet löschen",
+        icon: "icons/cross.png",
+        action: function(elm) {
+          return Tweet.hooks["delete"](elm);
+        }
+      });
+    }
+    if (this.account.user.id !== this.sender.id) {
+      array.push({
+        name: "Als Spammer melden",
+        icon: "icons/exclamation.png",
+        action: function(elm) {
+          return Tweet.hooks.report_as_spam(elm);
+        }
+      });
+    }
+    return array;
   };
 
   Tweet.prototype.get_single_thumb_html = function() {
@@ -1221,7 +1295,7 @@ Tweet = (function(_super) {
   Tweet.hooks = {
     get_tweet: function(element) {
       var tweet_div;
-      tweet_div = $(element).parents('.tweet');
+      tweet_div = element.filter(".tweet").length === 1 ? element : $(element).parents('.tweet');
       return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
     },
     reply: function(elm) {
@@ -1251,6 +1325,9 @@ Tweet = (function(_super) {
     show_replies: function(elm) {
       this.get_tweet(elm).show_replies();
       return false;
+    },
+    get_menu_items: function(elm) {
+      return this.get_tweet(elm).get_menu_items();
     },
     send: function() {
       var content_type, data, key, parameters, place, placeindex, url, value;
@@ -1962,7 +2039,7 @@ Application = (function() {
       });
     });
     $('#file').change(Hooks.check_file);
-    return $('#text').autocomplete({
+    $('#text').autocomplete({
       minLength: 1,
       source: function(request, response) {
         var word;
@@ -1985,6 +2062,11 @@ Application = (function() {
         term = this.value.split(/\s+/).pop();
         this.value = this.value.substring(0, this.value.length - term.length) + ui.item.value + " ";
         return false;
+      }
+    });
+    return $(document).delegateContextMenu(".tweet", "context_menu_tweet", {
+      get_items_function: function(elm) {
+        return Tweet.hooks.get_menu_items(elm);
       }
     });
   };

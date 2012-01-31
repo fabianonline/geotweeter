@@ -54,8 +54,11 @@ class Application
 				term = this.value.split(/\s+/).pop()
 				this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " "
 				return false
-			
-		});
+		})
+		
+		$(document).delegateContextMenu(".tweet", "context_menu_tweet", {
+			get_items_function: (elm) -> Tweet.hooks.get_menu_items(elm)
+		})
 
 	@initialize_accounts: ->
 		for data, id in settings.twitter.users

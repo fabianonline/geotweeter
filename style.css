@@ -219,21 +219,15 @@ textarea, input, select {
     display: none;
 }
 
-.tweet .overlay,
-.dm .overlay {
+.tweet .info,
+.dm .info {
     font-size: 8px;
     width: 100%;
-    display: none;
     text-decoration: none !important;
     color: #333 !important;
 }
 
-.tweet:hover .overlay,
-.dm:hover .overlay {
-    display: block;
-}
-
-.overlay a {
+.info a {
     text-decoration: none;
     color: #333;
 }
@@ -325,4 +319,27 @@ textarea, input, select {
 
 #dm_info_text {
     font-size: 18px;
+}
+
+ul.context-menu {
+	list-style-type: none;
+	border: 1px solid #ccc;
+	padding-left: 0px;
+}
+
+.context-menu li {
+	background-color: #eee;
+	padding: 1px 5px 1px 20px;
+	background-repeat: no-repeat;
+	background-position: left;
+}
+
+.context-menu li:hover {
+	background-color: #ddd;
+}
+
+.context-menu a {
+	text-decoration: none;
+	color: #000;
+	cursor: default;
 }

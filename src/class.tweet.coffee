@@ -57,7 +57,7 @@ class Tweet extends TwitterMessage
 		"<span class='text'>#{@text}</span>" +
 		@get_multi_thumb_html() +
 		@get_permanent_info_html() +
-		@get_overlay_html() +
+		@get_temporary_info_html() +
 		"<div style='clear: both;'></div>" +
 		"</div>"
 	
@@ -67,27 +67,24 @@ class Tweet extends TwitterMessage
 		@get_retweet_html() +
 		@get_place_html()
 	
-	get_overlay_html: -> 
-		"<div class='overlay'>" +
-		@get_temporary_info_html() +
-		@get_buttons_html() +
-		"</div>"
-	
 	get_temporary_info_html: ->
 		"<div class='info'>" +
 		"<a href='#{@permalink}' target='_blank'>#{@date.format("%d.%m.%Y %H:%M")}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
 		"</div>"
-			
-	get_buttons_html: ->
-		"<a href='#' onClick='return Tweet.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
-		"<a href='#' onClick='return Tweet.hooks.retweet(this);'><img src='icons/arrow_rotate_clockwise.png' title='Retweet' /></a>" +
-		"<a href='#' onClick='return Tweet.hooks.quote(this);'><img src='icons/tag.png' title='Quote' /></a>" +
-		(if @data.favorited then "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star.png' class='favorite_button' title='Favorisierung entfernen' /></a>" else "<a href='#' onClick='return Tweet.hooks.toggle_favorite(this);'><img src='icons/star_gray.png' class='favorite_button' title='Favorisieren' /></a>") +
-		"<a href='#{@permalink}' target='_blank'><img src='icons/link.png' title='Permalink' /></a>" +
-		(if @data.coordinates? then "<a href='http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}' target='_blank'><img src='icons/world.png' title='Geotag' /></a>" else "") +
-		(if @data.coordinates? then "<a href='http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250' target='_blank'><img src='icons/world_add.png' title='All Geotags' /></a>" else "") +
-		(if @account.screen_name==@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.delete(this);'><img src='icons/cross.png' title='Delete' /></a>" else "") +
-		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
+
+	get_menu_items: ->
+		array = []
+		array.push {name: "Reply",                      icon: "icons/comments.png",                  action: (elm) -> Tweet.hooks.reply(elm)}
+		array.push {name: "Retweet",                    icon: "icons/arrow_rotate_clockwise.png",    action: (elm) -> Tweet.hooks.retweet(elm)}
+		array.push {name: "Quote",                      icon: "icons/tag.png",                       action: (elm) -> Tweet.hooks.quote(elm)}
+		array.push {name: "Favorisieren",               icon: "icons/star_gray.png",                 action: (elm) -> Tweet.hooks.toggle_favorite(elm)} unless @data.favorited
+		array.push {name: "Favorisierung entfernen",    icon: "icons/star.png",                      action: (elm) -> Tweet.hooks.toggle_favorite(elm)} if @data.favorited
+		array.push {name: "Permalink",                  icon: "icons/link.png",                      url: @permalink}
+		array.push {name: "Geotag",                     icon: "icons/world.png",                     url: "http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}"} if @data.coordinates?
+		array.push {name: "Alle Geotags",               icon: "icons/world_add.png",                 url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250"} if @data.coordinates?
+		array.push {name: "Tweet löschen",              icon: "icons/cross.png",                     action: (elm) -> Tweet.hooks.delete(elm)} if @account.user.id==@sender.id
+		array.push {name: "Als Spammer melden",         icon: "icons/exclamation.png",               action: (elm) -> Tweet.hooks.report_as_spam(elm)} unless @account.user.id==@sender.id
+		return array
 	
 	get_single_thumb_html: ->
 		return "" unless @thumbs.length==1
@@ -257,7 +254,7 @@ class Tweet extends TwitterMessage
 	
 	@hooks: {
 		get_tweet: (element) -> 
-			tweet_div = $(element).parents('.tweet')
+			tweet_div = if element.filter(".tweet").length==1 then element else $(element).parents('.tweet')
 			Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'))
 		
 		reply:          (elm) -> @get_tweet(elm).reply(); return false
@@ -267,6 +264,7 @@ class Tweet extends TwitterMessage
 		delete:         (elm) -> @get_tweet(elm).delete(); return false
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
 		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
+		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
 		
 		# called by the tweet button
 		send: ->
