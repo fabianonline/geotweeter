@@ -245,7 +245,7 @@ class Tweet extends TwitterMessage
 			method: "GET"
 			success: (foo, data) =>
 				tweet = new Tweet(data, @account)
-				$('#info_spinner').before(tweet.get_html())
+				$('#info_spinner').before($(tweet.get_html()).hide().fadeIn())
 				if Application.infoarea.visible && tweet.data.in_reply_to_status_id_str
 					@fetch_reply(tweet.data.in_reply_to_status_id_str)
 				else
@@ -254,7 +254,7 @@ class Tweet extends TwitterMessage
 	
 	@hooks: {
 		get_tweet: (element) -> 
-			tweet_div = if element.filter(".tweet").length==1 then element else $(element).parents('.tweet')
+			tweet_div = if element.filter? && element.filter(".tweet").length==1 then element else $(element).parents('.tweet')
 			Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'))
 		
 		reply:          (elm) -> @get_tweet(elm).reply(); return false

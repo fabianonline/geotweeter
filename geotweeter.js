@@ -1283,7 +1283,7 @@ Tweet = (function(_super) {
       success: function(foo, data) {
         var tweet;
         tweet = new Tweet(data, _this.account);
-        $('#info_spinner').before(tweet.get_html());
+        $('#info_spinner').before($(tweet.get_html()).hide().fadeIn());
         if (Application.infoarea.visible && tweet.data.in_reply_to_status_id_str) {
           return _this.fetch_reply(tweet.data.in_reply_to_status_id_str);
         } else {
@@ -1296,7 +1296,7 @@ Tweet = (function(_super) {
   Tweet.hooks = {
     get_tweet: function(element) {
       var tweet_div;
-      tweet_div = element.filter(".tweet").length === 1 ? element : $(element).parents('.tweet');
+      tweet_div = (element.filter != null) && element.filter(".tweet").length === 1 ? element : $(element).parents('.tweet');
       return Application.accounts[tweet_div.attr('data-account-id')].get_tweet(tweet_div.attr('data-tweet-id'));
     },
     reply: function(elm) {
