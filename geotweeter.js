@@ -1307,7 +1307,9 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.debug = function() {
-    debugger;
+    window.tweet = this;
+    console.dir(this);
+    return alert("Objekt wurde auf der JS-Konsole ausgegeben und ist in der globalen Variable tweet gespeichert.");
   };
 
   Tweet.hooks = {

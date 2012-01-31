@@ -255,7 +255,10 @@ class Tweet extends TwitterMessage
 				debugger;
 		})
 	
-	debug: -> debugger
+	debug: -> 
+		window.tweet = this
+		console.dir(this)
+		alert("Objekt wurde auf der JS-Konsole ausgegeben und ist in der globalen Variable tweet gespeichert.")
 
 	@hooks: {
 		get_tweet: (element) -> 
