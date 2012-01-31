@@ -21,6 +21,12 @@ class DirectMessage extends Tweet
 		"<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" +
 		(if @account.screen_name!=@sender.screen_name then "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" else "")
 	
+	get_menu_items: ->
+		array = []
+		array.push {name: "Reply", icon: "icons/comments.png", action: (elm) -> DirectMessage.hooks.reply(elm) }
+		array.push {name: "Als Spammer melden", icon: "icon/exclamation.png", action: (elm) -> DirectMessage.hooks.report_as_spam(elm) } unless @account.user.id==@sender.id
+		return array
+
 	get_sender_html: -> 
 		if @account.screen_name == @sender.screen_name
 			return @sender.get_avatar_html() + "to " + @recipient.get_link_html()
@@ -30,7 +36,7 @@ class DirectMessage extends Tweet
 	
 	@hooks: {
 		get_tweet: (element) ->
-			tweet_div = $(element).parents('.dm')
+			tweet_div = if element.filter? && element.filter(".dm").length==1 then element else $(element).parents('.dm') 
 			Application.accounts[tweet_div.attr('data-account-id')].get_dm(tweet_div.attr('data-tweet-id'))
 		
 		send: ->
@@ -72,4 +78,5 @@ class DirectMessage extends Tweet
 			})
 		
 		reply: (elm) -> @get_tweet(elm).reply(); return false;
+		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
 	}

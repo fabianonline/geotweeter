@@ -70,6 +70,10 @@ class Application
 			get_items_function: (elm) -> Tweet.hooks.get_menu_items(elm)
 		})
 
+		$(document).delegateContextMenu(".dm", "context_menu_dm", {
+			get_items_function: (elm) -> DirectMessage.hooks.get_menu_items(elm)
+		})
+
 	@initialize_accounts: ->
 		for data, id in settings.twitter.users
 			acct = new Account(id) # new Account calls validateCredentials.

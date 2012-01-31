@@ -1453,6 +1453,28 @@ DirectMessage = (function(_super) {
     return "<a href='#' onClick='return DirectMessage.hooks.reply(this);'><img src='icons/comments.png' title='Reply' /></a>" + (this.account.screen_name !== this.sender.screen_name ? "<a href='#' onClick='return Tweet.hooks.report_as_spam(this);'><img src='icons/exclamation.png' title='Block and report as spam' /></a>" : "");
   };
 
+  DirectMessage.prototype.get_menu_items = function() {
+    var array;
+    array = [];
+    array.push({
+      name: "Reply",
+      icon: "icons/comments.png",
+      action: function(elm) {
+        return DirectMessage.hooks.reply(elm);
+      }
+    });
+    if (this.account.user.id !== this.sender.id) {
+      array.push({
+        name: "Als Spammer melden",
+        icon: "icon/exclamation.png",
+        action: function(elm) {
+          return DirectMessage.hooks.report_as_spam(elm);
+        }
+      });
+    }
+    return array;
+  };
+
   DirectMessage.prototype.get_sender_html = function() {
     if (this.account.screen_name === this.sender.screen_name) {
       return this.sender.get_avatar_html() + "to " + this.recipient.get_link_html();
@@ -1464,7 +1486,7 @@ DirectMessage = (function(_super) {
   DirectMessage.hooks = {
     get_tweet: function(element) {
       var tweet_div;
-      tweet_div = $(element).parents('.dm');
+      tweet_div = (element.filter != null) && element.filter(".dm").length === 1 ? element : $(element).parents('.dm');
       return Application.accounts[tweet_div.attr('data-account-id')].get_dm(tweet_div.attr('data-tweet-id'));
     },
     send: function() {
@@ -1521,6 +1543,9 @@ DirectMessage = (function(_super) {
     reply: function(elm) {
       this.get_tweet(elm).reply();
       return false;
+    },
+    get_menu_items: function(elm) {
+      return this.get_tweet(elm).get_menu_items();
     }
   };
 
@@ -2081,9 +2106,14 @@ Application = (function() {
         return false;
       }
     });
-    return $(document).delegateContextMenu(".tweet", "context_menu_tweet", {
+    $(document).delegateContextMenu(".tweet", "context_menu_tweet", {
       get_items_function: function(elm) {
         return Tweet.hooks.get_menu_items(elm);
+      }
+    });
+    return $(document).delegateContextMenu(".dm", "context_menu_dm", {
+      get_items_function: function(elm) {
+        return DirectMessage.hooks.get_menu_items(elm);
       }
     });
   };
