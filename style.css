@@ -329,9 +329,17 @@ ul.context-menu {
 
 .context-menu li {
 	background-color: #eee;
-	padding: 1px 5px 1px 20px;
+	padding: 3px 5px 3px 23px;
 	background-repeat: no-repeat;
-	background-position: left;
+	background-position: 3px center;
+}
+
+.context-menu li.separator_above {
+	border-top: 1px solid #ccc;
+}
+
+.context-menu li.separator_below {
+	border-bottom: 1px solid #ccc;
 }
 
 .context-menu li:hover {

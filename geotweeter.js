@@ -988,6 +988,7 @@ Tweet = (function(_super) {
     array.push({
       name: "Permalink",
       icon: "icons/link.png",
+      separator_below: true,
       url: this.permalink
     });
     if (this.data.coordinates != null) {
@@ -1001,6 +1002,7 @@ Tweet = (function(_super) {
       array.push({
         name: "Alle Geotags",
         icon: "icons/world_add.png",
+        separator_below: true,
         url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250"
       });
     }
@@ -1025,6 +1027,7 @@ Tweet = (function(_super) {
     array.push({
       name: "Tweet debuggen",
       icon: "icons/bug.png",
+      separator_above: true,
       action: function(elm) {
         return Tweet.hooks.debug(elm);
       }
@@ -1482,6 +1485,7 @@ DirectMessage = (function(_super) {
       array.push({
         name: "Als Spammer melden",
         icon: "icon/exclamation.png",
+        separator_above: true,
         action: function(elm) {
           return DirectMessage.hooks.report_as_spam(elm);
         }
@@ -1490,6 +1494,7 @@ DirectMessage = (function(_super) {
     array.push({
       name: "DM debuggen",
       icon: "icons/bug.png",
+      separator_above: true,
       action: function(elm) {
         return DirectMessage.hooks.debug(elm);
       }
@@ -2132,12 +2137,12 @@ Application = (function() {
         return false;
       }
     });
-    $(document).delegateContextMenu(".tweet", "context_menu_tweet", {
+    $(document).delegateContextMenu(".tweet", "context_menu", {
       get_items_function: function(elm) {
         return Tweet.hooks.get_menu_items(elm);
       }
     });
-    return $(document).delegateContextMenu(".dm", "context_menu_dm", {
+    return $(document).delegateContextMenu(".dm", "context_menu", {
       get_items_function: function(elm) {
         return DirectMessage.hooks.get_menu_items(elm);
       }

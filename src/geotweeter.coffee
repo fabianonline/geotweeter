@@ -66,11 +66,11 @@ class Application
 				return false
 		})
 		
-		$(document).delegateContextMenu(".tweet", "context_menu_tweet", {
+		$(document).delegateContextMenu(".tweet", "context_menu", {
 			get_items_function: (elm) -> Tweet.hooks.get_menu_items(elm)
 		})
 
-		$(document).delegateContextMenu(".dm", "context_menu_dm", {
+		$(document).delegateContextMenu(".dm", "context_menu", {
 			get_items_function: (elm) -> DirectMessage.hooks.get_menu_items(elm)
 		})
 
