@@ -1289,6 +1289,9 @@ Tweet = (function(_super) {
         } else {
           return $('#info_spinner').remove();
         }
+      },
+      error: function(foo, fata) {
+        debugger;
       }
     });
   };
@@ -2001,6 +2004,7 @@ Application = (function() {
     if (!this.is_settings_version_okay()) return;
     this.fill_places();
     this.attach_hooks();
+    this.set_time_diff();
     this.initialize_accounts();
     this.get_twitter_configuration();
     return this.accounts[0].show();
@@ -2030,6 +2034,18 @@ Application = (function() {
         return $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
       }
     }
+  };
+
+  Application.set_time_diff = function() {
+    return $.ajax("proxy/api/help/test.json?suppress_response_codes", {
+      async: false,
+      type: "post",
+      success: function(foo, bar, req) {
+        var d;
+        d = new Date(req.getResponseHeader("Date"));
+        return OAuth.correctTimestamp(d.getTime() / 1000);
+      }
+    });
   };
 
   Application.attach_hooks = function() {

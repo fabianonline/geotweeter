@@ -14,6 +14,7 @@ class Application
 		return unless @is_settings_version_okay()
 		@fill_places()
 		@attach_hooks()
+		@set_time_diff()
 		@initialize_accounts()
 		@get_twitter_configuration()
 		@accounts[0].show()
@@ -33,6 +34,15 @@ class Application
 			p.options[0] = new Option("-- leer --", 0)
 			p.options[p.options.length] = new Option(place.name, id+1) for place, id in settings.places
 			$("#place option[value='#{$.cookie('last_place')}']").attr('selected', true) if $.cookie('last_place')
+	
+	@set_time_diff: ->
+		$.ajax("proxy/api/help/test.json?suppress_response_codes", {
+			async: false
+			type: "post"
+			success: (foo, bar, req) ->
+				d = new Date(req.getResponseHeader("Date"))
+				OAuth.correctTimestamp(d.getTime() / 1000)
+		})
 
 	@attach_hooks: ->
 		$('#place').change( -> $.cookie('last_place', $('#place option:selected').val(), {expires: 365}))
