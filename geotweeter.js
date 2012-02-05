@@ -1751,9 +1751,12 @@ StreamRequest = (function(_super) {
     this.request.onreadystatechange = function() {
       _this.last_data_received_at = new Date();
       switch (_this.request.readyState) {
+        case 2:
+          _this.connected = true;
+          _this.account.set_status("Waiting for data...", "green");
+          break;
         case 3:
           if (!_this.connected) _this.account.set_status("Connected.", "green");
-          _this.connected = true;
           break;
         case 4:
           _this.account.set_status("Disconnected", "red");

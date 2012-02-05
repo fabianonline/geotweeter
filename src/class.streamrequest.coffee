@@ -59,9 +59,11 @@ class StreamRequest extends Request
 		@request.onreadystatechange = =>
 			@last_data_received_at = new Date()
 			switch @request.readyState
+				when 2
+					@connected = true
+					@account.set_status("Waiting for data...", "green")
 				when 3
 					@account.set_status("Connected.", "green") unless @connected
-					@connected = true
 				when 4
 					@account.set_status("Disconnected", "red")
 					@connected = false
