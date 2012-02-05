@@ -1141,7 +1141,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.quote = function() {
-    $('#text').val("RT @" + this.sender.screen_name + ": " + this.text).focus();
+    Application.set_text("RT @" + this.sender.screen_name + ": " + this.text);
     return Application.reply_to(this);
   };
 
@@ -1185,7 +1185,6 @@ Tweet = (function(_super) {
   Tweet.prototype.reply = function() {
     var mention, mentions, sender;
     Application.set_dm_recipient_name(null);
-    $('#text').val('').focus();
     Application.reply_to(this);
     sender = this.sender.screen_name !== this.account.screen_name ? "@" + this.sender.screen_name + " " : "";
     mentions = ((function() {
@@ -1200,7 +1199,7 @@ Tweet = (function(_super) {
       }
       return _results;
     }).call(this)).join("");
-    $('#text').val("" + sender + mentions);
+    Application.set_text("" + sender + mentions);
     $('#text')[0].selectionStart = sender.length;
     $('#text')[0].selectionEnd = sender.length + mentions.length;
     return $('#text').focus();
@@ -1465,7 +1464,7 @@ DirectMessage = (function(_super) {
   };
 
   DirectMessage.prototype.reply = function() {
-    $('#text').val('').focus();
+    Application.set_text("");
     return Application.set_dm_recipient_name(this.sender.screen_name !== this.account.screen_name ? this.sender.screen_name : this.recipient.screen_name);
   };
 
@@ -2213,6 +2212,13 @@ Application = (function() {
       this.autocompletes.push(term);
       return this.autocompletes.sort();
     }
+  };
+
+  Application.set_text = function(text) {
+    $('#text').val(text).focus();
+    $('#success').stop(true, true).fadeTo(0, 0);
+    $('#failure').stop(true, true).fadeTo(0, 0);
+    return $('#form').stop(true, true).fadeTo(0, 1);
   };
 
   Application.infoarea = {

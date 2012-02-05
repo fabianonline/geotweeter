@@ -158,7 +158,7 @@ class Tweet extends TwitterMessage
 		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
 	quote: ->
-		$('#text').val("RT @#{@sender.screen_name}: #{@text}").focus()
+		Application.set_text("RT @#{@sender.screen_name}: #{@text}")
 		Application.reply_to(this)
 	
 	delete: ->
@@ -187,11 +187,10 @@ class Tweet extends TwitterMessage
 	
 	reply: ->
 		Application.set_dm_recipient_name(null)
-		$('#text').val('').focus()
 		Application.reply_to(this)
 		sender = if @sender.screen_name!=@account.screen_name then "@#{@sender.screen_name} " else ""
 		mentions = ("@#{mention} " for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name).join("")
-		$('#text').val("#{sender}#{mentions}")
+		Application.set_text("#{sender}#{mentions}")
 		$('#text')[0].selectionStart = sender.length
 		$('#text')[0].selectionEnd = sender.length + mentions.length
 		$('#text').focus()

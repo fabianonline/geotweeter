@@ -112,6 +112,12 @@ class Application
 			@autocompletes.push(term)
 			@autocompletes.sort()
 	
+	@set_text: (text) ->
+		$('#text').val(text).focus()
+		$('#success').stop(true, true).fadeTo(0, 0)
+		$('#failure').stop(true, true).fadeTo(0, 0)
+		$('#form').stop(true, true).fadeTo(0, 1)
+	
 	@infoarea: {
 		visible: false
 		show: (title, content) ->

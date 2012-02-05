@@ -14,7 +14,7 @@ class DirectMessage extends Tweet
 	get_classes: -> ["dm", "by_#{@sender.get_screen_name()}"]
 	
 	reply: ->
-		$('#text').val('').focus()
+		Application.set_text("")
 		Application.set_dm_recipient_name(if @sender.screen_name!=@account.screen_name then @sender.screen_name else @recipient.screen_name)
 	
 	get_buttons_html: ->
