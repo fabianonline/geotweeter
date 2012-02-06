@@ -228,6 +228,9 @@ Account = (function() {
     return this.twitter_request('followers/ids.json', {
       silent: true,
       method: "GET",
+      parameters: {
+        stringify_ids: true
+      },
       success: function(element, data) {
         return _this.followers_ids = data.ids;
       }
@@ -1954,6 +1957,7 @@ FollowEvent = (function(_super) {
 
   FollowEvent.prototype.get_inner_html = function() {
     if (this.source.id === this.account.user.id) return "";
+    this.account.followers_ids.push(this.source.id_str);
     return "Neuer Follower: " + (this.source.get_link_html(true));
   };
 

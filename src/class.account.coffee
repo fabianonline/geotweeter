@@ -163,7 +163,7 @@ class Account
 				@set_status("Error!", "red")
 		})
 	
-	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", success: (element, data) => @followers_ids=data.ids})
+	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", parameters: {stringify_ids: true}, success: (element, data) => @followers_ids=data.ids})
 	get_tweet: (id) -> @tweets[id]
 	get_dm: (id) -> @dms[id]
 	
