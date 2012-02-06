@@ -258,6 +258,14 @@ class Tweet extends TwitterMessage
 		window.tweet = this
 		console.dir(this)
 		alert("Objekt wurde auf der JS-Konsole ausgegeben und ist in der globalen Variable tweet gespeichert.")
+	
+	get_avatar_tooltip: -> "
+		<strong>#{@sender.data.name}</strong><br />
+		<br />
+		Tweets: #{@sender.data.statuses_count}<br />
+		Followers: #{@sender.data.followers_count}<br />
+		Friends: #{@sender.data.friends_count}
+	"
 
 	@hooks: {
 		get_tweet: (element) -> 
@@ -273,6 +281,8 @@ class Tweet extends TwitterMessage
 		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
 		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
 		debug:          (elm) -> @get_tweet(elm).debug(); return false
+		
+		avatar_tooltip: (elm) -> @get_tweet(elm).get_avatar_tooltip();
 		
 		# called by the tweet button
 		send: ->

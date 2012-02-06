@@ -1311,6 +1311,10 @@ Tweet = (function(_super) {
     return alert("Objekt wurde auf der JS-Konsole ausgegeben und ist in der globalen Variable tweet gespeichert.");
   };
 
+  Tweet.prototype.get_avatar_tooltip = function() {
+    return "		<strong>" + this.sender.data.name + "</strong><br />		<br />		Tweets: " + this.sender.data.statuses_count + "<br />		Followers: " + this.sender.data.followers_count + "<br />		Friends: " + this.sender.data.friends_count + "	";
+  };
+
   Tweet.hooks = {
     get_tweet: function(element) {
       var tweet_div;
@@ -1351,6 +1355,9 @@ Tweet = (function(_super) {
     debug: function(elm) {
       this.get_tweet(elm).debug();
       return false;
+    },
+    avatar_tooltip: function(elm) {
+      return this.get_tweet(elm).get_avatar_tooltip();
     },
     send: function() {
       var content_type, data, key, parameters, place, placeindex, url, value;
@@ -2146,9 +2153,25 @@ Application = (function() {
         return Tweet.hooks.get_menu_items(elm);
       }
     });
-    return $(document).delegateContextMenu(".dm", "context_menu", {
+    $(document).delegateContextMenu(".dm", "context_menu", {
       get_items_function: function(elm) {
         return DirectMessage.hooks.get_menu_items(elm);
+      }
+    });
+    return $(document).delegate(".avatar", "mouseenter", function(e) {
+      var obj;
+      obj = $(e.target);
+      if (!obj.data("has-tooltip")) {
+        obj.tooltip({
+          bodyHandler: function() {
+            return Tweet.hooks.avatar_tooltip(this);
+          },
+          track: true,
+          showURL: false,
+          left: 5
+        });
+        obj.data("has-tooltip", "true");
+        return obj.mouseenter();
       }
     });
   };
