@@ -74,7 +74,7 @@ class Application
 			get_items_function: (elm) -> DirectMessage.hooks.get_menu_items(elm)
 		})
 		
-		$(document).delegate(".avatar", "mouseenter", (e) ->
+		$(document).delegate(".avatar", "mouseover", (e) ->
 			obj = $(e.target)
 			unless obj.data("has-tooltip")
 				obj.tooltip({
@@ -84,7 +84,7 @@ class Application
 					left: 5
 				}) 
 				obj.data("has-tooltip", "true")
-				obj.mouseenter()
+				obj.mouseover(e)
 		)
 
 	@initialize_accounts: ->

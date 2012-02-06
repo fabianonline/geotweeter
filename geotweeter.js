@@ -1315,7 +1315,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_avatar_tooltip = function() {
-    return "		<strong>" + this.sender.data.name + "</strong><br />		<br />		Tweets: " + this.sender.data.statuses_count + "<br />		Followers: " + this.sender.data.followers_count + "<br />		Friends: " + this.sender.data.friends_count + "	";
+    return "		<strong>" + this.sender.data.name + "</strong><br />		<br />		Tweets: " + this.sender.data.statuses_count + "<br />		Followers: " + this.sender.data.followers_count + "<br />		Friends: " + this.sender.data.friends_count + "<br />		<br />		@" + this.sender.screen_name + " folgt dir" + (this.account.followers_ids.indexOf(this.sender.id) === -1 ? " nicht" : "") + ".	";
   };
 
   Tweet.hooks = {
@@ -2162,7 +2162,7 @@ Application = (function() {
         return DirectMessage.hooks.get_menu_items(elm);
       }
     });
-    return $(document).delegate(".avatar", "mouseenter", function(e) {
+    return $(document).delegate(".avatar", "mouseover", function(e) {
       var obj;
       obj = $(e.target);
       if (!obj.data("has-tooltip")) {
@@ -2175,7 +2175,7 @@ Application = (function() {
           left: 5
         });
         obj.data("has-tooltip", "true");
-        return obj.mouseenter();
+        return obj.mouseover(e);
       }
     });
   };

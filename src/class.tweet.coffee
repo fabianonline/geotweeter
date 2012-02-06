@@ -264,7 +264,9 @@ class Tweet extends TwitterMessage
 		<br />
 		Tweets: #{@sender.data.statuses_count}<br />
 		Followers: #{@sender.data.followers_count}<br />
-		Friends: #{@sender.data.friends_count}
+		Friends: #{@sender.data.friends_count}<br />
+		<br />
+		@#{@sender.screen_name} folgt dir#{if @account.followers_ids.indexOf(@sender.id)==-1 then " nicht" else ""}.
 	"
 
 	@hooks: {
