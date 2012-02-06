@@ -1,9 +1,12 @@
 class Event extends TwitterMessage
 	get_user_data: -> @source
-	get_html: -> "
+	get_html: -> 
+		inner = @get_inner_html
+		return "" unless inner?
+		return "
 		<div class='status'>
 			#{@source.get_avatar_html()}
-			#{@get_inner_html()}
+			#{inner}
 		</div>
 	"
 	get_inner_html: -> alert("get_inner_html should be overwritten!")
@@ -26,25 +29,25 @@ class Event extends TwitterMessage
 
 class FollowEvent extends Event
 	get_inner_html: ->
-		return "" if @source.id == @account.user.id
+		return if @source.id_str == @account.user.id
 		@account.followers_ids.push(@source.id_str)
 		"Neuer Follower: #{@source.get_link_html(true)}"
 
 class FavoriteEvent extends Event
 	get_inner_html: -> 
-		return "" if @source.id == @account.user.id
+		return if @source.id == @account.user.id
 		"#{@source.get_link_html(true)} favorisierte:<br />#{@data.target_object.text}"
 
 class ListMemberAddedEvent extends Event
 	get_inner_html: -> 
-		return "" if @source.id == @account.user.id
+		return if @source.id == @account.user.id
 		"{@source.get_link_html(true)} fügte dich zu einer Liste hinzu:<br />
 		<a href='https://twitter.com#{@data.target_object.uri}' target='_blank'>#{@data.target_object.full_name}</a><br />
 		(#{target_object.members_count} Members, #{event.target_object.subscriber_count} Subscribers)"
 
 class ListMemberRemovedEvent extends Event
 	get_inner_html: ->
-		return "" if @source.id == @account.user.id
+		return if @source.id == @account.user.id
 		"#{@source.get_link_html(true)} entfernte dich von einer Liste:<br />
 		<a href='https://twitter.com#{@data.target_object.uri}' target='_blank'>#{@data.target_object.full_name}</a><br />
 		(#{target_object.members_count} Members, #{event.target_object.subscriber_count} Subscribers)"

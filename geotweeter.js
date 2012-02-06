@@ -1906,7 +1906,10 @@ Event = (function(_super) {
   };
 
   Event.prototype.get_html = function() {
-    return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + (this.get_inner_html()) + "		</div>	";
+    var inner;
+    inner = this.get_inner_html;
+    if (inner == null) return "";
+    return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + inner + "		</div>	";
   };
 
   Event.prototype.get_inner_html = function() {
@@ -1956,7 +1959,7 @@ FollowEvent = (function(_super) {
   }
 
   FollowEvent.prototype.get_inner_html = function() {
-    if (this.source.id === this.account.user.id) return "";
+    if (this.source.id_str === this.account.user.id) return;
     this.account.followers_ids.push(this.source.id_str);
     return "Neuer Follower: " + (this.source.get_link_html(true));
   };
@@ -1974,7 +1977,7 @@ FavoriteEvent = (function(_super) {
   }
 
   FavoriteEvent.prototype.get_inner_html = function() {
-    if (this.source.id === this.account.user.id) return "";
+    if (this.source.id === this.account.user.id) return;
     return "" + (this.source.get_link_html(true)) + " favorisierte:<br />" + this.data.target_object.text;
   };
 
@@ -1991,7 +1994,7 @@ ListMemberAddedEvent = (function(_super) {
   }
 
   ListMemberAddedEvent.prototype.get_inner_html = function() {
-    if (this.source.id === this.account.user.id) return "";
+    if (this.source.id === this.account.user.id) return;
     return "{@source.get_link_html(true)} fügte dich zu einer Liste hinzu:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
   };
 
@@ -2008,7 +2011,7 @@ ListMemberRemovedEvent = (function(_super) {
   }
 
   ListMemberRemovedEvent.prototype.get_inner_html = function() {
-    if (this.source.id === this.account.user.id) return "";
+    if (this.source.id === this.account.user.id) return;
     return "" + (this.source.get_link_html(true)) + " entfernte dich von einer Liste:<br />		<a href='https://twitter.com" + this.data.target_object.uri + "' target='_blank'>" + this.data.target_object.full_name + "</a><br />		(" + target_object.members_count + " Members, " + event.target_object.subscriber_count + " Subscribers)";
   };
 
