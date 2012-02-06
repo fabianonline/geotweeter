@@ -114,8 +114,8 @@ class Application
 	
 	@set_text: (text) ->
 		$('#text').val(text).focus()
-		$('#success').stop(true, true).fadeTo(0, 0)
-		$('#failure').stop(true, true).fadeTo(0, 0)
+		$('#success').stop(true, true).fadeTo(0, 0).hide()
+		$('#failure').stop(true, true).fadeTo(0, 0).hide()
 		$('#form').stop(true, true).fadeTo(0, 1)
 	
 	@infoarea: {
