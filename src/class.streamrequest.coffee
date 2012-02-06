@@ -62,6 +62,7 @@ class StreamRequest extends Request
 				when 2
 					@connected = true
 					@account.set_status("Waiting for data...", "green")
+					@account.remove_errors()
 				when 3
 					@account.set_status("Connected.", "green") unless @connected
 				when 4
@@ -69,7 +70,7 @@ class StreamRequest extends Request
 					@connected = false
 					# Delay auf Minimum zurücksetzen, wenn die Verbindung länger als 60 Sekunden stand.
 					@delay = settings.timings.mindelay if (new Date()).getTime() - @connection_started_at.getTime() > 60000
-					@account.add_status_html("Disconnect.<br>Grund: #{@request.statusText}<br>Delay: #{@delay} Sekunden") unless @stopped
+					@account.add_error_html("Disconnect.<br>Grund: #{@request.statusText}<br>Delay: #{@delay} Sekunden") unless @stopped
 					Application.log(@, "onreadystatechange", "Disconnect. Delay jetzt: #{@delay}")
 					window.setTimeout(@account.fill_list, @delay*1000) unless @stopped
 					@delay = @delay * 2
@@ -91,7 +92,7 @@ class StreamRequest extends Request
 		
 	timeout: =>
 		Application.log(this, "Timeout", "Timeout reached.")
-		@account.add_status_html("Timeout vermutet.")
+		@account.add_error_html("Timeout vermutet.")
 		@stop_request()
 		@account.fill_list()
 	

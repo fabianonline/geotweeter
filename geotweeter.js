@@ -252,11 +252,16 @@ Account = (function() {
     return this.get_my_element().prepend(element);
   };
 
-  Account.prototype.add_status_html = function(message) {
+  Account.prototype.add_status_html = function(message, additional_classes) {
     var html;
-    html = "			<div class='status'>				" + message + "			</div>";
+    if (additional_classes == null) additional_classes = "";
+    html = "			<div class='status " + additional_classes + "'>				" + message + "			</div>";
     this.add_html(html);
     return "";
+  };
+
+  Account.prototype.add_error_html = function(message) {
+    return this.add_status_html(message, "error");
   };
 
   Account.prototype.update_user_counter = function() {
@@ -382,7 +387,7 @@ Account = (function() {
         return _this.request.start_request();
       } else {
         setTimeout(_this.fill_list, 30000);
-        return _this.add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
+        return _this.add_error_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
       }
     };
     success = function(element, data) {
@@ -393,7 +398,7 @@ Account = (function() {
     error = function(object, data, req, textStatus, exc, additional_info) {
       threads_running -= 1;
       threads_errored += 1;
-      _this.add_status_html("Fehler in " + additional_info.name + ":<br />" + req.status + " - " + exc);
+      _this.add_error_html("Fehler in " + additional_info.name + ":<br />" + req.status + " - " + exc);
       if (threads_running === 0) return after_run();
     };
     default_parameters = {
@@ -559,6 +564,10 @@ Account = (function() {
     $("#user_" + this.id).mouseout();
     $("#user_" + this.id).remove();
     return delete Application.accounts[this.id];
+  };
+
+  Account.prototype.remove_errors = function() {
+    return this.get_my_element().find(".error").slideUp();
   };
 
   Account.hooks = {
@@ -1764,6 +1773,7 @@ StreamRequest = (function(_super) {
         case 2:
           _this.connected = true;
           _this.account.set_status("Waiting for data...", "green");
+          _this.account.remove_errors();
           break;
         case 3:
           if (!_this.connected) _this.account.set_status("Connected.", "green");
@@ -1775,7 +1785,7 @@ StreamRequest = (function(_super) {
             _this.delay = settings.timings.mindelay;
           }
           if (!_this.stopped) {
-            _this.account.add_status_html("Disconnect.<br>Grund: " + _this.request.statusText + "<br>Delay: " + _this.delay + " Sekunden");
+            _this.account.add_error_html("Disconnect.<br>Grund: " + _this.request.statusText + "<br>Delay: " + _this.delay + " Sekunden");
           }
           Application.log(_this, "onreadystatechange", "Disconnect. Delay jetzt: " + _this.delay);
           if (!_this.stopped) {
@@ -1800,7 +1810,7 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.timeout = function() {
     Application.log(this, "Timeout", "Timeout reached.");
-    this.account.add_status_html("Timeout vermutet.");
+    this.account.add_error_html("Timeout vermutet.");
     this.stop_request();
     return this.account.fill_list();
   };
@@ -1882,6 +1892,7 @@ PullRequest = (function(_super) {
   }
 
   PullRequest.prototype.start_request = function() {
+    this.account.remove_errors();
     return window.setTimeout(this.account.fill_list, 300000);
   };
 

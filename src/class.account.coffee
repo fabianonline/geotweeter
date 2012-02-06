@@ -176,13 +176,17 @@ class Account
 		@get_my_element().prepend(element)
 	
 	# Adds a status message to this account's content area.
-	add_status_html: (message) ->
+	add_status_html: (message, additional_classes="") ->
 		html = "
-			<div class='status'>
+			<div class='status #{additional_classes}'>
 				#{message}
 			</div>"
 		@add_html(html)
 		return ""
+	
+	# Adds an error message, which will fade out as soon as a working connection
+	# has been established.
+	add_error_html: (message) -> @add_status_html(message, "error")
 	
 	# Updates the number of unread tweets at the top of the page.
 	# We count all unread tweets including mentions (even if they aren't)
@@ -312,7 +316,7 @@ class Account
 			else
 				# otherwise we ouptput an error and try again some time later.
 				setTimeout(@fill_list, 30000)
-				@add_status_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
+				@add_error_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
 		
 		# `success` is run whenever a request finished successfully.
 		success = (element, data) =>
@@ -324,7 +328,7 @@ class Account
 		error = (object, data, req, textStatus, exc, additional_info) =>
 			threads_running -= 1
 			threads_errored += 1
-			@add_status_html("Fehler in #{additional_info.name}:<br />#{req.status} - #{exc}")
+			@add_error_html("Fehler in #{additional_info.name}:<br />#{req.status} - #{exc}")
 			after_run() if threads_running == 0
 		
 		# Set some default parameters for all request.
@@ -505,6 +509,9 @@ class Account
 		$("#user_#{@id}").mouseout()
 		$("#user_#{@id}").remove()
 		delete Application.accounts[@id]
+	
+	# Removes the errors of this account by fading them out.
+	remove_errors: -> @get_my_element().find(".error").slideUp()
 	
 	# Some static hooks to be called from the HTML via buttons and stuff.
 	# Mostly self-explenatory.
