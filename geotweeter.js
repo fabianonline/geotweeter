@@ -1918,7 +1918,7 @@ Event = (function(_super) {
 
   Event.prototype.get_html = function() {
     var inner;
-    inner = this.get_inner_html;
+    inner = this.get_inner_html();
     if (inner == null) return "";
     return "		<div class='status'>			" + (this.source.get_avatar_html()) + "			" + inner + "		</div>	";
   };

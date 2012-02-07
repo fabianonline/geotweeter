@@ -1,7 +1,7 @@
 class Event extends TwitterMessage
 	get_user_data: -> @source
 	get_html: -> 
-		inner = @get_inner_html
+		inner = @get_inner_html()
 		return "" unless inner?
 		return "
 		<div class='status'>
