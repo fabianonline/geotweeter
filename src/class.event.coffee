@@ -29,7 +29,7 @@ class Event extends TwitterMessage
 
 class FollowEvent extends Event
 	get_inner_html: ->
-		return if @source.id_str == @account.user.id
+		return if @source.id == @account.user.id
 		@account.followers_ids.push(@source.id_str)
 		"Neuer Follower: #{@source.get_link_html(true)}"
 
