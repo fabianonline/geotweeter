@@ -30,6 +30,11 @@ describe('Tweet', ->
 		expect(tweet.get_single_thumb_html()).toEqual("")
 		expect(tweet.get_multi_thumb_html()).toEqual("")
 	)
+
+	it("should deliver the correct context menu items", ->
+		items = tweet.get_menu_items()
+		expect((item for item in items when item.name=="Reply").length).toEqual(1)
+	)
 	
 	describe("mentioning this user", ->
 		beforeEach(->

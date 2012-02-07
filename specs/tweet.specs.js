@@ -26,6 +26,19 @@ describe('Tweet', function() {
     expect(tweet.get_single_thumb_html()).toEqual("");
     return expect(tweet.get_multi_thumb_html()).toEqual("");
   });
+  it("should deliver the correct context menu items", function() {
+    var item, items;
+    items = tweet.get_menu_items();
+    return expect(((function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = items.length; _i < _len; _i++) {
+        item = items[_i];
+        if (item.name === "Reply") _results.push(item);
+      }
+      return _results;
+    })()).length).toEqual(1);
+  });
   describe("mentioning this user", function() {
     beforeEach(function() {
       return tweet = new Tweet(tweet_mentioning_this_user, get_account());
