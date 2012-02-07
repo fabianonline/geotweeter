@@ -7,6 +7,8 @@ class Account
 	screen_name: "unknown"
 	max_read_id: "0"
 	max_known_tweet_id: "0"
+	min_known_tweet_id: null
+	min_known_dm_id: null
 	max_known_dm_id: "0"
 	my_last_tweet_id: "0"
 	tweets: {}
@@ -34,6 +36,7 @@ class Account
 		# area.
 		new_area = $('#content_template').clone()
 		new_area.attr('id', @get_content_div_id())
+		new_area.attr('data-account-id', @id)
 		$('body').append(new_area);
 		$('#users').append("
 			<div class='user' id='user_#{@id}' data-account-id='#{@id}'>
@@ -156,7 +159,7 @@ class Account
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
 				@get_followers()
-				@fill_list()
+				@fill_list({clip: true})
 			error: (element, data, req, textStatus) =>
 				@add_status_html("Unknown error in validate_credentials. Exiting.<br />#{req.status} - #{req.statusText}")
 				$("#user_#{@id} img").attr('src', "icons/exclamation.png")
@@ -170,10 +173,13 @@ class Account
 	# Adds HTML code to this account's content area. The HTML code is added
 	# to a new `div` element which is then added to the DOM. That method is
 	# much, much, much, much faster than adding the html directly.
-	add_html: (html) -> 
+	add_html: (html, add_at_bottom=false) -> 
 		element = document.createElement("div")
 		element.innerHTML = html
-		@get_my_element().prepend(element)
+		if add_at_bottom
+			@get_my_element().find(".bottom").before(element)
+		else
+			@get_my_element().prepend(element)
 	
 	# Adds a status message to this account's content area.
 	add_status_html: (message, additional_classes="") ->
@@ -291,36 +297,39 @@ class Account
 	# 
 	# This code gets called by `validate_credentials` and by timeouts in this
 	# account's `Request` object.
-	fill_list: =>
+	fill_list: (options={}) =>
 		@set_status("Filling List...", "orange")
 		
-		# If settings.fill_list.home_timeline_pages is set, use that.
-		# Otherwise use 2.
-		home_timeline_pages = settings.fill_list?.home_timeline_pages ? 2
+		options.clip=true if options.fill_bottom?
 		
 		# This method is supposed to run multiple requests asynchronously, so
 		# we have to fiddle with it a bit.
 		# We will be starting 3+home_timeline_pages "threads" (a.k.a. requests).
-		threads_running = 3+home_timeline_pages
 		threads_errored = 0
 		responses = []
+		main_data = null
 		
 		# `after_run` is run after the last request finished.
 		after_run = =>
+			responses.unshift(main_data) if main_data?
 			if threads_errored == 0
 				# if we were successful, we parse the returned data and start
 				# the request.
 				@set_status("", "")
-				@parse_data(responses)
+				@parse_data(responses, options)
 				@request.start_request() 
+				@get_my_element().find(".bottom").show()
 			else
 				# otherwise we ouptput an error and try again some time later.
 				setTimeout(@fill_list, 30000)
 				@add_error_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.")
 		
 		# `success` is run whenever a request finished successfully.
-		success = (element, data) =>
-			responses.push(data)
+		success = (element, data, req, additional_info) =>
+			if additional_info.main_data? 
+				main_data = data
+			else
+				responses.push(data)
 			threads_running -= 1
 			after_run() if threads_running == 0
 		
@@ -342,12 +351,18 @@ class Account
 			page: 1
 			# If `@max_known_tweet_id` is set, we already know some tweets.
 			# So we set `since_id` to only get new tweets.
-			since_id: @max_known_tweet_id unless @max_known_tweet_id=="0"
+			since_id: @max_known_tweet_id unless @max_known_tweet_id=="0" || options.fill_bottom?
+			max_id: @min_known_tweet_id.decrement() if options.fill_bottom?
 		}
 		
 		# Define all the necessary requests to be made. `extra_parameters` can
 		# be set to override the `default_parameters` for this request.
 		requests = [
+			{
+				url: "statuses/home_timeline.json"
+				name: "home_timeline"
+				main_data: true
+			}
 			{
 				url: "statuses/mentions.json"
 				name: "mentions"
@@ -361,7 +376,8 @@ class Account
 					count: 100
 					# DMs have their own IDs, so we use `@max_known_dm_id`
 					# here.
-					since_id: @max_known_dm_id if @max_known_dm_id?
+					since_id: @max_known_dm_id if @max_known_dm_id? && !options.fill_bottom?
+					max_id: @min_known_dm_id.decrement() if @min_known_dm_id? && options.fill_bottom?
 				}
 			}
 			{
@@ -369,12 +385,15 @@ class Account
 				name: "Sent DMs"
 				extra_parameters: {
 					count: 100
-					since_id: @max_known_dm_id if @max_known_dm_id?
+					since_id: @max_known_dm_id if @max_known_dm_id? && !options.fill_bottom?
+					max_id: @min_known_dm_id.decrement() if @min_known_dm_id? && options.fill_bottom?
 				}
 			}
 		]
 		
-		requests.push({url: "statuses/home_timeline.json", name: "home_timeline #{page}", extra_parameters: {page: page}}) for page in [1..home_timeline_pages]
+		# Number of threads to be started. Will be reduced by one every time
+		# one of the threads finishes. If zero, all requests are done.
+		threads_running = requests.length
 		
 		# Do the actual requests.
 		for request in requests
@@ -383,12 +402,14 @@ class Account
 			# extended by `extra_parameters`.
 			parameters[key] = value for key, value of default_parameters when value
 			parameters[key] = value for key, value of request.extra_parameters when value
+			additional_info = {name: request.name}
+			additional_info.main_data = true if request.main_data
 			@twitter_request(request.url, {
 				method: "GET"
 				parameters: parameters
 				dataType: "text"
 				silent: true
-				additional_info: {name: request.name}
+				additional_info: additional_info
 				success: success
 				error: error
 			})
@@ -396,7 +417,7 @@ class Account
 	# `parse_data` gets an array of (arrays of) responses from the Twitter API
 	# (generated by `fill_list` and `StreamRequest`), sorts them, gets matching
 	# objects, calls `get_html` on them and outputs the HTML.
-	parse_data: (json) ->
+	parse_data: (json, options={}) ->
 		# If we didn't get an array of responses, we create one.
 		json = [json] unless json.constructor==Array
 		responses = []
@@ -406,8 +427,6 @@ class Account
 			try temp = $.parseJSON(json_data)
 			continue unless temp?
 			if temp.constructor == Array
-				# Reverse the array in order to get the oldest tweets at the top.
-				temp = temp.reverse()
 				# Did we get an array of messages or just one?
 				if temp.length>0
 					temp_elements = []
@@ -436,37 +455,40 @@ class Account
 		html = ""
 		last_id = ""
 		while responses.length > 0
-			# Save the Date and the index of the array holding the oldest
+			# Save the Date and the index of the array holding the newest
 			# element.
-			oldest_date = null
-			oldest_index = null
+			newest_date = null
+			newest_index = null
 			for index, array of responses
 				object = array[0]
-				if oldest_date==null || object.get_date()<oldest_date
-					oldest_date = object.get_date()
-					oldest_index = index
-			# Retrieve the first object of the winning array (a.k.a. the oldest
+				if newest_date==null || object.get_date()>newest_date
+					newest_date = object.get_date()
+					newest_index = index
+			# Retrieve the first object of the winning array (a.k.a. the newest
 			# element).
-			array = responses[oldest_index]
+			array = responses[newest_index]
 			object = array.shift()
 			# If this array has become empty, we remove it from `responses`.
-			responses.splice(oldest_index, 1) if array.length==0
+			responses.splice(newest_index, 1) if array.length==0
+			break if array.length==0 && newest_index=="0" && options.clip?
 			this_id = object.id
 			# Add the html to the temporary html code. But look out for duplicate
 			# tweets (e.g. mentions from friends will be in `home_timeline` as
 			# well as in `mentions`).
-			html = object.get_html() + html unless this_id==old_id
+			html = html + object.get_html() unless this_id==old_id
 			# If we have a `Tweet` or `DirectMessage`, note it's `id`, if
 			# necessary.
 			if object.constructor==Tweet
 				@max_known_tweet_id=object.id if object.id.is_bigger_than(@max_known_tweet_id)
 				@my_last_tweet_id=object.id if object.sender.id==@user.id && object.id.is_bigger_than(@my_last_tweet_id)
+				@min_known_tweet_id=object.id unless @min_known_tweet_id? && object.id.is_bigger_than(@min_known_tweet_id)
 			if object.constructor==DirectMessage
 				@max_known_dm_id=object.id if object.id.is_bigger_than(@max_known_dm_id)
+				@min_known_dm_id=object.id unless @min_known_dm_id? && object.id.is_bigger_than(@min_known_dm_id)
 			# Save this id for recognizing duplicates in the next round.
 			old_id = this_id
 		# After we are done with all tweets, add the collected html to the DOM.
-		@add_html(html)
+		@add_html(html, options.fill_bottom?)
 		# Update the counter to display the right number of unread tweets.
 		@update_user_counter()
 	
@@ -520,6 +542,12 @@ class Account
 			account_id = $(elm).parents('.user').data('account-id')
 			acct = Application.accounts[account_id]
 			acct.show()
+			return false
+		
+		fill_bottom: (elm) ->
+			account_id = $(elm).parents(".content").data('account-id')
+			acct = Application.accounts[account_id]
+			acct.fill_list({fill_bottom: true})
 			return false
 		
 		# Marks all tweets up to upperst completety visible tweet as read.

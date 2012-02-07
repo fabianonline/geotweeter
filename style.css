@@ -351,3 +351,11 @@ ul.context-menu {
 	color: #000;
 	cursor: default;
 }
+
+.content .bottom {
+	display: none;
+	margin-top: 15px;
+	margin-bottom: 15px;
+	font-size: 15px;
+	text-align: center;
+}

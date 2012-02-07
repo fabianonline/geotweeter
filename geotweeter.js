@@ -51,6 +51,37 @@ String.prototype.is_bigger_than = function(id) {
   return l1 > l2;
 };
 
+String.prototype.decrement = function() {
+  var char, char_to_look_at, chars;
+  chars = (function() {
+    var _i, _len, _ref, _results;
+    _ref = this.split("");
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      char = _ref[_i];
+      _results.push(char.charCodeAt(0));
+    }
+    return _results;
+  }).call(this);
+  char_to_look_at = chars.length - 1;
+  while (true) {
+    chars[char_to_look_at] -= 1;
+    if (chars[char_to_look_at] !== 47) break;
+    chars[char_to_look_at] = 57;
+    char_to_look_at -= 1;
+    if (char_to_look_at < 0) break;
+  }
+  return ((function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = chars.length; _i < _len; _i++) {
+      char = chars[_i];
+      _results.push(String.fromCharCode(char));
+    }
+    return _results;
+  })()).join("");
+};
+
 Account = (function() {
 
   Account.first = null;
@@ -60,6 +91,10 @@ Account = (function() {
   Account.prototype.max_read_id = "0";
 
   Account.prototype.max_known_tweet_id = "0";
+
+  Account.prototype.min_known_tweet_id = null;
+
+  Account.prototype.min_known_dm_id = null;
 
   Account.prototype.max_known_dm_id = "0";
 
@@ -97,6 +132,7 @@ Account = (function() {
     };
     new_area = $('#content_template').clone();
     new_area.attr('id', this.get_content_div_id());
+    new_area.attr('data-account-id', this.id);
     $('body').append(new_area);
     $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/spinner.gif' />					<span class='count'></span>				</a>			</div>		");
     if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
@@ -213,7 +249,9 @@ Account = (function() {
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
         _this.get_followers();
-        return _this.fill_list();
+        return _this.fill_list({
+          clip: true
+        });
       },
       error: function(element, data, req, textStatus) {
         _this.add_status_html("Unknown error in validate_credentials. Exiting.<br />" + req.status + " - " + req.statusText);
@@ -245,11 +283,16 @@ Account = (function() {
     return this.dms[id];
   };
 
-  Account.prototype.add_html = function(html) {
+  Account.prototype.add_html = function(html, add_at_bottom) {
     var element;
+    if (add_at_bottom == null) add_at_bottom = false;
     element = document.createElement("div");
     element.innerHTML = html;
-    return this.get_my_element().prepend(element);
+    if (add_at_bottom) {
+      return this.get_my_element().find(".bottom").before(element);
+    } else {
+      return this.get_my_element().prepend(element);
+    }
   };
 
   Account.prototype.add_status_html = function(message, additional_classes) {
@@ -372,26 +415,33 @@ Account = (function() {
     if (options.return_response) return result.responseText;
   };
 
-  Account.prototype.fill_list = function() {
-    var after_run, default_parameters, error, home_timeline_pages, key, page, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _ref2, _ref3, _results,
+  Account.prototype.fill_list = function(options) {
+    var additional_info, after_run, default_parameters, error, key, main_data, parameters, request, requests, responses, success, threads_errored, threads_running, value, _i, _len, _ref, _results,
       _this = this;
+    if (options == null) options = {};
     this.set_status("Filling List...", "orange");
-    home_timeline_pages = (_ref = (_ref2 = settings.fill_list) != null ? _ref2.home_timeline_pages : void 0) != null ? _ref : 2;
-    threads_running = 3 + home_timeline_pages;
+    if (options.fill_bottom != null) options.clip = true;
     threads_errored = 0;
     responses = [];
+    main_data = null;
     after_run = function() {
+      if (main_data != null) responses.unshift(main_data);
       if (threads_errored === 0) {
         _this.set_status("", "");
-        _this.parse_data(responses);
-        return _this.request.start_request();
+        _this.parse_data(responses, options);
+        _this.request.start_request();
+        return _this.get_my_element().find(".bottom").show();
       } else {
         setTimeout(_this.fill_list, 30000);
         return _this.add_error_html("Fehler in fill_list.<br />Nächster Versuch in 30 Sekunden.");
       }
     };
-    success = function(element, data) {
-      responses.push(data);
+    success = function(element, data, req, additional_info) {
+      if (additional_info.main_data != null) {
+        main_data = data;
+      } else {
+        responses.push(data);
+      }
       threads_running -= 1;
       if (threads_running === 0) return after_run();
     };
@@ -406,10 +456,15 @@ Account = (function() {
       count: 200,
       include_entities: true,
       page: 1,
-      since_id: this.max_known_tweet_id !== "0" ? this.max_known_tweet_id : void 0
+      since_id: !(this.max_known_tweet_id === "0" || (options.fill_bottom != null)) ? this.max_known_tweet_id : void 0,
+      max_id: options.fill_bottom != null ? this.min_known_tweet_id.decrement() : void 0
     };
     requests = [
       {
+        url: "statuses/home_timeline.json",
+        name: "home_timeline",
+        main_data: true
+      }, {
         url: "statuses/mentions.json",
         name: "mentions"
       }, {
@@ -417,26 +472,20 @@ Account = (function() {
         name: "Received DMs",
         extra_parameters: {
           count: 100,
-          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
+          since_id: (this.max_known_dm_id != null) && !(options.fill_bottom != null) ? this.max_known_dm_id : void 0,
+          max_id: (this.min_known_dm_id != null) && (options.fill_bottom != null) ? this.min_known_dm_id.decrement() : void 0
         }
       }, {
         url: "direct_messages/sent.json",
         name: "Sent DMs",
         extra_parameters: {
           count: 100,
-          since_id: this.max_known_dm_id != null ? this.max_known_dm_id : void 0
+          since_id: (this.max_known_dm_id != null) && !(options.fill_bottom != null) ? this.max_known_dm_id : void 0,
+          max_id: (this.min_known_dm_id != null) && (options.fill_bottom != null) ? this.min_known_dm_id.decrement() : void 0
         }
       }
     ];
-    for (page = 1; 1 <= home_timeline_pages ? page <= home_timeline_pages : page >= home_timeline_pages; 1 <= home_timeline_pages ? page++ : page--) {
-      requests.push({
-        url: "statuses/home_timeline.json",
-        name: "home_timeline " + page,
-        extra_parameters: {
-          page: page
-        }
-      });
-    }
+    threads_running = requests.length;
     _results = [];
     for (_i = 0, _len = requests.length; _i < _len; _i++) {
       request = requests[_i];
@@ -445,19 +494,21 @@ Account = (function() {
         value = default_parameters[key];
         if (value) parameters[key] = value;
       }
-      _ref3 = request.extra_parameters;
-      for (key in _ref3) {
-        value = _ref3[key];
+      _ref = request.extra_parameters;
+      for (key in _ref) {
+        value = _ref[key];
         if (value) parameters[key] = value;
       }
+      additional_info = {
+        name: request.name
+      };
+      if (request.main_data) additional_info.main_data = true;
       _results.push(this.twitter_request(request.url, {
         method: "GET",
         parameters: parameters,
         dataType: "text",
         silent: true,
-        additional_info: {
-          name: request.name
-        },
+        additional_info: additional_info,
         success: success,
         error: error
       }));
@@ -465,8 +516,9 @@ Account = (function() {
     return _results;
   };
 
-  Account.prototype.parse_data = function(json) {
-    var array, data, html, index, json_data, last_id, object, old_id, oldest_date, oldest_index, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
+  Account.prototype.parse_data = function(json, options) {
+    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
+    if (options == null) options = {};
     if (json.constructor !== Array) json = [json];
     responses = [];
     for (_i = 0, _len = json.length; _i < _len; _i++) {
@@ -476,7 +528,6 @@ Account = (function() {
       } catch (_error) {}
       if (temp == null) continue;
       if (temp.constructor === Array) {
-        temp = temp.reverse();
         if (temp.length > 0) {
           temp_elements = [];
           for (_j = 0, _len2 = temp.length; _j < _len2; _j++) {
@@ -496,21 +547,24 @@ Account = (function() {
     html = "";
     last_id = "";
     while (responses.length > 0) {
-      oldest_date = null;
-      oldest_index = null;
+      newest_date = null;
+      newest_index = null;
       for (index in responses) {
         array = responses[index];
         object = array[0];
-        if (oldest_date === null || object.get_date() < oldest_date) {
-          oldest_date = object.get_date();
-          oldest_index = index;
+        if (newest_date === null || object.get_date() > newest_date) {
+          newest_date = object.get_date();
+          newest_index = index;
         }
       }
-      array = responses[oldest_index];
+      array = responses[newest_index];
       object = array.shift();
-      if (array.length === 0) responses.splice(oldest_index, 1);
+      if (array.length === 0) responses.splice(newest_index, 1);
+      if (array.length === 0 && newest_index === "0" && (options.clip != null)) {
+        break;
+      }
       this_id = object.id;
-      if (this_id !== old_id) html = object.get_html() + html;
+      if (this_id !== old_id) html = html + object.get_html();
       if (object.constructor === Tweet) {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
           this.max_known_tweet_id = object.id;
@@ -518,15 +572,21 @@ Account = (function() {
         if (object.sender.id === this.user.id && object.id.is_bigger_than(this.my_last_tweet_id)) {
           this.my_last_tweet_id = object.id;
         }
+        if (!((this.min_known_tweet_id != null) && object.id.is_bigger_than(this.min_known_tweet_id))) {
+          this.min_known_tweet_id = object.id;
+        }
       }
       if (object.constructor === DirectMessage) {
         if (object.id.is_bigger_than(this.max_known_dm_id)) {
           this.max_known_dm_id = object.id;
         }
+        if (!((this.min_known_dm_id != null) && object.id.is_bigger_than(this.min_known_dm_id))) {
+          this.min_known_dm_id = object.id;
+        }
       }
       old_id = this_id;
     }
-    this.add_html(html);
+    this.add_html(html, options.fill_bottom != null);
     return this.update_user_counter();
   };
 
@@ -576,6 +636,15 @@ Account = (function() {
       account_id = $(elm).parents('.user').data('account-id');
       acct = Application.accounts[account_id];
       acct.show();
+      return false;
+    },
+    fill_bottom: function(elm) {
+      var account_id, acct;
+      account_id = $(elm).parents(".content").data('account-id');
+      acct = Application.accounts[account_id];
+      acct.fill_list({
+        fill_bottom: true
+      });
       return false;
     },
     mark_as_read: function(elm) {
