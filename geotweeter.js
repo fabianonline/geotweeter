@@ -517,7 +517,7 @@ Account = (function() {
   };
 
   Account.prototype.parse_data = function(json, options) {
-    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _len, _len2;
+    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _k, _l, _len, _len2, _len3, _len4;
     if (options == null) options = {};
     if (json.constructor !== Array) json = [json];
     responses = [];
@@ -561,6 +561,24 @@ Account = (function() {
       object = array.shift();
       if (array.length === 0) responses.splice(newest_index, 1);
       if (array.length === 0 && newest_index === "0" && (options.clip != null)) {
+        if (this.max_known_tweet_id === "0") {
+          for (_k = 0, _len3 = responses.length; _k < _len3; _k++) {
+            array = responses[_k];
+            object = array[0];
+            if (object.constructor === Tweet && object.id.is_bigger_than(this.max_known_tweet_id)) {
+              this.max_known_tweet_id = object.id;
+            }
+          }
+        }
+        if (this.max_known_dm_id === "0") {
+          for (_l = 0, _len4 = responses.length; _l < _len4; _l++) {
+            array = responses[_l];
+            object = array[0];
+            if (object.constructor === DirectMessage && object.id.is_bigger_than(this.max_known_dm_id)) {
+              this.max_known_dm_id = object.id;
+            }
+          }
+        }
         break;
       }
       this_id = object.id;

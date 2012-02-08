@@ -470,7 +470,23 @@ class Account
 			object = array.shift()
 			# If this array has become empty, we remove it from `responses`.
 			responses.splice(newest_index, 1) if array.length==0
-			break if array.length==0 && newest_index=="0" && options.clip?
+			
+			# Wenn `clip` aktiviert ist und das erste ("wichtigste") Array leer
+			# ist, brechen wir ab.
+			if array.length==0 && newest_index=="0" && options.clip?
+				# Vorher müssen wir jedoch zusehen, `max_known_tweet_id` und
+				# `max_known_dm_id` zu setzen (falls sie noch leer sind).
+				if @max_known_tweet_id == "0"
+					for array in responses
+						object = array[0]
+						@max_known_tweet_id = object.id if object.constructor==Tweet && object.id.is_bigger_than(@max_known_tweet_id)
+				if @max_known_dm_id == "0"
+					for array in responses
+						object = array[0]
+						@max_known_dm_id = object.id if object.constructor==DirectMessage && object.id.is_bigger_than(@max_known_dm_id)
+				# Jetzt können wir aber wirklich abbrechen.
+				break
+				
 			this_id = object.id
 			# Add the html to the temporary html code. But look out for duplicate
 			# tweets (e.g. mentions from friends will be in `home_timeline` as
