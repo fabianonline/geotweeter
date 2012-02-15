@@ -873,7 +873,7 @@ Hooks = (function() {
 
   Hooks.add = function() {
     var html;
-    html = "			<ul>				<li><a href='#' onClick='return Hooks.add_user();'>User</a><br />					Fügt einen weiteren User zum Geotweeter hinzu.</li>				<li><a href='#' onClick='return Hooks.add_filter_stream();'>Suche</a><br />					Fügt einen Stream mit einer Echtzeit-Suche hinzu.</li>			</ul>		";
+    html = "			<ul>				<li><a href='#' onClick='return Hooks.add_user();'>User</a><br />					Fügt einen weiteren User zum Geotweeter hinzu.</li>				<li><a href='#' onClick='return Hooks.add_filter_stream();'>Suche</a><br />					Fügt einen Stream mit einer Echtzeit-Suche hinzu.</li>				<li><a href='#' onClick='return Hooks.add_location_1();'>Location</a><br />					Fügt eine weitere Location hinzu.</li>			</ul>		";
     Application.infoarea.show("Hinzufügen", html);
     return false;
   };
@@ -881,7 +881,8 @@ Hooks = (function() {
   Hooks.add_filter_stream = function() {
     var html;
     html = "			Nach welchen Begriffen soll gesucht werden?<br />			Leerzeichen stellen AND, Kommas OR dar.<br />			Beispiel: 'top gear, topgear'.<br /><br />			<input type='text' id='filter_keyword' /> 			<input type='button' value='Go!' onClick='return Hooks.add_filter_stream_2();' />		";
-    return Application.infoarea.show("Such-Stream hinzufügen", html);
+    Application.infoarea.show("Such-Stream hinzufügen", html);
+    return false;
   };
 
   Hooks.add_filter_stream_2 = function() {
@@ -890,6 +891,103 @@ Hooks = (function() {
     acct = new FilterAccount(Application.current_account, keywords);
     Application.accounts[acct.id] = acct;
     return Application.infoarea.hide();
+  };
+
+  Hooks.add_location_1 = function() {
+    var html;
+    html = "			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />			Tipp: Das ist exakt das Format, dass bei Google Maps in den			LatLng-Markern zu finden ist. ;-)<br /><br />			<input type='text' id='location_coords' />			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />";
+    Application.infoarea.show("Places suchen", html);
+    if (navigator.geolocation != null) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        if ($('#location_coords').val() === "") {
+          return $('#location_coords').val("" + position.coords.latitude + " " + position.coords.longitude);
+        }
+      }, function() {});
+    }
+    return false;
+  };
+
+  Hooks.add_location_2 = function() {
+    var html, parts;
+    parts = $('#location_coords').val().split(" ");
+    Application.temp.lat = parts[0].replace(/,/, ".");
+    Application.temp.long = parts[1].replace(/,/, ".");
+    html = "			Suche nach Locations...<br />			<img src='icons/spinner_big.gif' />";
+    Application.infoarea.show("Location hinzufügen", html);
+    Account.first.twitter_request("geo/search.json", {
+      silent: true,
+      parameters: {
+        lat: Application.temp.lat,
+        long: Application.temp.long,
+        granularity: "poi",
+        max_results: 20
+      },
+      success: function(elm, data) {
+        var place, _i, _len, _ref;
+        html = "Folgende POIs wurden in der Umgebung der Koordinaten gefunden:<br />					<ul>";
+        _ref = data.result.places;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          place = _ref[_i];
+          html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "');\">" + place.name + "</a> (<a href='#' onClick=\"Application.temp.contained_within='" + place.id + "'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>";
+        }
+        html += "</ul><br />					Kein passender Ort dabei? Dann erstellen wir halt einen neuen.<br />					Bitte zunächst bei einem übergeordneten Place aus der Liste oben auf 'umgebend' klicken.<br />					<div id='location_add_hidden' style='display: none;'>					Bitte hier die Bezeichnung für den neuen Ort angeben:<br />					<input type='text' id='location_place_name' />					<input type='button' value='Go!' onClick=\"return Hooks.add_location_3();\" />					</div>";
+        return $('#infoarea_content').html(html);
+      }
+    });
+    return false;
+  };
+
+  Hooks.add_location_3 = function() {
+    Application.temp.name = $('#location_place_name').val();
+    Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />");
+    Account.first.twitter_request("geo/similar_places.json", {
+      silent: true,
+      method: "GET",
+      parameters: {
+        lat: Application.temp.lat,
+        long: Application.temp.long,
+        name: Application.temp.name
+      },
+      success: function(elm, data) {
+        var html, place, _i, _len, _ref;
+        Application.temp.token = data.result.token;
+        if (data.result.places.length > 0) {
+          html = "Folgende passenden POIs wurden in der Umgebung der Koordinaten gefunden:<br />						<ul>";
+          _ref = data.result.places;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            place = _ref[_i];
+            html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "');\">" + place.name + "</a></li>";
+          }
+          html += "</ul><br /><br />						War da der gesuchte Punkt wieder nicht bei, können wir ihn auch anlegen. Diesmal dann aber wirklich!<br />						<a href='#' onClick=\"return Hooks.add_location_4();\">Tu das bitte.</a>";
+          return $('#infoarea_content').html(html);
+        } else {
+          return this.add_location_4();
+        }
+      }
+    });
+    return false;
+  };
+
+  Hooks.add_location_4 = function() {
+    return Account.first.twitter_request("geo/place.json", {
+      silent: true,
+      parameters: {
+        lat: Application.temp.lat,
+        long: Application.temp.long,
+        name: Application.temp.name,
+        token: Application.temp.token,
+        contained_within: Application.temp.contained_within
+      },
+      success: function(elm, data) {
+        return Hooks.add_location_final(data.id);
+      }
+    });
+  };
+
+  Hooks.add_location_final = function(id) {
+    var html;
+    html = "Bitte folgenden Code zum places-Bereich der Settings hinzufügen:<br />			<textarea width='70' height='5'>{name:'" + Application.temp.name + "', lat:" + Application.temp.lat + ", lon:" + Application.temp.long + ", place_id:'" + id + "'},</textarea><br />			Anschließend den Geotweeter bitte neu starten.";
+    return Application.infoarea.show("Ort hinzufügen", html);
   };
 
   return Hooks;
@@ -2170,6 +2268,8 @@ Application = (function() {
   Application.twitter_config = {};
 
   Application.autocompletes = [];
+
+  Application.temp = {};
 
   Application.start = function() {
     Application.log(this, "", "Starting...");

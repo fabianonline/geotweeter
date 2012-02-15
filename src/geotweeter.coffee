@@ -8,6 +8,7 @@ class Application
 	@current_account: null
 	@twitter_config: {}
 	@autocompletes: []
+	@temp: {}
 
 	@start: ->
 		Application.log(this, "", "Starting...")
