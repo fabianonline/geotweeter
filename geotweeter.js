@@ -1066,6 +1066,8 @@ Tweet = (function(_super) {
 
   Tweet.prototype.text = "";
 
+  Tweet.prototype.original_text = "";
+
   Tweet.prototype.entities = {};
 
   Tweet.prototype.date = null;
@@ -1084,7 +1086,8 @@ Tweet = (function(_super) {
     this.fill_user_variables();
     this.save_as_last_message();
     this.permalink = "https://twitter.com/" + this.sender.screen_name + "/status/" + this.id;
-    this.text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
+    this.original_text = data.retweeted_status != null ? data.retweeted_status.text : data.text;
+    this.text = this.original_text;
     this.entities = data.retweeted_status != null ? data.retweeted_status.entities : data.entities;
     this.linkify_text();
     this.get_thumbnails();
@@ -1338,7 +1341,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.quote = function() {
-    Application.set_text("RT @" + this.sender.screen_name + ": " + this.text);
+    Application.set_text("RT @" + this.sender.screen_name + ": " + this.original_text);
     return Application.reply_to(this);
   };
 

@@ -10,6 +10,7 @@ class Tweet extends TwitterMessage
 	permalink: ""
 	data: {}
 	text: ""
+	original_text: ""
 	entities: {}
 	date: null
 	retweeted_by: null
@@ -24,7 +25,8 @@ class Tweet extends TwitterMessage
 		@fill_user_variables()
 		@save_as_last_message()
 		@permalink = "https://twitter.com/#{@sender.screen_name}/status/#{@id}"
-		@text = if data.retweeted_status? then data.retweeted_status.text else data.text
+		@original_text = if data.retweeted_status? then data.retweeted_status.text else data.text
+		@text = @original_text
 		@entities = if data.retweeted_status? then data.retweeted_status.entities else data.entities
 		@linkify_text()
 		@get_thumbnails()
@@ -158,7 +160,7 @@ class Tweet extends TwitterMessage
 		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
 	quote: ->
-		Application.set_text("RT @#{@sender.screen_name}: #{@text}")
+		Application.set_text("RT @#{@sender.screen_name}: #{@original_text}")
 		Application.reply_to(this)
 	
 	delete: ->
