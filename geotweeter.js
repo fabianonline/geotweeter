@@ -2450,8 +2450,8 @@ Application = (function() {
 
   Application.set_text = function(text) {
     $('#text').val(text).focus();
-    $('#success').stop(true, true).fadeTo(0, 0).hide();
-    $('#failure').stop(true, true).fadeTo(0, 0).hide();
+    $('#success').stop(true, true).fadeOut(0);
+    $('#failure').stop(true, true).fadeOut(0);
     return $('#form').stop(true, true).fadeTo(0, 1);
   };
 
