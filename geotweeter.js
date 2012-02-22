@@ -1383,25 +1383,25 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.reply = function() {
-    var mention, mentions, sender;
+    var mention, mentions, sender, _i, _len, _ref;
     Application.set_dm_recipient_name(null);
     Application.reply_to(this);
-    sender = this.sender.screen_name !== this.account.screen_name ? "@" + this.sender.screen_name + " " : "";
-    mentions = ((function() {
-      var _i, _len, _ref, _results;
-      _ref = this.mentions.reverse();
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        mention = _ref[_i];
-        if (mention !== this.sender.screen_name && mention !== this.account.screen_name) {
-          _results.push("@" + mention + " ");
-        }
+    mentions = [];
+    if (this.sender.screen_name !== this.account.screen_name) {
+      mentions.push("@" + this.sender.screen_name);
+    }
+    _ref = this.mentions.reverse();
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      mention = _ref[_i];
+      if (mention !== this.sender.screen_name && mention !== this.account.screen_name) {
+        mentions.push("@" + mention);
       }
-      return _results;
-    }).call(this)).join("");
-    Application.set_text("" + sender + mentions);
-    $('#text')[0].selectionStart = sender.length;
-    $('#text')[0].selectionEnd = sender.length + mentions.length;
+    }
+    sender = mentions.shift();
+    mentions = mentions.join(" ") + (mentions.length > 0 ? " " : "");
+    Application.set_text("" + sender + " " + mentions);
+    $('#text')[0].selectionStart = sender.length + 1;
+    $('#text')[0].selectionEnd = sender.length + 1 + mentions.length;
     return $('#text').focus();
   };
 

@@ -190,11 +190,14 @@ class Tweet extends TwitterMessage
 	reply: ->
 		Application.set_dm_recipient_name(null)
 		Application.reply_to(this)
-		sender = if @sender.screen_name!=@account.screen_name then "@#{@sender.screen_name} " else ""
-		mentions = ("@#{mention} " for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name).join("")
-		Application.set_text("#{sender}#{mentions}")
-		$('#text')[0].selectionStart = sender.length
-		$('#text')[0].selectionEnd = sender.length + mentions.length
+		mentions = []
+		mentions.push("@#{@sender.screen_name}") unless @sender.screen_name==@account.screen_name
+		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name
+		sender = mentions.shift()
+		mentions = mentions.join(" ") + (if mentions.length>0 then " " else "")
+		Application.set_text("#{sender} #{mentions}")
+		$('#text')[0].selectionStart = sender.length+1
+		$('#text')[0].selectionEnd = sender.length+1 + mentions.length
 		$('#text').focus()
 	
 	get_thumbnails: ->
