@@ -179,12 +179,17 @@ textarea, input, select {
     display: none;
 }
 
-#success, #failure {
+#success, #failure, #progress {
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 99;
     display: none;
+}
+
+#progress {
+	padding-top: 20px;
+	width: 100%;
 }
 
 #text {

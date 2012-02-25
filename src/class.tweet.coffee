@@ -299,6 +299,9 @@ class Tweet extends TwitterMessage
 				status: $('#text').val().trim()
 				wrap_links: true
 			}
+			
+			show_progress = false
+			
 			if settings.places.length > 0 && (placeindex=document.tweet_form.place.value-1)>=0
 				place = settings.places[placeindex]
 				parameters.lat = place.lat + (((Math.random()*300)-15)*0.000001)
@@ -314,11 +317,13 @@ class Tweet extends TwitterMessage
 				data = new FormData()
 				data.append("media[]", $('#file')[0].files[0])
 				data.append(key, value) for key, value of parameters
+				show_progress = true
 			else
 				data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters)
 				url = "proxy/api/statuses/update.json"
 				content_type = "application/x-www-form-urlencoded"
-			$('#form').fadeTo(500, 0);
+			$('#form').fadeTo(500, 0)
+			$('#progress').fadeTo(500, 1) if show_progress
 			
 			$.ajax({
 				url: url
@@ -328,7 +333,15 @@ class Tweet extends TwitterMessage
 				async: true
 				dataType: "json"
 				type: "POST"
+				xhr: ->
+					xhr = jQuery.ajaxSettings.xhr()
+					xhr.upload?.addEventListener?("progress", (evt) -> 
+						$('#progress_bar').attr('value', (evt.loaded/evt.total*100))
+						return true
+					)
+					return xhr
 				success: (data) ->
+					$('#progress').fadeTo(500, 0)
 					if data.text
 						html = "
 							Tweet-ID: #{data.id_str}<br />
@@ -345,6 +358,7 @@ class Tweet extends TwitterMessage
 						$('#failure_info').html(data.error);
 						$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
 				error: (req) ->
+					$('#progress').fadeTo(500, 0)
 					info = "Error #{req.status} (#{req.statusText})"
 					try additional = $.parseJSON(req.responseText)
 					info += "<br /><strong>#{additional.error}</strong>" if additional?.error?

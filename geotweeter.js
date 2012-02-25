@@ -1560,12 +1560,13 @@ Tweet = (function(_super) {
       return this.get_tweet(elm).get_avatar_tooltip();
     },
     send: function() {
-      var content_type, data, key, parameters, place, placeindex, url, value;
+      var content_type, data, key, parameters, place, placeindex, show_progress, url, value;
       if (typeof event !== "undefined" && event !== null) event.preventDefault();
       parameters = {
         status: $('#text').val().trim(),
         wrap_links: true
       };
+      show_progress = false;
       if (settings.places.length > 0 && (placeindex = document.tweet_form.place.value - 1) >= 0) {
         place = settings.places[placeindex];
         parameters.lat = place.lat + (((Math.random() * 300) - 15) * 0.000001);
@@ -1586,12 +1587,14 @@ Tweet = (function(_super) {
           value = parameters[key];
           data.append(key, value);
         }
+        show_progress = true;
       } else {
         data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters);
         url = "proxy/api/statuses/update.json";
         content_type = "application/x-www-form-urlencoded";
       }
       $('#form').fadeTo(500, 0);
+      if (show_progress) $('#progress').fadeTo(500, 1);
       $.ajax({
         url: url,
         data: data,
@@ -1600,8 +1603,22 @@ Tweet = (function(_super) {
         async: true,
         dataType: "json",
         type: "POST",
+        xhr: function() {
+          var xhr, _ref;
+          xhr = jQuery.ajaxSettings.xhr();
+          if ((_ref = xhr.upload) != null) {
+            if (typeof _ref.addEventListener === "function") {
+              _ref.addEventListener("progress", function(evt) {
+                $('#progress_bar').attr('value', evt.loaded / evt.total * 100);
+                return true;
+              });
+            }
+          }
+          return xhr;
+        },
         success: function(data) {
           var html;
+          $('#progress').fadeTo(500, 0);
           if (data.text) {
             html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";
             $('#text').val('');
@@ -1621,6 +1638,7 @@ Tweet = (function(_super) {
         },
         error: function(req) {
           var additional, info;
+          $('#progress').fadeTo(500, 0);
           info = "Error " + req.status + " (" + req.statusText + ")";
           try {
             additional = $.parseJSON(req.responseText);
