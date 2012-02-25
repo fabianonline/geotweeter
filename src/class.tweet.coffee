@@ -323,7 +323,7 @@ class Tweet extends TwitterMessage
 				url = "proxy/api/statuses/update.json"
 				content_type = "application/x-www-form-urlencoded"
 			$('#form').fadeTo(500, 0)
-			$('#progress').fadeTo(500, 1) if show_progress
+			$('#progress').fadeIn(500) if show_progress
 			
 			$.ajax({
 				url: url
@@ -341,7 +341,7 @@ class Tweet extends TwitterMessage
 					)
 					return xhr
 				success: (data) ->
-					$('#progress').fadeTo(500, 0)
+					$('#progress').fadeOut(500)
 					if data.text
 						html = "
 							Tweet-ID: #{data.id_str}<br />
@@ -358,7 +358,7 @@ class Tweet extends TwitterMessage
 						$('#failure_info').html(data.error);
 						$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
 				error: (req) ->
-					$('#progress').fadeTo(500, 0)
+					$('#progress').fadeOut(500)
 					info = "Error #{req.status} (#{req.statusText})"
 					try additional = $.parseJSON(req.responseText)
 					info += "<br /><strong>#{additional.error}</strong>" if additional?.error?

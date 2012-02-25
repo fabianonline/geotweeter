@@ -1594,7 +1594,7 @@ Tweet = (function(_super) {
         content_type = "application/x-www-form-urlencoded";
       }
       $('#form').fadeTo(500, 0);
-      if (show_progress) $('#progress').fadeTo(500, 1);
+      if (show_progress) $('#progress').fadeIn(500);
       $.ajax({
         url: url,
         data: data,
@@ -1618,7 +1618,7 @@ Tweet = (function(_super) {
         },
         success: function(data) {
           var html;
-          $('#progress').fadeTo(500, 0);
+          $('#progress').fadeOut(500);
           if (data.text) {
             html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";
             $('#text').val('');
@@ -1638,7 +1638,7 @@ Tweet = (function(_super) {
         },
         error: function(req) {
           var additional, info;
-          $('#progress').fadeTo(500, 0);
+          $('#progress').fadeOut(500);
           info = "Error " + req.status + " (" + req.statusText + ")";
           try {
             additional = $.parseJSON(req.responseText);
