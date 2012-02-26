@@ -2351,14 +2351,31 @@ Application = (function() {
     $('#file').change(Hooks.check_file);
     $('#text').autocomplete({
       minLength: 1,
+      html: true,
       source: function(request, response) {
-        var word;
+        this.options.inline = false;
+        var faces, id, word;
         word = request.term.split(/\s+/).pop();
         if (request.term.match(/^d @?[a-z0-9_]+$/i)) word = '@' + word;
-        if (word[0] !== "@" && word[0] !== "#") {
-          return response(new Array());
-        } else {
+        if (word === "rage") {
+          this.options.inline = true;
+          faces = [100, 53, 126, 154, 127, 57, 72, 113, 111, 31, 141, 313, 19, 103, 151, 434, 436, 120, 403, 408, 55, 435];
+          return response((function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = faces.length; _i < _len; _i++) {
+              id = faces[_i];
+              _results.push({
+                label: "<img src='http://ragefac.es/" + id + "/i' class='rageface' />",
+                value: "http://ragefac.es/" + id
+              });
+            }
+            return _results;
+          })());
+        } else if (word[0] === "@" || word[0] === "#") {
           return response($.ui.autocomplete.filter(_this.autocompletes, word));
+        } else {
+          return response(new Array());
         }
       },
       focus: function() {

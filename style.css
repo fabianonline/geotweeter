@@ -364,3 +364,12 @@ ul.context-menu {
 	font-size: 15px;
 	text-align: center;
 }
+
+.ui-menu-item .rageface {
+	max-height: 70px;
+}
+
+.ui-menu-item.inline {
+	clear: none !important;
+	width: auto !important;
+}

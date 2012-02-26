@@ -50,13 +50,22 @@ class Application
 		$('#file').change( Hooks.check_file )
 		$('#text').autocomplete({
 			minLength: 1
+			html: true
 			source: (request, response) =>
+				`this.options.inline = false`
 				word = request.term.split(/\s+/).pop()
 				word='@'+word if request.term.match(/^d @?[a-z0-9_]+$/i)
-				if (word[0]!="@" && word[0]!="#")
-					response(new Array())
-				else
+				if (word=="rage")
+					`this.options.inline = true`
+					faces = [100, 53, 126, 154, 127, 57, 72, 113, 111, 31, 141, 313, 19, 103, 151, 434, 436, 120, 403, 408, 55, 435]
+					
+					response(
+						{label: "<img src='http://ragefac.es/#{id}/i' class='rageface' />", value: "http://ragefac.es/#{id}"} for id in faces
+					)
+				else if word[0]=="@" || word[0]=="#"
 					response($.ui.autocomplete.filter(@autocompletes, word));
+				else
+					response(new Array())
 			focus: -> return false
 			autoFocus: true
 			delay: 0
