@@ -20,6 +20,7 @@ class Account
 	followers_ids: []
 	status_text: ""
 	scroll_top: 0
+	requests: []
 	
 	# The constructor is called by Application. `settings_id` is the id of
 	# this account as it appears in `settings.twitter.user`.

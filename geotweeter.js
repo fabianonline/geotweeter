@@ -118,6 +118,8 @@ Account = (function() {
 
   Account.prototype.scroll_top = 0;
 
+  Account.prototype.requests = [];
+
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);
     var new_area, _base,
@@ -1878,6 +1880,7 @@ Request = (function() {
 
   function Request(account) {
     this.account = account;
+    this.account.requests.push(this);
   }
 
   return Request;

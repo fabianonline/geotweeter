@@ -3,3 +3,4 @@ class Request
 	last_data_received_at: null
 	
 	constructor: (@account) ->
+		@account.requests.push(this)
