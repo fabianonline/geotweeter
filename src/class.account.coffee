@@ -552,19 +552,25 @@ class Account
 	# Removes the errors of this account by fading them out.
 	remove_errors: -> @get_my_element().find(".error").slideUp()
 	
+	toggle_pause_request: (pause_link_element) ->
+		if @request.stopped
+			$(pause_link_element).find('img').attr('src', 'icons/lightbulb_off.png')
+			@request.start_request()
+		else
+			$(pause_link_element).find('img').attr('src', 'icons/lightbulb_on.png')
+			@request.stop_request()
+	
 	# Some static hooks to be called from the HTML via buttons and stuff.
 	# Mostly self-explenatory.
 	@hooks: {
+		get_account: (elm) -> Application.accounts[$(elm).parents('.user, .content').data('account-id')]
+		
 		change_current_account: (elm) ->
-			account_id = $(elm).parents('.user').data('account-id')
-			acct = Application.accounts[account_id]
-			acct.show()
+			@get_account(elm).show()
 			return false
 		
 		fill_bottom: (elm) ->
-			account_id = $(elm).parents(".content").data('account-id')
-			acct = Application.accounts[account_id]
-			acct.fill_list({fill_bottom: true})
+			@get_account(elm).fill_list({fill_bottom: true})
 			return false
 		
 		# Marks all tweets up to upperst completety visible tweet as read.
@@ -598,8 +604,10 @@ class Account
 			return false
 		
 		destroy: (elm) ->
-			account_id = $(elm).parents('.user').data('account-id')
-			acct = Application.accounts[account_id]
-			acct.destroy()
+			@get_account(elm).destroy()
+			return false
+		
+		toggle_pause_request: (elm) -> 
+			@get_account(elm).toggle_pause_request()
 			return false
 	}

@@ -650,19 +650,26 @@ Account = (function() {
     return this.get_my_element().find(".error").slideUp();
   };
 
+  Account.prototype.toggle_pause_request = function(pause_link_element) {
+    if (this.request.stopped) {
+      $(pause_link_element).find('img').attr('src', 'icons/lightbulb_off.png');
+      return this.request.start_request();
+    } else {
+      $(pause_link_element).find('img').attr('src', 'icons/lightbulb_on.png');
+      return this.request.stop_request();
+    }
+  };
+
   Account.hooks = {
+    get_account: function(elm) {
+      return Application.accounts[$(elm).parents('.user, .content').data('account-id')];
+    },
     change_current_account: function(elm) {
-      var account_id, acct;
-      account_id = $(elm).parents('.user').data('account-id');
-      acct = Application.accounts[account_id];
-      acct.show();
+      this.get_account(elm).show();
       return false;
     },
     fill_bottom: function(elm) {
-      var account_id, acct;
-      account_id = $(elm).parents(".content").data('account-id');
-      acct = Application.accounts[account_id];
-      acct.fill_list({
+      this.get_account(elm).fill_list({
         fill_bottom: true
       });
       return false;
@@ -696,10 +703,11 @@ Account = (function() {
       return false;
     },
     destroy: function(elm) {
-      var account_id, acct;
-      account_id = $(elm).parents('.user').data('account-id');
-      acct = Application.accounts[account_id];
-      acct.destroy();
+      this.get_account(elm).destroy();
+      return false;
+    },
+    toggle_pause_request: function(elm) {
+      this.get_account(elm).toggle_pause_request();
       return false;
     }
   };
@@ -727,7 +735,7 @@ FilterAccount = (function(_super) {
     new_area = $('#content_template').clone();
     new_area.attr('id', this.get_content_div_id());
     $('body').append(new_area);
-    $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/magnifier.png' />					<span class='count'></span>				</a>				<a href='#' onClick='return Account.hooks.destroy(this);'>					<img src='icons/cross.png' />				</a>			</div>		");
+    $('#users').append("			<div class='user' id='user_" + this.id + "' data-account-id='" + this.id + "'>				<a href='#' onClick='return Account.hooks.change_current_account(this);'>					<img src='icons/magnifier.png' />					<span class='count'></span>				</a>				<a href='#' onClick='return Account.hooks.toggle_pause_request(this);'>					<img src='icons/lightbulb_off.png' />				</a>				<a href='#' onClick='return Account.hooks.destroy(this);'>					<img src='icons/cross.png' />				</a>			</div>		");
     if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
       _base.tooltip({
         bodyHandler: function() {

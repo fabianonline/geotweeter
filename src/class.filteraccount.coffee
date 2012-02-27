@@ -20,6 +20,9 @@ class FilterAccount extends Account
 					<img src='icons/magnifier.png' />
 					<span class='count'></span>
 				</a>
+				<a href='#' onClick='return Account.hooks.toggle_pause_request(this);'>
+					<img src='icons/lightbulb_off.png' />
+				</a>
 				<a href='#' onClick='return Account.hooks.destroy(this);'>
 					<img src='icons/cross.png' />
 				</a>
