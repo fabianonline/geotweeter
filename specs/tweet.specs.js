@@ -110,8 +110,17 @@ describe('Tweet', function() {
       it("should link lauerfac.es images correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://lauerfac.es/27").thumbnail).toEqual("http://lauerfac.es/27/thumb");
       });
-      return it("should link ponyfac.es images correctly", function() {
+      it("should link ponyfac.es images correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://ponyfac.es/27").thumbnail).toEqual("http://ponyfac.es/27/thumb");
+      });
+      it("should link twitter images correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://www.flickr.com/photos/fabianonline/6789770962/in/set-72157629468588309").thumbnail).toEqual("http://flic.kr/p/img/bkZmmA_s.jpg");
+      });
+      it("should link static.twitter urls correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://farm6.static.flickr.com/5012/5454042425_9526e2e477.jpg").thumbnail).toEqual("http://flic.kr/p/img/9iXoNe_s.jpg");
+      });
+      return it("should link short twitter urls correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://flic.kr/p/7sqMtA").thumbnail).toEqual("http://flic.kr/p/img/7sqMtA_s.jpg");
       });
     });
   });

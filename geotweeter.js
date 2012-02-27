@@ -1461,6 +1461,15 @@ Tweet = (function(_super) {
     if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
       return new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url);
     }
+    if ((res = url.match(/flickr.com\/photos\/[^\/]+\/([0-9]+)/))) {
+      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url);
+    }
+    if ((res = url.match(/static.flickr.com\/[0-9]+\/([0-9]+)_/))) {
+      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url);
+    }
+    if ((res = url.match(/flic.kr\/p\/(.+)/))) {
+      return new Thumbnail("http://flic.kr/p/img/" + res[1] + "_s.jpg", url);
+    }
     return null;
   };
 
