@@ -889,9 +889,14 @@ Hooks = (function() {
   };
 
   Hooks.add_filter_stream = function() {
-    var html;
+    var html,
+      _this = this;
     html = "			Nach welchen Begriffen soll gesucht werden?<br />			Leerzeichen stellen AND, Kommas OR dar.<br />			Beispiel: 'top gear, topgear'.<br /><br />			<input type='text' id='filter_keyword' /> 			<input type='button' value='Go!' onClick='return Hooks.add_filter_stream_2();' />		";
     Application.infoarea.show("Such-Stream hinzufügen", html);
+    $('#filter_keyword').focus();
+    $('#filter_keyword').keyup(function(event) {
+      if (event.which === 13) return _this.add_filter_stream_2();
+    });
     return false;
   };
 

@@ -82,6 +82,10 @@ class Hooks
 			<input type='button' value='Go!' onClick='return Hooks.add_filter_stream_2();' />
 		"
 		Application.infoarea.show("Such-Stream hinzufügen", html)
+		$('#filter_keyword').focus()
+		$('#filter_keyword').keyup( (event) =>
+			@add_filter_stream_2() if event.which==13
+		)
 		return false
 	
 	@add_filter_stream_2: ->
