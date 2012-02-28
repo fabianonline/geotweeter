@@ -2413,6 +2413,7 @@ Application = (function() {
         var term;
         term = this.value.split(/\s+/).pop();
         this.value = this.value.substring(0, this.value.length - term.length) + ui.item.value + " ";
+        Hooks.text_before_enter = this.value;
         return false;
       }
     });
