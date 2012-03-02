@@ -19,6 +19,12 @@ class Application
 		@initialize_accounts()
 		@get_twitter_configuration()
 		@accounts[0].show()
+		
+		# If after_startup() is defined, run it. This can be used to automatically
+		# execute code ofter the Geotweeter has started.
+		# To use it, just add a script block to index.html containing
+		# `Application.after_startup = function() { ... }`.
+		@after_startup?()
 
 	@is_settings_version_okay: -> 
 		if settings.version != @expected_settings_version

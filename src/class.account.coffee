@@ -161,6 +161,9 @@ class Account
 				@get_max_read_id()
 				@get_followers()
 				@fill_list({clip: true})
+				
+				# If after_validation is defined, run it.
+				@after_validation?()
 			error: (element, data, req, textStatus) =>
 				@add_status_html("Unknown error in validate_credentials. Exiting.<br />#{req.status} - #{req.statusText}")
 				$("#user_#{@id} img").attr('src', "icons/exclamation.png")

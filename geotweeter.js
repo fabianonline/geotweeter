@@ -251,9 +251,10 @@ Account = (function() {
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
         _this.get_followers();
-        return _this.fill_list({
+        _this.fill_list({
           clip: true
         });
+        return typeof _this.after_validation === "function" ? _this.after_validation() : void 0;
       },
       error: function(element, data, req, textStatus) {
         _this.add_status_html("Unknown error in validate_credentials. Exiting.<br />" + req.status + " - " + req.statusText);
@@ -2326,7 +2327,8 @@ Application = (function() {
     this.set_time_diff();
     this.initialize_accounts();
     this.get_twitter_configuration();
-    return this.accounts[0].show();
+    this.accounts[0].show();
+    return typeof this.after_startup === "function" ? this.after_startup() : void 0;
   };
 
   Application.is_settings_version_okay = function() {
