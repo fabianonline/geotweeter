@@ -1314,24 +1314,24 @@ Tweet = (function(_super) {
         switch (entity.type) {
           case "user_mentions":
             this.mentions.push(entity.screen_name);
-            this.replace_entity(entity, "<a href='https://twitter.com/" + entity.screen_name + "' target='_blank'>@" + entity.screen_name + "</a>");
+            this.replace_entity(entity, "<a href='https://twitter.com/" + entity.screen_name + "' target='_blank' class='external'>@" + entity.screen_name + "</a>");
             break;
           case "urls":
           case "media":
             if (entity.expanded_url != null) {
-              this.replace_entity(entity, "<a href='" + entity.expanded_url + "' class='external' target='_blank'>" + entity.display_url + "</a>");
+              this.replace_entity(entity, "<a href='" + entity.expanded_url + "' class='external' target='_blank' class='external'>" + entity.display_url + "</a>");
             } else {
-              this.replace_entity(entity, "<a href='" + entity.url + "' class='external' target='_blank'>" + entity.url + "</a>");
+              this.replace_entity(entity, "<a href='" + entity.url + "' class='external' target='_blank' class='external'>" + entity.url + "</a>");
             }
             break;
           case "hashtags":
-            this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank'>#" + entity.text + "</a>");
+            this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank' class='external'>#" + entity.text + "</a>");
             Application.add_to_autocomplete("#" + entity.text);
         }
       }
     }
     this.text = this.text.trim().replace(/\n/g, "<br />");
-    return this.text = this.text.replace(/\b(GC[A-Z0-9]+)\b/g, "<a href='http://coords.info/$1' target='_blank'>$1</a>");
+    return this.text = this.text.replace(/\b(GC[A-Z0-9]+)\b/g, "<a href='http://coords.info/$1' target='_blank' class='external'>$1</a>");
   };
 
   Tweet.prototype.replace_entity = function(entity_object, text) {
