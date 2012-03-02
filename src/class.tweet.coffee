@@ -140,6 +140,7 @@ class Tweet extends TwitterMessage
 						@replace_entity(entity, "<a href='https://twitter.com/search?q=##{entity.text}' target='_blank'>##{entity.text}</a>")
 						Application.add_to_autocomplete("##{entity.text}")
 		@text = @text.trim().replace(/\n/g, "<br />")
+		@text = @text.replace(/\b(GC[A-Z0-9]+)\b/g, "<a href='http://coords.info/$1' target='_blank'>$1</a>")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
 	
