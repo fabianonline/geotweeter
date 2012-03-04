@@ -513,8 +513,10 @@ class Account
 		@update_user_counter()
 	
 	# Scrolls down to a specified tweet.
-	scroll_to: (tweet_id) ->
-		element_top = $("##{tweet_id}").offset().top
+	scroll_to: (tweet_id, alternate_target) ->
+		target = $("##{tweet_id}")
+		target = $(alternate_target) unless target.length>0
+		element_top = target.offset().top
 		# Just scrolling to a tweet doesn't show it because it will be hidden behind
 		# the form on the top. So we use this as an offset.
 		topheight = parseInt($('#content_template').css("padding-top"))
@@ -563,6 +565,9 @@ class Account
 			$(pause_link_element).find('img').attr('src', 'icons/lightbulb_on.png')
 			@request.stop_request()
 	
+	scroll_to_last_read_tweet: ->
+		@scroll_to(@max_read_id, "##{@get_content_div_id()} .bottom")
+	
 	# Some static hooks to be called from the HTML via buttons and stuff.
 	# Mostly self-explenatory.
 	@hooks: {
@@ -598,7 +603,7 @@ class Account
 			return false
 		
 		goto_unread_tweet: ->
-			Application.current_account.scroll_to(Application.current_account.max_read_id)
+			Application.current_account.scroll_to_last_read_tweet()
 			return false
 		
 		reload: ->

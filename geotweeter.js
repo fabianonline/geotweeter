@@ -611,9 +611,11 @@ Account = (function() {
     return this.update_user_counter();
   };
 
-  Account.prototype.scroll_to = function(tweet_id) {
-    var element_top, topheight;
-    element_top = $("#" + tweet_id).offset().top;
+  Account.prototype.scroll_to = function(tweet_id, alternate_target) {
+    var element_top, target, topheight;
+    target = $("#" + tweet_id);
+    if (!(target.length > 0)) target = $(alternate_target);
+    element_top = target.offset().top;
     topheight = parseInt($('#content_template').css("padding-top"));
     $(document).scrollTop(element_top - topheight);
     return false;
@@ -661,6 +663,10 @@ Account = (function() {
     }
   };
 
+  Account.prototype.scroll_to_last_read_tweet = function() {
+    return this.scroll_to(this.max_read_id, "#" + (this.get_content_div_id()) + " .bottom");
+  };
+
   Account.hooks = {
     get_account: function(elm) {
       return Application.accounts[$(elm).parents('.user, .content').data('account-id')];
@@ -695,7 +701,7 @@ Account = (function() {
       return false;
     },
     goto_unread_tweet: function() {
-      Application.current_account.scroll_to(Application.current_account.max_read_id);
+      Application.current_account.scroll_to_last_read_tweet();
       return false;
     },
     reload: function() {
