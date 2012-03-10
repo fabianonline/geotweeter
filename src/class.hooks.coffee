@@ -1,7 +1,7 @@
 class Hooks
 	@display_file: false
 	@time_of_last_enter: new Date()
-	@update_counter: ->
+	@update_counter: (event) ->
 		if event? && event.type? && event.type == "keyup" && event.which == 13
 			# user pressed enter. check the time since last press of enter...
 			now = new Date()

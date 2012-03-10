@@ -54,6 +54,7 @@ class Application
 	@attach_hooks: ->
 		$('#place').change( -> $.cookie('last_place', $('#place option:selected').val(), {expires: 365}))
 		$('#file').change( Hooks.check_file )
+		$('#text').keyup( Hooks.update_counter )
 		$('#text').autocomplete({
 			minLength: 1
 			html: true

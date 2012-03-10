@@ -809,9 +809,9 @@ Hooks = (function() {
 
   Hooks.time_of_last_enter = new Date();
 
-  Hooks.update_counter = function() {
+  Hooks.update_counter = function(event) {
     var color, length, now, parts, text, url, urls, _i, _len, _ref;
-    if ((typeof event !== "undefined" && event !== null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
+    if ((event != null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
       now = new Date();
       if (now - this.time_of_last_enter <= settings.timings.max_double_enter_time) {
         event.preventDefault();
@@ -2384,6 +2384,7 @@ Application = (function() {
       });
     });
     $('#file').change(Hooks.check_file);
+    $('#text').keyup(Hooks.update_counter);
     $('#text').autocomplete({
       minLength: 1,
       html: true,
