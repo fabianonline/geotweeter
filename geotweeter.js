@@ -1785,7 +1785,7 @@ DirectMessage = (function(_super) {
       data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
       url = "proxy/api/direct_messages/new.json";
       $('#form').fadeTo(500, 0);
-      return $.ajax({
+      $.ajax({
         url: url,
         data: data,
         async: true,
@@ -1824,6 +1824,7 @@ DirectMessage = (function(_super) {
           });
         }
       });
+      return false;
     },
     reply: function(elm) {
       this.get_tweet(elm).reply();

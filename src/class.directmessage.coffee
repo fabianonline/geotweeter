@@ -77,6 +77,8 @@ class DirectMessage extends Tweet
 					$('#failure_info').html(info)
 					$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
 			})
+
+			return false
 		
 		reply: (elm) -> @get_tweet(elm).reply(); return false;
 		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
