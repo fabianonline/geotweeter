@@ -809,19 +809,21 @@ Hooks = (function() {
 
   Hooks.time_of_last_enter = new Date();
 
+  Hooks.text_before_enter = "";
+
   Hooks.update_counter = function(event) {
     var color, length, now, parts, text, url, urls, _i, _len, _ref;
     if ((event != null) && (event.type != null) && event.type === "keyup" && event.which === 13) {
       now = new Date();
       if (now - this.time_of_last_enter <= settings.timings.max_double_enter_time) {
         event.preventDefault();
-        $('#text').val(this.text_before_enter);
+        $('#text').val(Hooks.text_before_enter);
         Hooks.send();
         return;
       }
       this.time_of_last_enter = now;
     } else {
-      this.text_before_enter = $('#text').val();
+      Hooks.text_before_enter = $('#text').val();
     }
     text = $('#text').val();
     if (!(Application.get_dm_recipient_name() != null) && (parts = text.match(/^d @?(\w+) (.*)$/i))) {
@@ -2422,9 +2424,11 @@ Application = (function() {
       appendTo: "#autocomplete_area",
       select: function(event, ui) {
         var term;
+        event.preventDefault();
         term = this.value.split(/\s+/).pop();
         this.value = this.value.substring(0, this.value.length - term.length) + ui.item.value + " ";
         Hooks.text_before_enter = this.value;
+        Hooks.update_counter(event);
         return false;
       }
     });

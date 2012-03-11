@@ -1,18 +1,19 @@
 class Hooks
 	@display_file: false
 	@time_of_last_enter: new Date()
+	@text_before_enter: ""
 	@update_counter: (event) ->
 		if event? && event.type? && event.type == "keyup" && event.which == 13
 			# user pressed enter. check the time since last press of enter...
 			now = new Date()
 			if now - @time_of_last_enter <= settings.timings.max_double_enter_time
 				event.preventDefault()
-				$('#text').val(@text_before_enter)
+				$('#text').val(Hooks.text_before_enter)
 				Hooks.send()
 				return
 			@time_of_last_enter = now
 		else
-			@text_before_enter = $('#text').val()
+			Hooks.text_before_enter = $('#text').val()
 		text = $('#text').val() # don't trim just yet
 		if !Application.get_dm_recipient_name()? && parts=text.match(/^d @?(\w+) (.*)$/i)
 			Application.set_dm_recipient_name(parts[1])

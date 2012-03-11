@@ -78,9 +78,11 @@ class Application
 			delay: 0
 			appendTo: "#autocomplete_area"
 			select: (event, ui) ->
+				event.preventDefault()
 				term = this.value.split(/\s+/).pop()
 				this.value = this.value.substring(0, this.value.length-term.length) + ui.item.value + " "
 				Hooks.text_before_enter = this.value
+				Hooks.update_counter(event)
 				return false
 		})
 		
