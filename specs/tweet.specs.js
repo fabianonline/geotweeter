@@ -92,8 +92,14 @@ describe('Tweet', function() {
       it("should link twitpic images correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://twitpic.com/12ABcd").thumbnail).toEqual("//twitpic.com/show/mini/12ABcd");
       });
-      it("should link yfrog images correctly", function() {
+      it("should link yfrog.com images correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://yfrog.com/12ABcd").thumbnail).toEqual("//yfrog.com/12ABcd.th.jpg");
+      });
+      it("should link yfrog.us images correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://yfrog.us/e9v71kz").thumbnail).toEqual("//yfrog.us/e9v71kz.th.jpg");
+      });
+      it("should link yfrog.ru images correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://yfrog.ru/12387").thumbnail).toEqual("//yfrog.ru/12387.th.jpg");
       });
       it("should link lockerz images correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://lockerz.com/s/12349").thumbnail).toEqual("//api.plixi.com/api/tpapi.svc/imagefromurl?url=http://lockerz.com/s/12349&size=thumbnail");

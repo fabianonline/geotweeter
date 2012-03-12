@@ -1468,8 +1468,8 @@ Tweet = (function(_super) {
     if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
       return new Thumbnail("//twitpic.com/show/mini/" + res[1], url);
     }
-    if ((res = url.match(/yfrog.com\/([a-zA-Z0-9]+)/))) {
-      return new Thumbnail("//yfrog.com/" + res[1] + ".th.jpg", url);
+    if ((res = url.match(/yfrog.(com|us|ru)\/([a-zA-Z0-9]+)/))) {
+      return new Thumbnail("//yfrog." + res[1] + "/" + res[2] + ".th.jpg", url);
     }
     if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
       return new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url);

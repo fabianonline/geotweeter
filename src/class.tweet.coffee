@@ -222,7 +222,7 @@ class Tweet extends TwitterMessage
 		# Note that not all of the services offer HTTPS versions, hence the differences.
 		return (new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
 		return (new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
-		return (new Thumbnail("//yfrog.com/#{res[1]}.th.jpg", url)) if (res=url.match(/yfrog.com\/([a-zA-Z0-9]+)/)) 
+		return (new Thumbnail("//yfrog.#{res[1]}/#{res[2]}.th.jpg", url)) if (res=url.match(/yfrog.(com|us|ru)\/([a-zA-Z0-9]+)/)) 
 		return (new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
 		return (new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
 		return (new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
