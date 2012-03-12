@@ -622,7 +622,9 @@ Account = (function() {
   };
 
   Account.prototype.show = function() {
-    if (Application.current_account != null) Application.current_account.hide();
+    if ((Application.current_account != null) && this !== Application.current_account) {
+      Application.current_account.hide();
+    }
     $("#content_" + this.id).show();
     $("#user_" + this.id).addClass('active');
     $(window).scrollTop(this.scroll_top);
@@ -2534,6 +2536,8 @@ Application = (function() {
   Application.infoarea = {
     visible: false,
     show: function(title, content) {
+      Application.current_account.hide();
+      $('#top').hide();
       Application.infoarea.visible = true;
       $('#infoarea_title').html(title);
       $('#infoarea_content').html(content);
@@ -2543,6 +2547,8 @@ Application = (function() {
     hide: function() {
       Application.infoarea.visible = false;
       $('#infoarea').hide();
+      $('#top').show();
+      Application.current_account.show();
       return false;
     }
   };

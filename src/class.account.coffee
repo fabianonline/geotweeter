@@ -525,7 +525,7 @@ class Account
 	
 	# Set this Account as the active (show this Account's tweets and so on).
 	show: ->
-		Application.current_account.hide() if Application.current_account?
+		Application.current_account.hide() if Application.current_account? && this!=Application.current_account
 		$("#content_#{@id}").show()
 		$("#user_#{@id}").addClass('active')
 		$(window).scrollTop(@scroll_top)

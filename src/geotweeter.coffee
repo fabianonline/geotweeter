@@ -154,6 +154,8 @@ class Application
 	@infoarea: {
 		visible: false
 		show: (title, content) ->
+			Application.current_account.hide()
+			$('#top').hide()
 			Application.infoarea.visible = true
 			$('#infoarea_title').html(title)
 			$('#infoarea_content').html(content)
@@ -163,5 +165,7 @@ class Application
 		hide: ->
 			Application.infoarea.visible = false
 			$('#infoarea').hide()
+			$('#top').show()
+			Application.current_account.show()
 			return false
 	}
