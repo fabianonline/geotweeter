@@ -987,7 +987,7 @@ Hooks = (function() {
           html += "</ul><br /><br />						War da der gesuchte Punkt wieder nicht bei, können wir ihn auch anlegen. Diesmal dann aber wirklich!<br />						<a href='#' onClick=\"return Hooks.add_location_4();\">Tu das bitte.</a>";
           return $('#infoarea_content').html(html);
         } else {
-          return this.add_location_4();
+          return Hooks.add_location_4();
         }
       }
     });

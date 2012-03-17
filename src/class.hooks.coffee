@@ -174,7 +174,7 @@ class Hooks
 						<a href='#' onClick=\"return Hooks.add_location_4();\">Tu das bitte.</a>"
 					$('#infoarea_content').html(html)
 				else
-					@add_location_4()
+					Hooks.add_location_4()
 		})
 		return false
 	
