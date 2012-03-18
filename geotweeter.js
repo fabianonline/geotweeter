@@ -1342,7 +1342,7 @@ Tweet = (function(_super) {
       }
     }
     this.text = this.text.trim().replace(/\n/g, "<br />");
-    return this.text = this.text.replace(/\b(GC[A-Z0-9]+)\b/g, "<a href='http://coords.info/$1' target='_blank' class='external'>$1</a>");
+    return this.text = this.text.replace(/[^\/>](GC[A-Z0-9]+)\b/g, "<a href='http://coords.info/$1' target='_blank' class='external'>$1</a>");
   };
 
   Tweet.prototype.replace_entity = function(entity_object, text) {
