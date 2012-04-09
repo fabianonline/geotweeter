@@ -114,6 +114,8 @@ Account = (function() {
 
   Account.prototype.followers_ids = [];
 
+  Account.prototype.friends_ids = [];
+
   Account.prototype.status_text = "";
 
   Account.prototype.scroll_top = 0;
@@ -250,7 +252,12 @@ Account = (function() {
         _this.screen_name = _this.user.screen_name;
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
-        _this.get_followers();
+        try {
+          _this.get_followers();
+        } catch (_error) {}
+        try {
+          _this.get_friends();
+        } catch (_error) {}
         _this.fill_list({
           clip: true
         });
@@ -273,9 +280,63 @@ Account = (function() {
         stringify_ids: true
       },
       success: function(element, data) {
-        return _this.followers_ids = data.ids;
+        _this.followers_ids = data.ids;
+        if (_this.friends_ids.length > 0) {
+          return _this.get_friends_and_followers_data();
+        }
       }
     });
+  };
+
+  Account.prototype.get_friends = function() {
+    var _this = this;
+    return this.twitter_request('friends/ids.json', {
+      silent: true,
+      method: "GET",
+      parameters: {
+        stringify_ids: true
+      },
+      success: function(element, data) {
+        _this.friends_ids = data.ids;
+        if (_this.followers_ids.length > 0) {
+          return _this.get_friends_and_followers_data();
+        }
+      }
+    });
+  };
+
+  Account.prototype.get_friends_and_followers_data = function() {
+    var all_contacts, parts, users, _i, _len, _results,
+      _this = this;
+    all_contacts = this.friends_ids.concat(this.followers_ids);
+    parts = (function() {
+      var _results;
+      _results = [];
+      while (all_contacts.length > 0) {
+        _results.push(all_contacts.splice(0, 100));
+      }
+      return _results;
+    })();
+    _results = [];
+    for (_i = 0, _len = parts.length; _i < _len; _i++) {
+      users = parts[_i];
+      _results.push(this.twitter_request('users/lookup.json', {
+        silent: true,
+        parameters: {
+          user_id: users.join(",")
+        },
+        success: function(element, data) {
+          var user, _j, _len2, _results2;
+          _results2 = [];
+          for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+            user = data[_j];
+            _results2.push(Application.add_to_autocomplete("@" + user.screen_name));
+          }
+          return _results2;
+        }
+      }));
+    }
+    return _results;
   };
 
   Account.prototype.get_tweet = function(id) {

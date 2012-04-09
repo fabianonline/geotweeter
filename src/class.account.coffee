@@ -18,6 +18,7 @@ class Account
 	request: null
 	keys: {}
 	followers_ids: []
+	friends_ids: []
 	status_text: ""
 	scroll_top: 0
 	requests: []
@@ -159,7 +160,8 @@ class Account
 				@screen_name = @user.screen_name
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
-				@get_followers()
+				try @get_followers()
+				try @get_friends()
 				@fill_list({clip: true})
 				
 				# If after_validation is defined, run it.
@@ -170,7 +172,43 @@ class Account
 				@set_status("Error!", "red")
 		})
 	
-	get_followers: -> @twitter_request('followers/ids.json', {silent: true, method: "GET", parameters: {stringify_ids: true}, success: (element, data) => @followers_ids=data.ids})
+	get_followers: -> @twitter_request('followers/ids.json', {
+		silent: true
+		method: "GET"
+		parameters: {
+			stringify_ids: true
+		}
+		success: (element, data) => 
+			@followers_ids=data.ids
+			@get_friends_and_followers_data() if @friends_ids.length>0
+	})
+	
+	get_friends: -> @twitter_request('friends/ids.json', {
+		silent: true
+		method: "GET"
+		parameters: {
+			stringify_ids: true
+		}
+		success: (element, data) => 
+			@friends_ids=data.ids
+			@get_friends_and_followers_data() if @followers_ids.length>0
+	})
+	
+	get_friends_and_followers_data: ->
+		# merge friends and followers ids and split them into 100er blocks
+		all_contacts = @friends_ids.concat(@followers_ids)
+		parts = while all_contacts.length>0
+			all_contacts.splice(0, 100)
+		
+		@twitter_request('users/lookup.json', {
+			silent: true
+			parameters: {
+				user_id: users.join(",")
+			}
+			success: (element, data) =>
+				Application.add_to_autocomplete("@#{user.screen_name}") for user in data
+		}) for users in parts
+	
 	get_tweet: (id) -> @tweets[id]
 	get_dm: (id) -> @dms[id]
 	
