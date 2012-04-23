@@ -53,15 +53,25 @@ class Tweet extends TwitterMessage
 	get_date: -> @date
 	div_id: -> "##{@id}"
 	get_html: ->
-		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
-		@get_single_thumb_html() +
-		@get_sender_html() +
-		"<span class='text'>#{@text}</span>" +
-		@get_multi_thumb_html() +
-		@get_permanent_info_html() +
-		@get_temporary_info_html() +
-		"<div style='clear: both;'></div>" +
-		"</div>"
+		if @isOnBlacklist() == 1
+			@text = ""
+		else
+			"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
+			@get_single_thumb_html() +
+			@get_sender_html() +
+			"<span class='text'>#{@text}</span>" +
+			@get_multi_thumb_html() +
+			@get_permanent_info_html() +
+			@get_temporary_info_html() +
+			"<div style='clear: both;'></div>" +
+			"</div>"
+	
+	isOnBlacklist: -> 
+		for entry in settings.blacklist 
+			return 1 if @original_text.indexOf(entry)!=-1 
+		return 0
+		
+		
 	
 	get_sender_html: -> @sender.get_avatar_html() + @sender.get_link_html()
 		
