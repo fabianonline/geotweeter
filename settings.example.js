@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 12,
+    version: 13,
 
     // Twitter Access Keys
     twitter: {
@@ -24,8 +24,8 @@ var settings = {
 		home_timeline_pages: 2
 	},
     
-    //Array for blacklisted words
-    blacklist: ["Test1", "Test2"],
+    //Array for blacklisted words (MUST BE LOWER CASE!)
+    blacklist: ["test1", "test2"],
     
      //Array for highlighted words
     highlight: ["Android"],

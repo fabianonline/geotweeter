@@ -53,7 +53,9 @@ class Tweet extends TwitterMessage
 	get_date: -> @date
 	div_id: -> "##{@id}"
 	get_html: ->
-		if @isOnBlacklist() == 1
+		if @isWordOnBlacklist() == 1
+			@text = ""
+		else if @isSenderOnBlacklist() == 1
 			@text = ""
 		else
 			"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
@@ -66,10 +68,16 @@ class Tweet extends TwitterMessage
 			"<div style='clear: both;'></div>" +
 			"</div>"
 	
-	isOnBlacklist: -> 
+	isWordOnBlacklist: -> 
 		for entry in settings.blacklist 
-			return 1 if @original_text.indexOf(entry)!=-1 
+			return 1 if @original_text.toLowerCase().indexOf(entry)!=-1 
 		return 0
+		
+	isSenderOnBlacklist: ->
+		for entry in settings.muted 
+			return 1 if @sender.get_screen_name().toLowerCase().indexOf(entry)!=-1 
+		return 0
+	
 		
 		
 	
