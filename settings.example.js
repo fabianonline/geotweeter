@@ -27,13 +27,13 @@ var settings = {
     //Array for blacklisted words (MUST BE LOWER CASE!)
     blacklist: ["test1", "test2"],
     
-     //Array for highlighted words
+     //Array for highlighted words (not implemented yet)
     highlight: ["Android"],
 	
-	 //Array for muted users
+	 //Array for muted users (MUST BE LOWER CASE!)
     muted: ["Troll"],
 	
-		//Array for muting trolls
+		//Array for muting trolls (not implemented yet)
 	troll: ["user1","user2"],
 	trigger: ["word_user1_uses","word_user2_uses"],
 
