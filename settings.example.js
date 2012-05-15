@@ -31,7 +31,7 @@ var settings = {
     highlight: ["Android"],
 	
 	 //Array for muted users (MUST BE LOWER CASE!)
-    muted: ["Troll"],
+    muted: ["troll"],
 	
 		//Array for muting trolls (not implemented yet)
 	troll: ["user1","user2"],
