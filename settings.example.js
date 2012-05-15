@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 12,
+    version: 13,
 
     // Twitter Access Keys
     twitter: {
@@ -24,16 +24,16 @@ var settings = {
 		home_timeline_pages: 2
 	},
     
-    //Array for blacklisted words
-    blacklist: ["Test1", "Test2"],
+    //Array for blacklisted words (MUST BE LOWER CASE!)
+    blacklist: ["test1", "test2"],
     
-     //Array for highlighted words
+     //Array for highlighted words (not implemented yet)
     highlight: ["Android"],
 	
-	 //Array for muted users
-    muted: ["Troll"],
+	 //Array for muted users (MUST BE LOWER CASE!)
+    muted: ["troll"],
 	
-		//Array for muting trolls
+		//Array for muting trolls (MUST BE LOWER CASE!)
 	troll: ["user1","user2"],
 	trigger: ["word_user1_uses","word_user2_uses"],
 
