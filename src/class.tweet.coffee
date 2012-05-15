@@ -57,7 +57,9 @@ class Tweet extends TwitterMessage
 			@text = ""
 		else if @isSenderOnBlacklist() == 1
 			@text = ""
-		else
+		else if @isTroll() == 1
+			@text = ""
+		else 
 			"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
 			@get_single_thumb_html() +
 			@get_sender_html() +
@@ -76,6 +78,13 @@ class Tweet extends TwitterMessage
 	isSenderOnBlacklist: ->
 		for entry in settings.muted 
 			return 1 if @sender.get_screen_name().toLowerCase().indexOf(entry)!=-1 
+		return 0
+		
+	isTroll: ->
+		for entry in settings.troll 
+			if @sender.get_screen_name().toLowerCase().indexOf(entry)!=-1 
+				for entry in settings.trigger
+					return 1 if @original_text.toLowerCase().indexOf(entry)!=-1
 		return 0
 	
 		

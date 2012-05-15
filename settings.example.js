@@ -33,7 +33,7 @@ var settings = {
 	 //Array for muted users (MUST BE LOWER CASE!)
     muted: ["troll"],
 	
-		//Array for muting trolls (not implemented yet)
+		//Array for muting trolls (MUST BE LOWER CASE!)
 	troll: ["user1","user2"],
 	trigger: ["word_user1_uses","word_user2_uses"],
 

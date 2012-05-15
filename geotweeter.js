@@ -1311,6 +1311,8 @@ Tweet = (function(_super) {
       return this.text = "";
     } else if (this.isSenderOnBlacklist() === 1) {
       return this.text = "";
+    } else if (this.isTroll() === 1) {
+      return this.text = "";
     } else {
       return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>";
     }
@@ -1335,6 +1337,24 @@ Tweet = (function(_super) {
       entry = _ref[_i];
       if (this.sender.get_screen_name().toLowerCase().indexOf(entry) !== -1) {
         return 1;
+      }
+    }
+    return 0;
+  };
+
+  Tweet.prototype.isTroll = function() {
+    var entry, _i, _j, _len, _len1, _ref, _ref1;
+    _ref = settings.troll;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      entry = _ref[_i];
+      if (this.sender.get_screen_name().toLowerCase().indexOf(entry) !== -1) {
+        _ref1 = settings.trigger;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          entry = _ref1[_j];
+          if (this.original_text.toLowerCase().indexOf(entry) !== -1) {
+            return 1;
+          }
+        }
       }
     }
     return 0;
