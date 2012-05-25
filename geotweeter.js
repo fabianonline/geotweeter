@@ -1487,9 +1487,11 @@ Tweet = (function(_super) {
     }
     sender = mentions.shift();
     mentions = mentions.join(" ") + (mentions.length > 0 ? " " : "");
-    Application.set_text("" + sender + " " + mentions);
-    $('#text')[0].selectionStart = sender.length + 1;
-    $('#text')[0].selectionEnd = sender.length + 1 + mentions.length;
+    if (sender) {
+      Application.set_text("" + sender + " " + mentions);
+      $('#text')[0].selectionStart = sender.length + 1;
+      $('#text')[0].selectionEnd = sender.length + 1 + mentions.length;
+    }
     return $('#text').focus();
   };
 

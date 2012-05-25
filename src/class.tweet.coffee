@@ -196,9 +196,10 @@ class Tweet extends TwitterMessage
 		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name
 		sender = mentions.shift()
 		mentions = mentions.join(" ") + (if mentions.length>0 then " " else "")
-		Application.set_text("#{sender} #{mentions}")
-		$('#text')[0].selectionStart = sender.length+1
-		$('#text')[0].selectionEnd = sender.length+1 + mentions.length
+		if sender
+			Application.set_text("#{sender} #{mentions}")
+			$('#text')[0].selectionStart = sender.length+1
+			$('#text')[0].selectionEnd = sender.length+1 + mentions.length
 		$('#text').focus()
 	
 	get_thumbnails: ->
