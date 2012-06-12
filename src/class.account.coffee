@@ -346,7 +346,7 @@ class Account
 		
 		# This method is supposed to run multiple requests asynchronously, so
 		# we have to fiddle with it a bit.
-		# We will be starting 3+home_timeline_pages "threads" (a.k.a. requests).
+		# We will be starting 4 "threads" (a.k.a. requests).
 		threads_errored = 0
 		responses = []
 		main_data = null
