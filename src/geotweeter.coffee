@@ -28,7 +28,7 @@ class Application
 
 	@is_settings_version_okay: -> 
 		if settings.version != @expected_settings_version
-			alert("settings.js veraltet.\nErwartet: #{expected_settings_version}\nGegeben: #{settings.version}")
+			alert("settings.js veraltet.\nErwartet: #{@expected_settings_version}\nGegeben: #{settings.version}")
 			return false
 		return true
 

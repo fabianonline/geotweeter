@@ -2613,7 +2613,7 @@ Application = (function() {
 
   Application.is_settings_version_okay = function() {
     if (settings.version !== this.expected_settings_version) {
-      alert("settings.js veraltet.\nErwartet: " + expected_settings_version + "\nGegeben: " + settings.version);
+      alert("settings.js veraltet.\nErwartet: " + this.expected_settings_version + "\nGegeben: " + settings.version);
       return false;
     }
     return true;
