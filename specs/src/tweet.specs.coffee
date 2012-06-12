@@ -101,6 +101,7 @@ describe('Tweet', ->
 			it("should link twitter images correctly", -> expect(Tweet.url_to_thumbnail("http://www.flickr.com/photos/fabianonline/6789770962/in/set-72157629468588309").thumbnail).toEqual("http://flic.kr/p/img/bkZmmA_s.jpg"))
 			it("should link static.twitter urls correctly", -> expect(Tweet.url_to_thumbnail("http://farm6.static.flickr.com/5012/5454042425_9526e2e477.jpg").thumbnail).toEqual("http://flic.kr/p/img/9iXoNe_s.jpg"))
 			it("should link short twitter urls correctly", -> expect(Tweet.url_to_thumbnail("http://flic.kr/p/7sqMtA").thumbnail).toEqual("http://flic.kr/p/img/7sqMtA_s.jpg"))
+			it("should link imgur urls correctly", -> expect(Tweet.url_to_thumbnail("http://i.imgur.com/zQqzj.jpg").thumbnail).toEqual("http://i.imgur.com/zQqzjs.jpg"))
 		)
 	)
 	

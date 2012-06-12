@@ -125,8 +125,11 @@ describe('Tweet', function() {
       it("should link static.twitter urls correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://farm6.static.flickr.com/5012/5454042425_9526e2e477.jpg").thumbnail).toEqual("http://flic.kr/p/img/9iXoNe_s.jpg");
       });
-      return it("should link short twitter urls correctly", function() {
+      it("should link short twitter urls correctly", function() {
         return expect(Tweet.url_to_thumbnail("http://flic.kr/p/7sqMtA").thumbnail).toEqual("http://flic.kr/p/img/7sqMtA_s.jpg");
+      });
+      return it("should link imgur urls correctly", function() {
+        return expect(Tweet.url_to_thumbnail("http://i.imgur.com/zQqzj.jpg").thumbnail).toEqual("http://i.imgur.com/zQqzjs.jpg");
       });
     });
   });
