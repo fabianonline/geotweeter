@@ -4,7 +4,7 @@ class Application
 	@all_dms: {}
 	@all_events: []
 	@accounts: []
-	@expected_settings_version: 12
+	@expected_settings_version: 14
 	@current_account: null
 	@twitter_config: {}
 	@autocompletes: []

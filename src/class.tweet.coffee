@@ -53,22 +53,28 @@ class Tweet extends TwitterMessage
 	get_date: -> @date
 	div_id: -> "##{@id}"
 	get_html: ->
-		if @isWordOnBlacklist() == 1
-			@text = ""
-		else if @isSenderOnBlacklist() == 1
-			@text = ""
-		else if @isTroll() == 1
-			@text = ""
-		else 
-			"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
-			@get_single_thumb_html() +
-			@get_sender_html() +
-			"<span class='text'>#{@text}</span>" +
-			@get_multi_thumb_html() +
-			@get_permanent_info_html() +
-			@get_temporary_info_html() +
-			"<div style='clear: both;'></div>" +
-			"</div>"
+		return "" if @is_ignoreable_tweet()
+		
+		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
+		@get_single_thumb_html() +
+		@get_sender_html() +
+		"<span class='text'>#{@text}</span>" +
+		@get_multi_thumb_html() +
+		@get_permanent_info_html() +
+		@get_temporary_info_html() +
+		"<div style='clear: both;'></div>" +
+		"</div>"
+	
+	is_ignoreable_tweet: ->
+		# Word based Blacklist
+		return true for entry in settings.muted_strings when @original_text.toLowerCase().indexOf(entry.toLowerCase()) isnt -1
+		# Sender based Blacklist
+		return true for entry in settings.muted_users when @sender.get_screen_name().toLowerCase().indexOf(entry.toLowerCase()) isnt -1
+		# Troll based Blacklist
+		return true for entry of settings.muted_combinations when @sender.get_screen_name().toLowerCase().indexOf(entry.user.toLowerCase()) isnt -1 and @original_text.toLowerCase().indexOf(entry.string.toLowerCase()) isnt -1
+		
+		# default - return false
+		return false
 	
 	isWordOnBlacklist: -> 
 		for entry in settings.blacklist 

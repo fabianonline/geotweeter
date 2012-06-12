@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 13,
+    version: 14,
 
     // Twitter Access Keys
     twitter: {
@@ -19,23 +19,21 @@ var settings = {
             }
         ]
     },
-
-	fill_list: {
-		home_timeline_pages: 2
-	},
     
-    //Array for blacklisted words (MUST BE LOWER CASE!)
-    blacklist: ["test1", "test2"],
+    //Array for blacklisted words
+    muted_strings: ["test1", "test2"],
+
+	//Array for muted users (MUST BE LOWER CASE!)
+    muted_users: ["troll"],
+
+	//Trolls to ignore
+	muted_combinations: [
+		{user: "troll1", string: "word1"},
+		{user: "troll2", string: "word2"}
+	],
     
      //Array for highlighted words (not implemented yet)
     highlight: ["Android"],
-	
-	 //Array for muted users (MUST BE LOWER CASE!)
-    muted: ["troll"],
-	
-		//Array for muting trolls (MUST BE LOWER CASE!)
-	troll: ["user1","user2"],
-	trigger: ["word_user1_uses","word_user2_uses"],
 
     // Places. Array of objects containing Name, lat, lon and optionally place_id.
     // Make it an empty array ("places: []") to disable the places feature completely.
@@ -72,12 +70,6 @@ var settings = {
     // Endpoints to a script used for setting and getting the last read tweet id
     get_maxreadid_url: "maxreadid/get.php",
     set_maxreadid_url: "maxreadid/set.php",
-
-    // show an error if no place is set?
-    show_error_if_no_place_is_set: true,
-
-    // unshorten links on mouseover?
-    unshorten_links: true,
 
     // send debug messages to the JS console?
     debug: false,

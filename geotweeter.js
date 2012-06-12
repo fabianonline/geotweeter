@@ -1307,15 +1307,34 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
-    if (this.isWordOnBlacklist() === 1) {
-      return this.text = "";
-    } else if (this.isSenderOnBlacklist() === 1) {
-      return this.text = "";
-    } else if (this.isTroll() === 1) {
-      return this.text = "";
-    } else {
-      return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>";
+    if (this.is_ignoreable_tweet()) {
+      return "";
     }
+    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>";
+  };
+
+  Tweet.prototype.is_ignoreable_tweet = function() {
+    var entry, _i, _j, _len, _len1, _ref, _ref1;
+    _ref = settings.muted_strings;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      entry = _ref[_i];
+      if (this.original_text.toLowerCase().indexOf(entry.toLowerCase()) !== -1) {
+        return true;
+      }
+    }
+    _ref1 = settings.muted_users;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      entry = _ref1[_j];
+      if (this.sender.get_screen_name().toLowerCase().indexOf(entry.toLowerCase()) !== -1) {
+        return true;
+      }
+    }
+    for (entry in settings.muted_combinations) {
+      if (this.sender.get_screen_name().toLowerCase().indexOf(entry.user.toLowerCase()) !== -1 && this.original_text.toLowerCase().indexOf(entry.string.toLowerCase()) !== -1) {
+        return true;
+      }
+    }
+    return false;
   };
 
   Tweet.prototype.isWordOnBlacklist = function() {
@@ -2608,7 +2627,7 @@ Application = (function() {
 
   Application.accounts = [];
 
-  Application.expected_settings_version = 13;
+  Application.expected_settings_version = 14;
 
   Application.current_account = null;
 
