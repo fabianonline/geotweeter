@@ -6,6 +6,8 @@ class Account
 	
 	screen_name: "unknown"
 	max_read_id: "0"
+	max_read_dm_id: "0"
+	max_read_mention_id: "0"
 	max_known_tweet_id: "0"
 	min_known_tweet_id: null
 	min_known_dm_id: null
@@ -64,12 +66,17 @@ class Account
 	get_my_element: -> $("#content_#{@id}")
 	
 	# Saves the given `id` to Tweetmarker.
-	set_max_read_id: (id) -> 
+	set_max_read_id: (id, mention_id, dm_id) -> 
 		unless id?
 			Application.log(this, "set_max_read_id", "Falscher Wert: #{id}")
 			return
 		
 		@max_read_id = id
+		mention_id = id if mention_id==null || mention_id=="0"
+		dm_if = id if dm_id==null || dm_id=="0"
+
+		@max_read_mention_id = mention_id
+		@max_read_dm_id = dm_id
 		
 		# Tweetmarker uses Oauth echo: To verify our identity, we generate
 		# valid OAuth credentials for our twitter account and send those to
@@ -85,11 +92,11 @@ class Account
 		# Oh, and please note the super secret api key...
 		$.ajax({
 			type: 'POST'
-			url: "proxy/tweetmarker/lastread?collection=timeline,mentions&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
+			url: "proxy/tweetmarker/lastread?collection=timeline,mentions,messages&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
 			headers: header
 			contentType: "text/plain"
 			dataType: 'text'
-			data: "#{id},#{id}"
+			data: "#{id},#{mention_id},#{dm_id}"
 			processData: false
 			error: (req) =>
 				html = "
@@ -127,13 +134,18 @@ class Account
 		$.ajax({
 			method: 'GET'
 			async: true
-			url: "proxy/tweetmarker/lastread?collection=timeline&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
+			url: "proxy/tweetmarker/lastread?collection=timeline,mentions,messages&username=#{@user.screen_name}&api_key=GT-F181AC70B051"
 			headers: header
 			dataType: 'text'
 			success: (data, textStatus, req) =>
 				if req.status==200 && data?
-					@max_read_id = data
-					Application.log(@, "get_max_read_id", "result: #{data}")
+					data = data.split(",")
+					@max_read_id = data[0]
+					@max_read_mention_id = data[1]
+					@max_read_dm_id = data[2]
+					Application.log(@, "get_max_read_id", "result: #{data[0]}")
+					Application.log(@, "get_max_read_mention_id", "result: #{data[1]}")
+					Application.log(@, "get_max_read_dm_id", "result: #{data[2]}")
 					@update_read_tweet_status()
 		})
 		return
@@ -624,6 +636,8 @@ class Account
 			# First, get all "new" tweets.
 			elements = $("#content_#{Application.current_account.id} .tweet.new")
 			id = null
+			mention_id = null
+			dm_id = null
 			# Get the height of the top area as offset.
 			offset = $(document).scrollTop() + $('#top').height()
 			# Go through all elements until we find the first tweet which's
@@ -633,7 +647,20 @@ class Account
 				if $(element).offset().top >= offset
 					id = $(element).attr('data-tweet-id')
 					break
-			Application.current_account.set_max_read_id(id)
+
+			elements = $("#content_#{Application.current_account.id} .mentions_this_user.new")
+			for element in elements
+				if $(element).offset().top >= offset
+					mention_id = $(element).attr('data-tweet-id')
+					break
+
+			elements = $("#content_#{Application.current_account.id} .dm")
+			for element in elements
+				if $(element).offset().top >= offset
+					dm_id = $(element).attr('data-tweet-id')
+					break
+
+			Application.current_account.set_max_read_id(id, mention_id, dm_id)
 			return false
 		
 		goto_my_last_tweet: ->

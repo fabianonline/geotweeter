@@ -102,6 +102,10 @@ Account = (function() {
 
   Account.prototype.max_read_id = "0";
 
+  Account.prototype.max_read_dm_id = "0";
+
+  Account.prototype.max_read_mention_id = "0";
+
   Account.prototype.max_known_tweet_id = "0";
 
   Account.prototype.min_known_tweet_id = null;
@@ -172,14 +176,22 @@ Account = (function() {
     return $("#content_" + this.id);
   };
 
-  Account.prototype.set_max_read_id = function(id) {
-    var header,
+  Account.prototype.set_max_read_id = function(id, mention_id, dm_id) {
+    var dm_if, header,
       _this = this;
     if (id == null) {
       Application.log(this, "set_max_read_id", "Falscher Wert: " + id);
       return;
     }
     this.max_read_id = id;
+    if (mention_id === null || mention_id === "0") {
+      mention_id = id;
+    }
+    if (dm_id === null || dm_id === "0") {
+      dm_if = id;
+    }
+    this.max_read_mention_id = mention_id;
+    this.max_read_dm_id = dm_id;
     header = {
       "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
       "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {
@@ -188,11 +200,11 @@ Account = (function() {
     };
     $.ajax({
       type: 'POST',
-      url: "proxy/tweetmarker/lastread?collection=timeline,mentions&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
+      url: "proxy/tweetmarker/lastread?collection=timeline,mentions,messages&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
       headers: header,
       contentType: "text/plain",
       dataType: 'text',
-      data: "" + id + "," + id,
+      data: "" + id + "," + mention_id + "," + dm_id,
       processData: false,
       error: function(req) {
         var html;
@@ -229,13 +241,18 @@ Account = (function() {
     $.ajax({
       method: 'GET',
       async: true,
-      url: "proxy/tweetmarker/lastread?collection=timeline&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
+      url: "proxy/tweetmarker/lastread?collection=timeline,mentions,messages&username=" + this.user.screen_name + "&api_key=GT-F181AC70B051",
       headers: header,
       dataType: 'text',
       success: function(data, textStatus, req) {
         if (req.status === 200 && (data != null)) {
-          _this.max_read_id = data;
-          Application.log(_this, "get_max_read_id", "result: " + data);
+          data = data.split(",");
+          _this.max_read_id = data[0];
+          _this.max_read_mention_id = data[1];
+          _this.max_read_dm_id = data[2];
+          Application.log(_this, "get_max_read_id", "result: " + data[0]);
+          Application.log(_this, "get_max_read_mention_id", "result: " + data[1]);
+          Application.log(_this, "get_max_read_dm_id", "result: " + data[2]);
           return _this.update_read_tweet_status();
         }
       }
@@ -806,9 +823,11 @@ Account = (function() {
       return false;
     },
     mark_as_read: function(elm) {
-      var element, elements, id, offset, _i, _len;
+      var dm_id, element, elements, id, mention_id, offset, _i, _j, _k, _len, _len1, _len2;
       elements = $("#content_" + Application.current_account.id + " .tweet.new");
       id = null;
+      mention_id = null;
+      dm_id = null;
       offset = $(document).scrollTop() + $('#top').height();
       for (_i = 0, _len = elements.length; _i < _len; _i++) {
         element = elements[_i];
@@ -817,7 +836,23 @@ Account = (function() {
           break;
         }
       }
-      Application.current_account.set_max_read_id(id);
+      elements = $("#content_" + Application.current_account.id + " .mentions_this_user.new");
+      for (_j = 0, _len1 = elements.length; _j < _len1; _j++) {
+        element = elements[_j];
+        if ($(element).offset().top >= offset) {
+          mention_id = $(element).attr('data-tweet-id');
+          break;
+        }
+      }
+      elements = $("#content_" + Application.current_account.id + " .dm");
+      for (_k = 0, _len2 = elements.length; _k < _len2; _k++) {
+        element = elements[_k];
+        if ($(element).offset().top >= offset) {
+          dm_id = $(element).attr('data-tweet-id');
+          break;
+        }
+      }
+      Application.current_account.set_max_read_id(id, mention_id, dm_id);
       return false;
     },
     goto_my_last_tweet: function() {
