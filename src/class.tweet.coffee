@@ -71,7 +71,7 @@ class Tweet extends TwitterMessage
 		# Sender based Blacklist
 		return true for entry in settings.muted_users when @sender.get_screen_name().toLowerCase().indexOf(entry.toLowerCase()) isnt -1
 		# Troll based Blacklist
-		return true for entry of settings.muted_combinations when @sender.get_screen_name().toLowerCase().indexOf(entry.user.toLowerCase()) isnt -1 and @original_text.toLowerCase().indexOf(entry.string.toLowerCase()) isnt -1
+		return true for entry in settings.muted_combinations when @sender.get_screen_name().toLowerCase().indexOf(entry.user.toLowerCase()) isnt -1 and @original_text.toLowerCase().indexOf(entry.string.toLowerCase()) isnt -1
 		
 		# default - return false
 		return false

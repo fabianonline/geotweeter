@@ -1337,7 +1337,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.is_ignoreable_tweet = function() {
-    var entry, _i, _j, _len, _len1, _ref, _ref1;
+    var entry, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
     _ref = settings.muted_strings;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       entry = _ref[_i];
@@ -1352,7 +1352,9 @@ Tweet = (function(_super) {
         return true;
       }
     }
-    for (entry in settings.muted_combinations) {
+    _ref2 = settings.muted_combinations;
+    for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+      entry = _ref2[_k];
       if (this.sender.get_screen_name().toLowerCase().indexOf(entry.user.toLowerCase()) !== -1 && this.original_text.toLowerCase().indexOf(entry.string.toLowerCase()) !== -1) {
         return true;
       }
