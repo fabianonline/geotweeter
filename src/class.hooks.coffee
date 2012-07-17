@@ -63,7 +63,7 @@ class Hooks
 	@add: ->
 		html = "
 			<ul>
-				<li><a href='#' onClick='return Hooks.add_user();'>User</a><br />
+				<li><a href='#' onClick='return Hooks.add_user_1();'>User</a><br />
 					Fügt einen weiteren User zum Geotweeter hinzu.</li>
 				<li><a href='#' onClick='return Hooks.add_filter_stream();'>Suche</a><br />
 					Fügt einen Stream mit einer Echtzeit-Suche hinzu.</li>
@@ -197,3 +197,83 @@ class Hooks
 			<textarea width='70' height='5'>{name:'#{Application.temp.name}', lat:#{Application.temp.lat}, lon:#{Application.temp.long}, place_id:'#{id}'},</textarea><br />
 			Anschließend den Geotweeter bitte neu starten."
 		Application.infoarea.show("Ort hinzufügen", html)
+	
+	@add_user_1:->
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		parameters = { oauth_callback: "oob" }
+		message = {
+			action: "https://api.twitter.com/oauth/request_token",
+			method: "POST",
+			parameters: parameters
+		}
+		keys = {
+			consumerKey: settings.twitter.consumerKey,
+			consumerSecret: settings.twitter.consumerSecret
+		}
+		OAuth.setTimestampAndNonce(message)
+		OAuth.completeRequest(message, keys)
+		OAuth.SignatureMethod.sign(message, keys)
+		url = "proxy/oauth/request_token"
+		data = OAuth.formEncode(message.parameters)
+		request = $.ajax({
+			url: url,
+			data: data,
+			dataType: "text",
+			async: false,
+			type: "POST"
+		});
+		throw new Exception("o_O") unless request.status==200
+		result = request.responseText
+		oauth_results = {}
+		result = result.split("&")
+		(x = x.split("=") ; oauth_results[x[0]] = x[1]) for x in result
+		url = "https://api.twitter.com/oauth/authorize?oauth_token=#{oauth_results.oauth_token}&force_login=true"
+		html = "
+			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />
+			<a href='#{url}' target='_blank'>Geotweeter authorisieren</a><br /><br />
+			<input type='text' name='pin' id='pin' />
+			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('#{oauth_results.oauth_token}');\" />"
+		$('#info_spinner').before(html)
+		$('#info_spinner').hide()
+	
+	@add_user_2: (oauth_token) ->
+		pin = $('#pin').val()
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		parameters = { oauth_token: oauth_token, oauth_verifier: pin }
+		message = {
+			action: "https://api.twitter.com/oauth/access_token",
+			method: "POST",
+			parameters: parameters
+		}
+		keys = {
+			consumerKey: settings.twitter.consumerKey,
+			consumerSecret: settings.twitter.consumerSecret
+		}
+		OAuth.setTimestampAndNonce(message)
+		OAuth.completeRequest(message, keys)
+		OAuth.SignatureMethod.sign(message, keys)
+		url = "proxy/oauth/access_token"
+		data = OAuth.formEncode(message.parameters)
+		request = $.ajax({
+			url: url,
+			data: data,
+			dataType: "text",
+			async: false,
+			type: "POST"
+		});
+		throw new Exception("o_O") unless request.status==200
+		result = request.responseText
+		oauth_results = {}
+		result = result.split("&")
+		(x = x.split("=") ; oauth_results[x[0]] = x[1]) for x in result
+		code = "{ // #{oauth_results.screen_name}\n" + 
+		       "    token: '#{oauth_results.oauth_token}',\n" +
+		       "    tokenSecret: '#{oauth_results.oauth_token_secret}'\n" +
+		       "}"
+		html = "
+			Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />
+			<textarea cols='100' rows='4'>#{code}</textarea><br />
+			Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden."
+		$('#info_spinner').before(html)
+		$('#info_spinner').hide()
+		return false
