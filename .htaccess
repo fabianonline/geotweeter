@@ -8,4 +8,4 @@ RewriteRule proxy/upload/(.+)$ https://upload.twitter.com/1/$1 [proxy]
 RewriteRule proxy/tweetmarker/(.+)$ https://api.tweetmarker.net/v1/$1 [proxy]
 RewriteRule user_proxy$ https://userstream.twitter.com/2/user.json [proxy]
 RewriteRule proxy/stream/(.+)$ https://stream.twitter.com/1/$1 [proxy]
-
+RewriteRule proxy/instapaper/(.+)$ https://www.instapaper.com/api/$1 [proxy]

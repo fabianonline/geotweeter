@@ -1508,8 +1508,20 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_menu_items = function() {
-    var array;
+    var array, clicked_element,
+      _this = this;
     array = [];
+    clicked_element = event.target;
+    if ($(clicked_element).is('a.external') && settings.instapaper_credentials.user.length > 0) {
+      array.push({
+        name: "Send to Instapaper",
+        icon: "icons/newspaper_add.png",
+        separator_below: true,
+        action: function(elm) {
+          return Tweet.hooks.send_link_to_instapaper(elm, clicked_element);
+        }
+      });
+    }
     array.push({
       name: "Reply",
       icon: "icons/comments.png",
@@ -1957,6 +1969,18 @@ Tweet = (function(_super) {
     },
     avatar_tooltip: function(elm) {
       return this.get_tweet(elm).get_avatar_tooltip();
+    },
+    send_link_to_instapaper: function(elm, link) {
+      var tweet, url;
+      tweet = this.get_tweet(elm);
+      url = $(link).attr('href');
+      $.post("proxy/instapaper/add", {
+        username: settings.instapaper_credentials.user,
+        password: settings.instapaper_credentials.password,
+        url: url,
+        selection: "@" + tweet.sender.screen_name + ": " + tweet.original_text + " - " + tweet.permalink
+      });
+      return false;
     },
     send: function() {
       var content_type, data, key, parameters, place, placeindex, show_progress, url, value;
@@ -2714,9 +2738,9 @@ Migrations = (function() {
     description: "Felder für Instapaper-Zugangsdaten hinzugefügt.",
     blocking: false,
     change: function(settings) {
-      settings["instapaper"] = {
+      settings["instapaper_credentials"] = {
         user: "",
-        credentials: ""
+        password: ""
       };
       return settings;
     }

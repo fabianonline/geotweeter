@@ -5,7 +5,7 @@ class Migrations
 		description: "Felder für Instapaper-Zugangsdaten hinzugefügt.",
 		blocking: false, # This update can be run "silently" (the default values are okay and GT will run with them)
 		change: (settings) ->
-			settings["instapaper"] = {user: "", credentials: ""}
+			settings["instapaper_credentials"] = {user: "", password: ""}
 			return settings
 	}
 	
