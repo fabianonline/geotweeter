@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2704,6 +2704,60 @@ UnknownEvent = (function(_super) {
 
 })(Event);
 
+Migrations = (function() {
+
+  function Migrations() {}
+
+  Migrations.migrations = [];
+
+  Migrations.migrations[14] = {
+    description: "Felder für Instapaper-Zugangsdaten hinzugefügt.",
+    blocking: false,
+    change: function(settings) {
+      settings["instapaper"] = {
+        user: "",
+        credentials: ""
+      };
+      return settings;
+    }
+  };
+
+  Migrations.migrate = function() {
+    var blocking, changes, code, i, migration, text, update, _i, _ref, _ref1;
+    changes = [];
+    blocking = false;
+    if (window.settings.version === Application.expected_settings_version) {
+      return true;
+    }
+    for (i = _i = _ref = settings.version, _ref1 = Application.expected_settings_version - 1; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _ref <= _ref1 ? ++_i : --_i) {
+      migration = this.migrations[i];
+      changes.push("  * " + migration.description);
+      blocking || (blocking = migration.blocking);
+      window.settings = migration.change(window.settings);
+      window.settings.version = i + 1;
+    }
+    text = "Die settings müssen aktualisiert werden.\n\nFolgende Änderungen wurden eingepflegt:\n" + changes.join("\n");
+    update = false;
+    if (blocking) {
+      text += "\n\nSie *müssen* settings.js aktualisieren, bevor Sie den Geotweeter nutzen können!";
+      alert(text);
+      update = true;
+    } else {
+      text += "\n\nDie Aktualisierung ist freiwillig. Wenn Sie sie jetzt nicht vornehmen, sind neue Features evtl. nicht verfügbar. Sie werden bei jedem weiteren Start daran erinnert werden.\nWollen Sie die Aktualisierung jetzt vornehmen?";
+      update = confirm(text);
+    }
+    if (update) {
+      code = JSON.stringify(window.settings, null, "    ");
+      $('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>" + code + "</pre>");
+      return false;
+    }
+    return true;
+  };
+
+  return Migrations;
+
+})();
+
 Application = (function() {
 
   function Application() {}
@@ -2718,7 +2772,7 @@ Application = (function() {
 
   Application.accounts = [];
 
-  Application.expected_settings_version = 14;
+  Application.expected_settings_version = 15;
 
   Application.current_account = null;
 
@@ -2730,7 +2784,7 @@ Application = (function() {
 
   Application.start = function() {
     Application.log(this, "", "Starting...");
-    if (!this.is_settings_version_okay()) {
+    if (!Migrations.migrate()) {
       return;
     }
     this.fill_places();

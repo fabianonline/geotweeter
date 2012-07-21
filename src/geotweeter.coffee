@@ -4,7 +4,7 @@ class Application
 	@all_dms: {}
 	@all_events: []
 	@accounts: []
-	@expected_settings_version: 14
+	@expected_settings_version: 15
 	@current_account: null
 	@twitter_config: {}
 	@autocompletes: []
@@ -12,7 +12,8 @@ class Application
 
 	@start: ->
 		Application.log(this, "", "Starting...")
-		return unless @is_settings_version_okay()
+		
+		return unless Migrations.migrate()
 		@fill_places()
 		@attach_hooks()
 		@set_time_diff()

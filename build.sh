@@ -20,5 +20,6 @@ else
 		src/class.filterrequest.coffee \
 		src/class.pullrequest.coffee \
 		src/class.event.coffee \
+		src/settings_migrations.coffee \
 		src/geotweeter.coffee
 fi

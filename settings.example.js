@@ -1,7 +1,7 @@
 var settings = {
     // Version of this settings-file. Changes every time new options are introduced
     // to settings.js.
-    version: 14,
+    version: 15,
 
     // Twitter Access Keys
     twitter: {
@@ -80,6 +80,11 @@ var settings = {
     timeout_detect_tweet_count: 10,
     timeout_detect_factor: 4,
     timeout_minimum_delay: 120,
-    timeout_maximum_delay: 600
+    timeout_maximum_delay: 600,
+
+    instapaper_credentials: {
+		user: "",
+		password: ""
+	}
 }
 
