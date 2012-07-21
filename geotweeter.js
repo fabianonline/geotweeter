@@ -2746,6 +2746,47 @@ Migrations = (function() {
     }
   };
 
+  Migrations.migrations[13] = {
+    description: "Entfernt ein paar alte Settings; formatiert die Filter neu.",
+    blocking: false,
+    change: function(settings) {
+      var i, _i, _len, _ref;
+      delete settings.fill_list;
+      delete settings.show_error_if_no_place_is_set;
+      delete settings.unshorten_links;
+      settings.muted_strings = settings.blacklist;
+      delete settings.blacklist;
+      settings.muted_users = settings.muted;
+      delete settings.muted;
+      settings.muted_combinations = [];
+      _ref = settings.troll;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        settings.muted_combinations.push({
+          user: settings.troll[i],
+          string: settings.trigger[i]
+        });
+      }
+      delete settings.troll;
+      delete setting.trigger;
+      return settings;
+    }
+  };
+
+  Migrations.migrations[12] = {
+    description: "Filter-Strings müssen komplett klein geschrieben sein.",
+    blocking: false,
+    change: function(settings) {
+      var i, _i, _len, _ref;
+      _ref = settings.blacklist;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        settings.blacklist[i] = settings.blacklist[i].toLowerCase;
+      }
+      return settings;
+    }
+  };
+
   Migrations.migrate = function() {
     var blocking, changes, code, i, migration, text, update, _i, _ref, _ref1;
     changes = [];
@@ -2772,7 +2813,7 @@ Migrations = (function() {
     }
     if (update) {
       code = JSON.stringify(window.settings, null, "    ");
-      $('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>" + code + "</pre>");
+      $('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>var settings = " + code + "</pre>");
       return false;
     }
     return true;

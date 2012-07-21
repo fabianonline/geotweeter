@@ -9,6 +9,32 @@ class Migrations
 			return settings
 	}
 	
+	@migrations[13] = { # 13 to 14
+		description: "Entfernt ein paar alte Settings; formatiert die Filter neu.",
+		blocking: false,
+		change: (settings) ->
+			delete settings.fill_list
+			delete settings.show_error_if_no_place_is_set
+			delete settings.unshorten_links
+			settings.muted_strings = settings.blacklist
+			delete settings.blacklist
+			settings.muted_users = settings.muted
+			delete settings.muted
+			settings.muted_combinations = []
+			settings.muted_combinations.push({user: settings.troll[i], string: settings.trigger[i]}) for i in settings.troll
+			delete settings.troll
+			delete setting.trigger
+			return settings
+	}
+	
+	@migrations[12] = { # 12 to 13
+		description: "Filter-Strings müssen komplett klein geschrieben sein.",
+		blocking: false,
+		change: (settings) ->
+			settings.blacklist[i] = settings.blacklist[i].toLowerCase for i in settings.blacklist
+			return settings
+	}
+	
 	@migrate: ->
 		changes = []
 		blocking = false
@@ -35,7 +61,7 @@ class Migrations
 		
 		if update
 			code = JSON.stringify(window.settings, null, "    ")
-			$('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>#{code}</pre>")
+			$('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>var settings = #{code}</pre>")
 			return false
 		
 		return true
