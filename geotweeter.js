@@ -2791,10 +2791,10 @@ Migrations = (function() {
     var blocking, changes, code, i, migration, text, update, _i, _ref, _ref1;
     changes = [];
     blocking = false;
-    if (window.settings.version === Application.expected_settings_version) {
+    if (window.settings.version === this.migrations.length) {
       return true;
     }
-    for (i = _i = _ref = settings.version, _ref1 = Application.expected_settings_version - 1; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _ref <= _ref1 ? ++_i : --_i) {
+    for (i = _i = _ref = settings.version, _ref1 = this.migrations.length - 1; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _ref <= _ref1 ? ++_i : --_i) {
       migration = this.migrations[i];
       changes.push("  * " + migration.description);
       blocking || (blocking = migration.blocking);
@@ -2837,8 +2837,6 @@ Application = (function() {
 
   Application.accounts = [];
 
-  Application.expected_settings_version = 15;
-
   Application.current_account = null;
 
   Application.twitter_config = {};
@@ -2859,14 +2857,6 @@ Application = (function() {
     this.get_twitter_configuration();
     this.accounts[0].show();
     return typeof this.after_startup === "function" ? this.after_startup() : void 0;
-  };
-
-  Application.is_settings_version_okay = function() {
-    if (settings.version !== this.expected_settings_version) {
-      alert("settings.js veraltet.\nErwartet: " + this.expected_settings_version + "\nGegeben: " + settings.version);
-      return false;
-    }
-    return true;
   };
 
   Application.fill_places = function() {

@@ -4,7 +4,6 @@ class Application
 	@all_dms: {}
 	@all_events: []
 	@accounts: []
-	@expected_settings_version: 15
 	@current_account: null
 	@twitter_config: {}
 	@autocompletes: []
@@ -12,7 +11,6 @@ class Application
 
 	@start: ->
 		Application.log(this, "", "Starting...")
-		
 		return unless Migrations.migrate()
 		@fill_places()
 		@attach_hooks()
@@ -26,12 +24,6 @@ class Application
 		# To use it, just add a script block to index.html containing
 		# `Application.after_startup = function() { ... }`.
 		@after_startup?()
-
-	@is_settings_version_okay: -> 
-		if settings.version != @expected_settings_version
-			alert("settings.js veraltet.\nErwartet: #{@expected_settings_version}\nGegeben: #{settings.version}")
-			return false
-		return true
 
 	@fill_places: ->
 		if settings.places.length == 0

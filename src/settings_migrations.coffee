@@ -38,9 +38,9 @@ class Migrations
 	@migrate: ->
 		changes = []
 		blocking = false
-		return true if window.settings.version == Application.expected_settings_version
+		return true if window.settings.version == @migrations.length
 		
-		for i in [settings.version..Application.expected_settings_version-1]
+		for i in [settings.version..@migrations.length-1]
 			migration = @migrations[i]
 			changes.push "  * #{migration.description}"
 			blocking ||= migration.blocking
