@@ -2768,7 +2768,7 @@ Migrations = (function() {
         });
       }
       delete settings.troll;
-      delete setting.trigger;
+      delete settings.trigger;
       return settings;
     }
   };

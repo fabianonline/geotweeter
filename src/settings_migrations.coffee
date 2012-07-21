@@ -23,7 +23,7 @@ class Migrations
 			settings.muted_combinations = []
 			settings.muted_combinations.push({user: settings.troll[i], string: settings.trigger[i]}) for i in settings.troll
 			delete settings.troll
-			delete setting.trigger
+			delete settings.trigger
 			return settings
 	}
 	
