@@ -268,6 +268,7 @@ class Tweet extends TwitterMessage
 		return (new Thumbnail("http://flic.kr/p/img/#{encdec().encode(res[1])}_s.jpg", url)) if (res=url.match(/static.flickr.com\/[0-9]+\/([0-9]+)_/))
 		return (new Thumbnail("http://flic.kr/p/img/#{res[1]}_s.jpg", url)) if (res=url.match(/flic.kr\/p\/(.+)/))
 		return (new Thumbnail("http://#{res[1]}.imgur.com/#{res[2]}s.jpg", url)) if (res=url.match(/http:\/\/([^\/]+)\.imgur\.com\/([a-zA-Z0-9]+)\.jpg/))
+		return (new Thumbnail("//instagr.am/p/#{res[1]}/media/?size=t", url)) if (res=url.match(/(?:instagr\.am|instagram\.com)\/p\/([^\/]+)/))
 		
 		return null
 	

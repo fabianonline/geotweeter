@@ -1868,6 +1868,9 @@ Tweet = (function(_super) {
     if ((res = url.match(/http:\/\/([^\/]+)\.imgur\.com\/([a-zA-Z0-9]+)\.jpg/))) {
       return new Thumbnail("http://" + res[1] + ".imgur.com/" + res[2] + "s.jpg", url);
     }
+    if ((res = url.match(/(?:instagr\.am|instagram\.com)\/p\/([^\/]+)/))) {
+      return new Thumbnail("//instagr.am/p/" + res[1] + "/media/?size=t", url);
+    }
     return null;
   };
 
