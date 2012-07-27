@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsField, SettingsList, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2825,6 +2825,161 @@ Migrations = (function() {
   return Migrations;
 
 })();
+
+SettingsField = (function() {
+
+  SettingsField.prototype.values = null;
+
+  function SettingsField(values) {
+    this.values = values;
+  }
+
+  return SettingsField;
+
+})();
+
+SettingsText = (function(_super) {
+
+  __extends(SettingsText, _super);
+
+  function SettingsText() {
+    return SettingsText.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsText.prototype.get_html = function() {
+    var _this = this;
+    return $('<input>').attr({
+      type: "text"
+    }).val(this.values.getValue()).change(function(elm) {
+      return _this.values.setValue(elm.target.value);
+    });
+  };
+
+  return SettingsText;
+
+})(SettingsField);
+
+SettingsList = (function(_super) {
+
+  __extends(SettingsList, _super);
+
+  function SettingsList() {
+    return SettingsList.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsList.prototype.get_html = function() {
+    var count, i, table, _fn, _i, _ref,
+      _this = this;
+    table = $('<table>');
+    count = this.values.count();
+    if (count > 0) {
+      _fn = function(i) {
+        var cells, tr, val, _j, _len;
+        tr = $('<tr>');
+        cells = _this.values.getValue(i);
+        if (typeof cells === Array) {
+          for (_j = 0, _len = cells.length; _j < _len; _j++) {
+            val = cells[_j];
+            tr.append($('<td>').html(val));
+          }
+        } else {
+          tr.append($('<td>').html(cells));
+        }
+        tr.append($('<td>').html("X").click(function(elm) {
+          return _this.values.deleteValue(i);
+        }));
+        return table.append(tr);
+      };
+      for (i = _i = 0, _ref = this.values.count() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        _fn(i);
+      }
+    }
+    return table;
+  };
+
+  return SettingsList;
+
+})(SettingsField);
+
+Settings = (function() {
+
+  function Settings() {}
+
+  Settings.fields = {};
+
+  Settings.categories = [];
+
+  Settings.add = function(category, name, object) {
+    var _base, _ref;
+    if ((_ref = (_base = this.fields)[category]) == null) {
+      _base[category] = {};
+    }
+    this.fields[category][name] = object;
+    if (this.categories.indexOf(category) === -1) {
+      return this.categories.push(category);
+    }
+  };
+
+  Settings.show = function(category) {
+    if (category == null) {
+      category = this.categories[0];
+    }
+  };
+
+  return Settings;
+
+})();
+
+Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twitter-Accounts.", new SettingsList({
+  count: function() {
+    return settings.twitter.users.length;
+  },
+  getValue: function(i) {
+    return settings.twitter.users[i].screen_name || settings.twitter.users[i].token;
+  },
+  deleteValue: function(i) {
+    if (confirm("Wirklich den gewählten User-Account löschen?")) {
+      return settings.twitter.splice(i, 1);
+    }
+  },
+  addValue: Hooks.add_user_1
+}));
+
+Settings.add("Allgemeines", "ConsumerKey", "Der vom Geotweeter verwendete ConsumerKey. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
+  getValue: function() {
+    return settings.twitter.consumerKey;
+  },
+  setValue: function(val) {
+    return settings.twitter.consumerKey = val;
+  }
+}));
+
+Settings.add("Allgemeines", "ConsumerSecret", "Der vom Geotweeter verwendete ConsumerSecret. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
+  getValue: function() {
+    return settings.twitter.consumerSecret;
+  },
+  setValue: function(val) {
+    return settings.twitter.consumerSecret = val;
+  }
+}));
+
+Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new SettingsList({
+  count: function() {
+    return settings.places.length;
+  },
+  getValue: function(i) {
+    var p;
+    p = settings.places[i];
+    return [p.name, p.lat, p.lon];
+  },
+  deleteValue: function(i) {
+    if (confirm("Wirklich den gewählten Ort löschen?")) {
+      return settings.places.splice(i, 1);
+    }
+  },
+  listHeaders: ["Name", "Lat", "Lon"],
+  addValue: Hooks.add_location_1
+}));
 
 Application = (function() {
 
