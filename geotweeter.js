@@ -2830,9 +2830,25 @@ SettingsField = (function() {
 
   SettingsField.prototype.values = null;
 
+  SettingsField.prototype.name = null;
+
+  SettingsField.prototype.category = null;
+
   function SettingsField(values) {
     this.values = values;
   }
+
+  SettingsField.prototype.get_id = function() {
+    return (this.category + this.name).replace(/[^A-Za-z0-9]/g, "");
+  };
+
+  SettingsField.prototype.get_html = function() {
+    return $(("<div id='" + (this.get_id()) + "'>") + this.get_head_html() + "</div>").append(this.get_field_html());
+  };
+
+  SettingsField.prototype.get_head_html = function() {
+    return "<h1>" + this.name + ":</h1>";
+  };
 
   return SettingsField;
 
@@ -2846,13 +2862,15 @@ SettingsText = (function(_super) {
     return SettingsText.__super__.constructor.apply(this, arguments);
   }
 
-  SettingsText.prototype.get_html = function() {
-    var _this = this;
-    return $('<input>').attr({
+  SettingsText.prototype.get_field_html = function() {
+    var elm,
+      _this = this;
+    elm = $('<input>').attr({
       type: "text"
     }).val(this.values.getValue()).change(function(elm) {
       return _this.values.setValue(elm.target.value);
     });
+    return elm;
   };
 
   return SettingsText;
@@ -2867,17 +2885,22 @@ SettingsList = (function(_super) {
     return SettingsList.__super__.constructor.apply(this, arguments);
   }
 
-  SettingsList.prototype.get_html = function() {
-    var count, i, table, _fn, _i, _ref,
+  SettingsList.prototype.get_field_html = function() {
+    var button, count, div, i, table, _fn, _i, _ref,
       _this = this;
+    div = $('<div>');
+    button = $("<a href='#'>").attr({
+      style: "float: right; margin-top: -25px;"
+    }).click(this.values.addValue).html("Hinzufügen");
+    div.append(button);
     table = $('<table>');
     count = this.values.count();
     if (count > 0) {
-      _fn = function(i) {
+      _fn = function(i, table) {
         var cells, tr, val, _j, _len;
         tr = $('<tr>');
         cells = _this.values.getValue(i);
-        if (typeof cells === Array) {
+        if (cells.constructor === Array) {
           for (_j = 0, _len = cells.length; _j < _len; _j++) {
             val = cells[_j];
             tr.append($('<td>').html(val));
@@ -2886,15 +2909,17 @@ SettingsList = (function(_super) {
           tr.append($('<td>').html(cells));
         }
         tr.append($('<td>').html("X").click(function(elm) {
-          return _this.values.deleteValue(i);
+          _this.values.deleteValue(i);
+          return Settings.refresh_view();
         }));
         return table.append(tr);
       };
-      for (i = _i = 0, _ref = this.values.count() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-        _fn(i);
+      for (i = _i = 0, _ref = count - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        _fn(i, table);
       }
     }
-    return table;
+    div.append(table);
+    return div;
   };
 
   return SettingsList;
@@ -2909,21 +2934,43 @@ Settings = (function() {
 
   Settings.categories = [];
 
-  Settings.add = function(category, name, object) {
+  Settings.current_category = null;
+
+  Settings.add = function(category, name, help, object) {
     var _base, _ref;
+    object.category = category;
+    object.name = name;
     if ((_ref = (_base = this.fields)[category]) == null) {
       _base[category] = {};
     }
-    this.fields[category][name] = object;
+    this.fields[category][name] = {
+      object: object,
+      help: help,
+      category: category,
+      name: name
+    };
     if (this.categories.indexOf(category) === -1) {
       return this.categories.push(category);
     }
   };
 
   Settings.show = function(category) {
+    var entry, html, name, _ref;
     if (category == null) {
       category = this.categories[0];
     }
+    this.current_category = category;
+    html = $("<div id='settings'></div>");
+    _ref = this.fields[category];
+    for (name in _ref) {
+      entry = _ref[name];
+      html.append(entry.object.get_html());
+    }
+    return $('body').html(html);
+  };
+
+  Settings.refresh_view = function() {
+    return this.show(this.current_category);
   };
 
   return Settings;
@@ -2939,7 +2986,7 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten User-Account löschen?")) {
-      return settings.twitter.splice(i, 1);
+      return settings.twitter.users.splice(i, 1);
     }
   },
   addValue: Hooks.add_user_1
