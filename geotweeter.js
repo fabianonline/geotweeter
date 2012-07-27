@@ -282,6 +282,7 @@ Account = (function() {
         }
         _this.user = new User(data);
         _this.screen_name = _this.user.screen_name;
+        settings.twitter.users[_this.id].screen_name = _this.screen_name;
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
         try {
@@ -2886,7 +2887,7 @@ SettingsList = (function(_super) {
   }
 
   SettingsList.prototype.get_field_html = function() {
-    var button, count, div, i, table, _fn, _i, _ref,
+    var button, count, div, i, table, tr, val, _fn, _i, _j, _len, _ref, _ref1,
       _this = this;
     div = $('<div>');
     button = $("<a href='#'>").attr({
@@ -2894,15 +2895,24 @@ SettingsList = (function(_super) {
     }).click(this.values.addValue).html("Hinzufügen");
     div.append(button);
     table = $('<table>');
+    if (this.values.listHeaders != null) {
+      tr = $('<tr>');
+      _ref = this.values.listHeaders;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        val = _ref[_i];
+        tr.append($('<th>').html(val));
+      }
+      table.append(tr);
+    }
     count = this.values.count();
     if (count > 0) {
       _fn = function(i, table) {
-        var cells, tr, val, _j, _len;
+        var cells, _k, _len1;
         tr = $('<tr>');
         cells = _this.values.getValue(i);
         if (cells.constructor === Array) {
-          for (_j = 0, _len = cells.length; _j < _len; _j++) {
-            val = cells[_j];
+          for (_k = 0, _len1 = cells.length; _k < _len1; _k++) {
+            val = cells[_k];
             tr.append($('<td>').html(val));
           }
         } else {
@@ -2914,7 +2924,7 @@ SettingsList = (function(_super) {
         }));
         return table.append(tr);
       };
-      for (i = _i = 0, _ref = count - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+      for (i = _j = 0, _ref1 = count - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
         _fn(i, table);
       }
     }
@@ -2982,13 +2992,19 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
     return settings.twitter.users.length;
   },
   getValue: function(i) {
-    return settings.twitter.users[i].screen_name || settings.twitter.users[i].token;
+    var _ref;
+    return [
+      settings.twitter.users[i].screen_name, (_ref = settings.twitter.users[i].stream) != null ? _ref : {
+        'X': ''
+      }
+    ];
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten User-Account löschen?")) {
       return settings.twitter.users.splice(i, 1);
     }
   },
+  listHeaders: ["Account", "Streaming"],
   addValue: Hooks.add_user_1
 }));
 

@@ -170,6 +170,7 @@ class Account
 					return
 				@user = new User(data)
 				@screen_name = @user.screen_name
+				settings.twitter.users[@id].screen_name = @screen_name
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
 				try @get_followers()

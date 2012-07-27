@@ -26,8 +26,9 @@ class Settings
 
 Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twitter-Accounts.", new SettingsList({
 	count: -> settings.twitter.users.length
-	getValue: (i) -> settings.twitter.users[i].screen_name || settings.twitter.users[i].token
+	getValue: (i) -> [settings.twitter.users[i].screen_name, settings.twitter.users[i].stream ? 'X' : '']
 	deleteValue: (i) -> settings.twitter.users.splice(i, 1) if confirm("Wirklich den gewählten User-Account löschen?")
+	listHeaders: ["Account", "Streaming"]
 	addValue: Hooks.add_user_1
 }))
 
