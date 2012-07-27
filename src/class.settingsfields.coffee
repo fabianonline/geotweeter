@@ -30,6 +30,11 @@ class SettingsList extends SettingsField
 		button = $("<a href='#'>").attr({style: "float: right; margin-top: -25px;"}).click(@values.addValue).html("Hinzufügen")
 		div.append(button)
 		table = $('<table>')
+		if @values.listHeaders?
+			tr = $('<tr>')
+			tr.append($('<th>').html(val)) for val in @values.listHeaders
+			table.append(tr)
+		
 		count = @values.count()
 		if count>0 then for i in [0..count-1]
 			do (i, table) =>
