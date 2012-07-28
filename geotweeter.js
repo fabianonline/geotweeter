@@ -1274,6 +1274,7 @@ Hooks = (function() {
       tokenSecret: oauth_results.oauth_token_secret,
       screen_name: oauth_results.screen_name
     });
+    Settings.save();
     return Application.infoarea.hide();
   };
 
@@ -2836,8 +2837,7 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype._addValue = function() {
-    this.values.addValue(val);
-    return Settings.save();
+    return this.values.addValue();
   };
 
   SettingsField.prototype._deleteValue = function(i) {
@@ -2931,15 +2931,12 @@ SettingsList = (function(_super) {
     this.values.listHeaders.push("Aktionen");
   }
 
-  SettingsList.prototype.get_field_html = function() {
+  SettingsList.prototype.get_html = function() {
     var button, count, div, i, table, tr, val, _fn, _i, _j, _len, _ref, _ref1,
       _this = this;
-    div = $('<div>');
-    button = $("<a href='#'>").attr({
-      style: "float: right; margin-top: -25px;"
-    }).html("Hinzufügen").click(function() {
-      _this._addValue();
-      return Settings.refresh_view();
+    div = $('<div>').append(this.get_head_html());
+    button = $("<a href='#'>").html("Hinzufügen").click(function() {
+      return _this._addValue();
     });
     div.append(button);
     table = $('<table>');

@@ -15,7 +15,7 @@ class SettingsField
 		"<strong>#{@name}:</strong>"
 	
 	_setValue: (val) -> @values.setValue(val); Settings.save()
-	_addValue: -> @values.addValue(val); Settings.save()
+	_addValue: -> @values.addValue()
 	_deleteValue: (i) -> @values.deleteValue(i); Settings.save()
 	
 class SettingsText extends SettingsField
@@ -50,11 +50,10 @@ class SettingsList extends SettingsField
 		@values.listHeaders ?= ["Name"]
 		@values.listHeaders.push("Aktionen")
 	
-	get_field_html: ->
-		div = $('<div>')
-		button = $("<a href='#'>").attr({style: "float: right; margin-top: -25px;"}).html("Hinzufügen").click( =>
+	get_html: ->
+		div = $('<div>').append(@get_head_html())
+		button = $("<a href='#'>").html("Hinzufügen").click( =>
 			@_addValue()
-			Settings.refresh_view()
 		)
 		div.append(button)
 		table = $('<table>')

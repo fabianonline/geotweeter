@@ -271,4 +271,5 @@ class Hooks
 			tokenSecret: oauth_results.oauth_token_secret
 			screen_name: oauth_results.screen_name
 		}
+		Settings.save()
 		Application.infoarea.hide()
