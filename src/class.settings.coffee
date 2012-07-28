@@ -39,7 +39,10 @@ class Settings
 	
 	@refresh_view: -> @show(@current_category)
 	
-	@save: -> localStorage.setItem("geotweeter.settings", JSON.stringify(settings))
+	@save: -> 
+		Application.log("Settings", "", "Saving Settings")
+		localStorage.setItem("geotweeter.settings", JSON.stringify(settings))
+	
 	@load: -> window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"))
 	@reset: -> 
 		localStorage.clear("geotweeter.settings")

@@ -14,6 +14,10 @@ class SettingsField
 	get_head_html: ->
 		"<h2>#{@name}:</h2>"
 	
+	_setValue: (val) -> @values.setValue(val); Settings.save()
+	_addValue: -> @values.addValue(val); Settings.save()
+	_deleteValue: (i) -> @values.deleteValue(i); Settings.save()
+	
 class SettingsText extends SettingsField
 	get_field_html: ->
 		if @values.readOnly
@@ -23,7 +27,7 @@ class SettingsText extends SettingsField
 				.attr({type: "text"})
 				.val(@values.getValue())
 				.change((elm) => 
-					@values.setValue(elm.target.value)
+					@_setValue(elm.target.value)
 				)
 		return elm
 
@@ -40,7 +44,7 @@ class SettingsList extends SettingsField
 	get_field_html: ->
 		div = $('<div>')
 		button = $("<a href='#'>").attr({style: "float: right; margin-top: -25px;"}).html("Hinzufügen").click( =>
-			@values.addValue()
+			@_addValue()
 			Settings.refresh_view()
 		)
 		div.append(button)
@@ -60,7 +64,7 @@ class SettingsList extends SettingsField
 				else
 					tr.append($('<td>').html(cells))
 				tr.append($('<td>').html("X").click((elm) => 
-					@values.deleteValue(i)
+					@_deleteValue(i)
 					Settings.refresh_view()
 				))
 				table.append(tr)
