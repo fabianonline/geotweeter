@@ -12,28 +12,43 @@ class SettingsField
 		$("<div id='#{@get_id()}'>" + @get_head_html() + "</div>").append(@get_field_html())
 	
 	get_head_html: ->
-		"<h1>#{@name}:</h1>"
+		"<h2>#{@name}:</h2>"
 	
 class SettingsText extends SettingsField
 	get_field_html: ->
-		elm = $('<input>')
-			.attr({type: "text"})
-			.val(@values.getValue())
-			.change((elm) => 
-				@values.setValue(elm.target.value)
-			)
+		if @values.readOnly
+			elm = $('<div>').html(@values.getValue())
+		else
+			elm = $('<input>')
+				.attr({type: "text"})
+				.val(@values.getValue())
+				.change((elm) => 
+					@values.setValue(elm.target.value)
+				)
 		return elm
+
+class SettingsPassword extends SettingsText
+	get_field_html: ->
+		return super().attr({type: "password"})
 	
 class SettingsList extends SettingsField
+	constructor: (values) ->
+		super(values)
+		@values.listHeaders ?= ["Name"]
+		@values.listHeaders.push("Aktionen")
+	
 	get_field_html: ->
 		div = $('<div>')
-		button = $("<a href='#'>").attr({style: "float: right; margin-top: -25px;"}).click(@values.addValue).html("Hinzufügen")
+		button = $("<a href='#'>").attr({style: "float: right; margin-top: -25px;"}).html("Hinzufügen").click( =>
+			@values.addValue()
+			Settings.refresh_view()
+		)
 		div.append(button)
 		table = $('<table>')
-		if @values.listHeaders?
-			tr = $('<tr>')
-			tr.append($('<th>').html(val)) for val in @values.listHeaders
-			table.append(tr)
+		
+		tr = $('<tr>')
+		tr.append($('<th>').html(val)) for val in @values.listHeaders
+		table.append(tr)
 		
 		count = @values.count()
 		if count>0 then for i in [0..count-1]

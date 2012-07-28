@@ -11,10 +11,15 @@ class Application
 
 	@start: ->
 		Application.log(this, "", "Starting...")
+		Settings.list_categories()
+		Settings.load()
 		return unless Migrations.migrate()
 		@fill_places()
 		@attach_hooks()
 		@set_time_diff()
+		if settings.twitter.users.length==0
+			Settings.show()
+			return
 		@initialize_accounts()
 		@get_twitter_configuration()
 		@accounts[0].show()
@@ -129,7 +134,7 @@ class Application
 	@toString: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
 	@log: (place, category, message) ->
-		return unless settings.debug && console? && console.log?
+		return unless settings? && settings.debug && console? && console.log?
 		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
 		console.log("#{(new Date()).format("%H:%M:%S")} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}")
 	
@@ -147,8 +152,8 @@ class Application
 	@infoarea: {
 		visible: false
 		show: (title, content) ->
-			Application.current_account.hide()
-			$('#top').hide()
+			#Application.current_account.hide()
+			$('#settings').hide()
 			Application.infoarea.visible = true
 			$('#infoarea_title').html(title)
 			$('#infoarea_content').html(content)
@@ -158,7 +163,8 @@ class Application
 		hide: ->
 			Application.infoarea.visible = false
 			$('#infoarea').hide()
-			$('#top').show()
-			Application.current_account.show()
+			#$('#top').show()
+			#Application.current_account.show()
+			Settings.refresh_view()
 			return false
 	}

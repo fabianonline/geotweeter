@@ -20,11 +20,19 @@
 <script src="lib/jquery.ui.min.js"></script>
 <script src="lib/jquery.ui.autocomplete.html.js"></script>
 
-<script src="settings.js"></script>
 <script src="geotweeter.js"></script>
 </head>
 
 <body onload="Application.start();">
+
+<div id="settings">
+	<h1>Einstellungen</h1>
+	<ul id="settings_categories"></ul>
+	<div><a href="#" class="close" onClick="return Settings.close();">Speichern und schließen</a></div>
+	<div id="settings_content"></div>
+	<div><a href="#" class="close" onClick="return Settings.close();">Speichern und schließen</a></div>
+</div>
+
 <div id="infoarea">
     <h3 id="infoarea_title"></h3>
     <div><a href="#" onClick="return Application.infoarea.hide();">Close</a></div>

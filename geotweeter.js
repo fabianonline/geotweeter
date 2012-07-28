@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsField, SettingsList, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1230,7 +1230,7 @@ Hooks = (function() {
   };
 
   Hooks.add_user_2 = function(oauth_token) {
-    var code, data, html, keys, message, oauth_results, parameters, pin, request, result, url, x, _i, _len;
+    var data, keys, message, oauth_results, parameters, pin, request, result, url, x, _i, _len;
     pin = $('#pin').val();
     Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
     parameters = {
@@ -1269,11 +1269,12 @@ Hooks = (function() {
       x = x.split("=");
       oauth_results[x[0]] = x[1];
     }
-    code = ("{ // " + oauth_results.screen_name + "\n") + ("    token: '" + oauth_results.oauth_token + "',\n") + ("    tokenSecret: '" + oauth_results.oauth_token_secret + "'\n") + "}";
-    html = "			Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />			<textarea cols='100' rows='4'>" + code + "</textarea><br />			Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden.";
-    $('#info_spinner').before(html);
-    $('#info_spinner').hide();
-    return false;
+    settings.twitter.users.push({
+      token: oauth_results.oauth_token,
+      tokenSecret: oauth_results.oauth_token_secret,
+      screen_name: oauth_results.screen_name
+    });
+    return Application.infoarea.hide();
   };
 
   return Hooks;
@@ -2738,89 +2739,66 @@ Migrations = (function() {
 
   Migrations.migrations = [];
 
-  Migrations.migrations[14] = {
-    description: "Felder für Instapaper-Zugangsdaten hinzugefügt.",
-    blocking: false,
+  Migrations.migrations[0] = {
+    description: "Settings erzeugt",
+    blocking: true,
     change: function(settings) {
-      settings["instapaper_credentials"] = {
-        user: "",
-        password: ""
+      settings = {
+        twitter: {
+          users: [],
+          consumerKey: "57z3b4GB1n8fOBUh7RZuQ",
+          consumerSecret: "TcwsnNqJByzhnrWvukjjFoZnBu6NpeOCo5MQQ4maCio"
+        },
+        muted_strings: [],
+        muted_users: [],
+        muted_combinations: [],
+        places: [],
+        timings: {
+          mindelay: 2,
+          maxdelay: 160,
+          max_double_enter_time: 150
+        },
+        show_error_if_no_place_is_set: true,
+        unshorten_links: false,
+        debug: true,
+        timeout_detect_factor: 4,
+        timeout_minimum_delay: 120,
+        timeout_maximum_delay: 600,
+        instapaper_credentials: {
+          user: null,
+          password: null
+        }
       };
       return settings;
     }
   };
 
-  Migrations.migrations[13] = {
-    description: "Entfernt ein paar alte Settings; formatiert die Filter neu.",
-    blocking: false,
-    change: function(settings) {
-      var i, _i, _len, _ref;
-      delete settings.fill_list;
-      delete settings.show_error_if_no_place_is_set;
-      delete settings.unshorten_links;
-      settings.muted_strings = settings.blacklist;
-      delete settings.blacklist;
-      settings.muted_users = settings.muted;
-      delete settings.muted;
-      settings.muted_combinations = [];
-      _ref = settings.troll;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        settings.muted_combinations.push({
-          user: settings.troll[i],
-          string: settings.trigger[i]
-        });
-      }
-      delete settings.troll;
-      delete settings.trigger;
-      return settings;
-    }
-  };
-
-  Migrations.migrations[12] = {
-    description: "Filter-Strings müssen komplett klein geschrieben sein.",
-    blocking: false,
-    change: function(settings) {
-      var i, _i, _len, _ref;
-      _ref = settings.blacklist;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        settings.blacklist[i] = settings.blacklist[i].toLowerCase;
-      }
-      return settings;
-    }
-  };
-
   Migrations.migrate = function() {
-    var blocking, changes, code, i, migration, text, update, _i, _ref, _ref1;
+    var blocking, changes, i, migration, start_version, text, _i, _ref;
     changes = [];
     blocking = false;
-    if (window.settings.version === this.migrations.length) {
-      return true;
+    if (window.settings) {
+      if (window.settings.version === this.migrations.length) {
+        return true;
+      }
+      start_version = window.settings.version;
+    } else {
+      start_version = 0;
     }
-    for (i = _i = _ref = settings.version, _ref1 = this.migrations.length - 1; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _ref <= _ref1 ? ++_i : --_i) {
+    for (i = _i = start_version, _ref = this.migrations.length - 1; start_version <= _ref ? _i <= _ref : _i >= _ref; i = start_version <= _ref ? ++_i : --_i) {
       migration = this.migrations[i];
       changes.push("  * " + migration.description);
       blocking || (blocking = migration.blocking);
       window.settings = migration.change(window.settings);
       window.settings.version = i + 1;
     }
-    text = "Die settings müssen aktualisiert werden.\n\nFolgende Änderungen wurden eingepflegt:\n" + changes.join("\n");
-    update = false;
     if (blocking) {
-      text += "\n\nSie *müssen* settings.js aktualisieren, bevor Sie den Geotweeter nutzen können!";
+      text = "Die settings müssen aktualisiert werden.\n\nFolgende Neuerungen kamen insgesamt dazu:\n" + changes.join("\n");
       alert(text);
-      update = true;
-    } else {
-      text += "\n\nDie Aktualisierung ist freiwillig. Wenn Sie sie jetzt nicht vornehmen, sind neue Features evtl. nicht verfügbar. Sie werden bei jedem weiteren Start daran erinnert werden.\nWollen Sie die Aktualisierung jetzt vornehmen?";
-      update = confirm(text);
-    }
-    if (update) {
-      code = JSON.stringify(window.settings, null, "    ");
-      $('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>var settings = " + code + "</pre>");
+      Settings.force_restart = true;
+      Settings.show();
       return false;
     }
-    return true;
   };
 
   return Migrations;
@@ -2848,7 +2826,7 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_head_html = function() {
-    return "<h1>" + this.name + ":</h1>";
+    return "<h2>" + this.name + ":</h2>";
   };
 
   return SettingsField;
@@ -2866,11 +2844,15 @@ SettingsText = (function(_super) {
   SettingsText.prototype.get_field_html = function() {
     var elm,
       _this = this;
-    elm = $('<input>').attr({
-      type: "text"
-    }).val(this.values.getValue()).change(function(elm) {
-      return _this.values.setValue(elm.target.value);
-    });
+    if (this.values.readOnly) {
+      elm = $('<div>').html(this.values.getValue());
+    } else {
+      elm = $('<input>').attr({
+        type: "text"
+      }).val(this.values.getValue()).change(function(elm) {
+        return _this.values.setValue(elm.target.value);
+      });
+    }
     return elm;
   };
 
@@ -2878,12 +2860,35 @@ SettingsText = (function(_super) {
 
 })(SettingsField);
 
+SettingsPassword = (function(_super) {
+
+  __extends(SettingsPassword, _super);
+
+  function SettingsPassword() {
+    return SettingsPassword.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsPassword.prototype.get_field_html = function() {
+    return SettingsPassword.__super__.get_field_html.call(this).attr({
+      type: "password"
+    });
+  };
+
+  return SettingsPassword;
+
+})(SettingsText);
+
 SettingsList = (function(_super) {
 
   __extends(SettingsList, _super);
 
-  function SettingsList() {
-    return SettingsList.__super__.constructor.apply(this, arguments);
+  function SettingsList(values) {
+    var _base, _ref;
+    SettingsList.__super__.constructor.call(this, values);
+    if ((_ref = (_base = this.values).listHeaders) == null) {
+      _base.listHeaders = ["Name"];
+    }
+    this.values.listHeaders.push("Aktionen");
   }
 
   SettingsList.prototype.get_field_html = function() {
@@ -2892,18 +2897,19 @@ SettingsList = (function(_super) {
     div = $('<div>');
     button = $("<a href='#'>").attr({
       style: "float: right; margin-top: -25px;"
-    }).click(this.values.addValue).html("Hinzufügen");
+    }).html("Hinzufügen").click(function() {
+      _this.values.addValue();
+      return Settings.refresh_view();
+    });
     div.append(button);
     table = $('<table>');
-    if (this.values.listHeaders != null) {
-      tr = $('<tr>');
-      _ref = this.values.listHeaders;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        val = _ref[_i];
-        tr.append($('<th>').html(val));
-      }
-      table.append(tr);
+    tr = $('<tr>');
+    _ref = this.values.listHeaders;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      val = _ref[_i];
+      tr.append($('<th>').html(val));
     }
+    table.append(tr);
     count = this.values.count();
     if (count > 0) {
       _fn = function(i, table) {
@@ -2946,6 +2952,8 @@ Settings = (function() {
 
   Settings.current_category = null;
 
+  Settings.force_restart = false;
+
   Settings.add = function(category, name, help, object) {
     var _base, _ref;
     object.category = category;
@@ -2965,22 +2973,71 @@ Settings = (function() {
   };
 
   Settings.show = function(category) {
-    var entry, html, name, _ref;
+    var entry, html, name, _ref, _ref1;
     if (category == null) {
       category = this.categories[0];
     }
+    this.save();
     this.current_category = category;
-    html = $("<div id='settings'></div>");
+    html = $("<div></div>");
     _ref = this.fields[category];
     for (name in _ref) {
       entry = _ref[name];
       html.append(entry.object.get_html());
     }
-    return $('body').html(html);
+    $('#settings_content').empty().append(html);
+    $('#top').hide();
+    if ((_ref1 = Application.current_account) != null) {
+      _ref1.hide();
+    }
+    return $('#settings').show();
+  };
+
+  Settings.close = function() {
+    this.save();
+    if (this.force_restart) {
+      return true;
+    } else {
+      $('#settings').hide();
+      $('#top').show();
+      Application.current_account.show();
+      return false;
+    }
   };
 
   Settings.refresh_view = function() {
     return this.show(this.current_category);
+  };
+
+  Settings.save = function() {
+    return localStorage.setItem("geotweeter.settings", JSON.stringify(settings));
+  };
+
+  Settings.load = function() {
+    return window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"));
+  };
+
+  Settings.reset = function() {
+    localStorage.clear("geotweeter.settings");
+    return window.location.href = ".";
+  };
+
+  Settings.list_categories = function() {
+    var cat, ul, _i, _len, _ref, _results;
+    ul = $('#settings ul');
+    _ref = this.categories;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      cat = _ref[_i];
+      _results.push((function(cat) {
+        var li;
+        li = $('<li>').click(function() {
+          return Settings.show(cat);
+        }).html(cat);
+        return ul.append(li);
+      })(cat));
+    }
+    return _results;
   };
 
   return Settings;
@@ -3001,29 +3058,12 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten User-Account löschen?")) {
-      return settings.twitter.users.splice(i, 1);
+      settings.twitter.users.splice(i, 1);
+      return Settings.force_restart = true;
     }
   },
   listHeaders: ["Account", "Streaming"],
   addValue: Hooks.add_user_1
-}));
-
-Settings.add("Allgemeines", "ConsumerKey", "Der vom Geotweeter verwendete ConsumerKey. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
-  getValue: function() {
-    return settings.twitter.consumerKey;
-  },
-  setValue: function(val) {
-    return settings.twitter.consumerKey = val;
-  }
-}));
-
-Settings.add("Allgemeines", "ConsumerSecret", "Der vom Geotweeter verwendete ConsumerSecret. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
-  getValue: function() {
-    return settings.twitter.consumerSecret;
-  },
-  setValue: function(val) {
-    return settings.twitter.consumerSecret = val;
-  }
 }));
 
 Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new SettingsList({
@@ -3037,11 +3077,97 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten Ort löschen?")) {
-      return settings.places.splice(i, 1);
+      settings.places.splice(i, 1);
+      return Settings.force_restart = true;
     }
   },
   listHeaders: ["Name", "Lat", "Lon"],
   addValue: Hooks.add_location_1
+}));
+
+Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_strings.length;
+  },
+  getValue: function(i) {
+    return settings.muted_strings[i];
+  },
+  deleteValue: function(i) {
+    return settings.muted_strings.splice(i, 1);
+  },
+  listHeaders: ["Begriff"],
+  addValue: function() {
+    var answer;
+    answer = prompt("Bitte den zu filternden Begriff eingeben.");
+    if (answer) {
+      return settings.muted_strings.push(answer.toLowerCase());
+    }
+  }
+}));
+
+Settings.add("Filter", "Benutzer", "Tweets von diesen Usern werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_users.length;
+  },
+  getValue: function(i) {
+    return settings.muted_users[i];
+  },
+  deleteValue: function(i) {
+    return settings.muted_users.splice(i, 1);
+  },
+  listHeaders: ["User"],
+  addValue: function() {
+    var answer;
+    answer = prompt("Bitte den zu filternden Usernamen eingeben.");
+    if (answer) {
+      return settings.muted_users.push(answer.toLowerCase());
+    }
+  }
+}));
+
+Settings.add("Filter", "Kombinationen", "Tweets mit diesen User-Begriff-Kombinationen werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_combinations.length;
+  },
+  getValue: function(i) {
+    return [settings.muted_combinations[i].user, settings.muted_combinations[i].string];
+  },
+  deleteValue: function(i) {
+    return settings.muted_combinations.splice(i, 1);
+  },
+  listHeaders: ["User", "Begriff"],
+  addValue: function() {
+    var answer1, answer2;
+    answer1 = prompt("Bitte den zu filternden Usernamen eingeben.");
+    answer2 = prompt("Bitte den zu filternden Begriff eingeben.");
+    if (answer1 && answer2) {
+      return settings.muted_combinations.push({
+        user: answer1.toLowerCase(),
+        string: answer2.toLowerCase()
+      });
+    }
+  }
+}));
+
+Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsText({
+  getValue: function() {
+    return settings.instapaper_credentials.user;
+  },
+  setValue: function(value) {
+    return settings.instapaper_credentials.user = value;
+  }
+}));
+
+Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
+  getValue: function() {
+    var _ref;
+    return (_ref = settings.instapaper_credentials.user && settings.instapaper_credentials.user.length > 0) != null ? _ref : {
+      "12345678": ""
+    };
+  },
+  setValue: function(value) {
+    return settings.instapaper_credentials.password = value;
+  }
 }));
 
 Application = (function() {
@@ -3068,12 +3194,18 @@ Application = (function() {
 
   Application.start = function() {
     Application.log(this, "", "Starting...");
+    Settings.list_categories();
+    Settings.load();
     if (!Migrations.migrate()) {
       return;
     }
     this.fill_places();
     this.attach_hooks();
     this.set_time_diff();
+    if (settings.twitter.users.length === 0) {
+      Settings.show();
+      return;
+    }
     this.initialize_accounts();
     this.get_twitter_configuration();
     this.accounts[0].show();
@@ -3248,7 +3380,7 @@ Application = (function() {
 
   Application.log = function(place, category, message) {
     var place_str;
-    if (!(settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
+    if (!((typeof settings !== "undefined" && settings !== null) && settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
       return;
     }
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
@@ -3272,8 +3404,7 @@ Application = (function() {
   Application.infoarea = {
     visible: false,
     show: function(title, content) {
-      Application.current_account.hide();
-      $('#top').hide();
+      $('#settings').hide();
       Application.infoarea.visible = true;
       $('#infoarea_title').html(title);
       $('#infoarea_content').html(content);
@@ -3283,8 +3414,7 @@ Application = (function() {
     hide: function() {
       Application.infoarea.visible = false;
       $('#infoarea').hide();
-      $('#top').show();
-      Application.current_account.show();
+      Settings.refresh_view();
       return false;
     }
   };

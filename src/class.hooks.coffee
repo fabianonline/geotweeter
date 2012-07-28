@@ -266,14 +266,9 @@ class Hooks
 		oauth_results = {}
 		result = result.split("&")
 		(x = x.split("=") ; oauth_results[x[0]] = x[1]) for x in result
-		code = "{ // #{oauth_results.screen_name}\n" + 
-		       "    token: '#{oauth_results.oauth_token}',\n" +
-		       "    tokenSecret: '#{oauth_results.oauth_token_secret}'\n" +
-		       "}"
-		html = "
-			Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />
-			<textarea cols='100' rows='4'>#{code}</textarea><br />
-			Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden."
-		$('#info_spinner').before(html)
-		$('#info_spinner').hide()
-		return false
+		settings.twitter.users.push {
+			token: oauth_results.oauth_token
+			tokenSecret: oauth_results.oauth_token_secret
+			screen_name: oauth_results.screen_name
+		}
+		Application.infoarea.hide()

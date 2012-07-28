@@ -237,7 +237,7 @@ textarea, input, select {
     color: #333;
 }
 
-#infoarea {
+#infoarea, #settings {
     display: none;
     z-index: 105;
 	padding-bottom: 25px;
@@ -245,6 +245,9 @@ textarea, input, select {
     height: 100%;
     background-color: #fff;
 }
+
+#infoarea { z-index: 106; }
+#settings { z-index: 105; }
 
 #infoarea #info_spinner {
     text-align: center;
