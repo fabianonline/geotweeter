@@ -65,7 +65,7 @@ class Settings
 
 Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twitter-Accounts.", new SettingsList({
 	count: -> settings.twitter.users.length
-	getValue: (i) -> [settings.twitter.users[i].screen_name, settings.twitter.users[i].stream ? 'X' : '']
+	getValue: (i) -> [settings.twitter.users[i].screen_name, if settings.twitter.users[i].stream then 'Ja' else '']
 	deleteValue: (i) -> 
 		if confirm("Wirklich den gewählten User-Account löschen?")
 			settings.twitter.users.splice(i, 1) 
@@ -121,11 +121,13 @@ Settings.add("Filter", "Kombinationen", "Tweets mit diesen User-Begriff-Kombinat
 Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsText({
 	getValue: -> settings.instapaper_credentials.user
 	setValue: (value) -> settings.instapaper_credentials.user = value
+	style: "big"
 }))
 
 Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
 	getValue: -> settings.instapaper_credentials.user && settings.instapaper_credentials.user.length>0 ? "12345678" : ""
 	setValue: (value) -> settings.instapaper_credentials.password = value
+	style: "big"
 }))
 
 Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", new SettingsBoolean({

@@ -1224,14 +1224,15 @@ Hooks = (function() {
       oauth_results[x[0]] = x[1];
     }
     url = "https://api.twitter.com/oauth/authorize?oauth_token=" + oauth_results.oauth_token + "&force_login=true";
-    html = "			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />			<a href='" + url + "' target='_blank'>Geotweeter authorisieren</a><br /><br />			<input type='text' name='pin' id='pin' />			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('" + oauth_results.oauth_token + "');\" />";
+    html = "			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />			<a href='" + url + "' target='_blank'>Geotweeter authorisieren</a><br /><br />			<input type='text' name='pin' id='pin' /><br /><br />			<input type='checkbox' name='use_streaming' id='use_streaming' /> <strong>Streaming nutzen</strong><br />			Durch Nutzung der Streaming-Funktion erscheinen Tweets quasi in Echtzeit im Geotweeter. 			Allerdings unterstützt der Browser nur einie gewisse Zahl an Verbindungen - zwei oder drei Streams 			sollten funktionieren, irgedwann wird der Geotweeter dann aber langsamer bzw. funktioniert 			irgendwann überhaupt nicht mehr.<br /><br />			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('" + oauth_results.oauth_token + "');\" />";
     $('#info_spinner').before(html);
     return $('#info_spinner').hide();
   };
 
   Hooks.add_user_2 = function(oauth_token) {
-    var data, keys, message, oauth_results, parameters, pin, request, result, url, x, _i, _len;
+    var data, keys, message, oauth_results, parameters, pin, request, result, url, use_streaming, x, _i, _len;
     pin = $('#pin').val();
+    use_streaming = $('#use_streaming').is(':checked');
     Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
     parameters = {
       oauth_token: oauth_token,
@@ -1272,7 +1273,8 @@ Hooks = (function() {
     settings.twitter.users.push({
       token: oauth_results.oauth_token,
       tokenSecret: oauth_results.oauth_token_secret,
-      screen_name: oauth_results.screen_name
+      screen_name: oauth_results.screen_name,
+      stream: use_streaming
     });
     Settings.save();
     return Application.infoarea.hide();
@@ -2824,7 +2826,7 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_html = function() {
-    return $(("<div id='" + (this.get_id()) + "'>") + this.get_head_html() + "</div>").append(this.get_field_html());
+    return $(("<div id='" + (this.get_id()) + "' class='setting'>") + this.get_head_html() + "</div>").append(this.get_field_html()).append("<br class='clear' />");
   };
 
   SettingsField.prototype.get_head_html = function() {
@@ -2871,6 +2873,9 @@ SettingsText = (function(_super) {
       }).val(this.values.getValue()).change(function(elm) {
         return _this._setValue(elm.target.value);
       });
+    }
+    if (this.values.style) {
+      elm.addClass(this.values.style);
     }
     return elm;
   };
@@ -2937,10 +2942,11 @@ SettingsList = (function(_super) {
     var button, count, div, i, table, tr, val, _fn, _i, _j, _len, _ref, _ref1,
       _this = this;
     div = $('<div>').append(this.get_head_html()).addClass('list');
-    button = $("<a href='#'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click(function() {
+    button = $("<a href='#' style='float: right;'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click(function() {
       return _this._addValue();
     });
     div.append(button);
+    div.append("<br class='break' />");
     table = $('<table>');
     tr = $('<tr>');
     _ref = this.values.listHeaders;
@@ -3102,12 +3108,7 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
     return settings.twitter.users.length;
   },
   getValue: function(i) {
-    var _ref;
-    return [
-      settings.twitter.users[i].screen_name, (_ref = settings.twitter.users[i].stream) != null ? _ref : {
-        'X': ''
-      }
-    ];
+    return [settings.twitter.users[i].screen_name, settings.twitter.users[i].stream ? 'Ja' : ''];
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten User-Account löschen?")) {
@@ -3208,7 +3209,8 @@ Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsTe
   },
   setValue: function(value) {
     return settings.instapaper_credentials.user = value;
-  }
+  },
+  style: "big"
 }));
 
 Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
@@ -3220,7 +3222,8 @@ Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPa
   },
   setValue: function(value) {
     return settings.instapaper_credentials.password = value;
-  }
+  },
+  style: "big"
 }));
 
 Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", new SettingsBoolean({

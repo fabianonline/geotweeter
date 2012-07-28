@@ -231,13 +231,19 @@ class Hooks
 		html = "
 			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />
 			<a href='#{url}' target='_blank'>Geotweeter authorisieren</a><br /><br />
-			<input type='text' name='pin' id='pin' />
+			<input type='text' name='pin' id='pin' /><br /><br />
+			<input type='checkbox' name='use_streaming' id='use_streaming' /> <strong>Streaming nutzen</strong><br />
+			Durch Nutzung der Streaming-Funktion erscheinen Tweets quasi in Echtzeit im Geotweeter. 
+			Allerdings unterstützt der Browser nur einie gewisse Zahl an Verbindungen - zwei oder drei Streams 
+			sollten funktionieren, irgedwann wird der Geotweeter dann aber langsamer bzw. funktioniert 
+			irgendwann überhaupt nicht mehr.<br /><br />
 			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('#{oauth_results.oauth_token}');\" />"
 		$('#info_spinner').before(html)
 		$('#info_spinner').hide()
 	
 	@add_user_2: (oauth_token) ->
 		pin = $('#pin').val()
+		use_streaming = $('#use_streaming').is(':checked')
 		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
 		parameters = { oauth_token: oauth_token, oauth_verifier: pin }
 		message = {
@@ -270,6 +276,7 @@ class Hooks
 			token: oauth_results.oauth_token
 			tokenSecret: oauth_results.oauth_token_secret
 			screen_name: oauth_results.screen_name
+			stream: use_streaming
 		}
 		Settings.save()
 		Application.infoarea.hide()

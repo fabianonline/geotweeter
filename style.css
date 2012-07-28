@@ -249,8 +249,24 @@ textarea, input, select {
 #infoarea { z-index: 106; }
 #settings { z-index: 105; }
 
+#settings h1 {
+	margin-top: 5px;
+	margin-bottom: 10px;
+}
+
+#settings #save_button {
+	display: block;
+	border: 1px solid #000;
+	background-color: #ddd;
+	padding: 5px;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
 #settings h2 {
 	display: inline;
+	font-size: 15px;
+	margin-right: 25px;
 }
 
 #settings a {
@@ -262,6 +278,24 @@ textarea, input, select {
 	border: 1px dotted #aaa;
 	margin-bottom: 5px;
 	padding-bottom: 5px; 
+}
+
+#settings .setting:hover,
+#settings .list:hover {
+	background-color: #eef;
+}
+
+#settings input {
+	float: right;
+}
+
+#settings input[type="text"],
+#settings input[type="password"] {
+	width: 100px;
+}
+
+#settings input.big {
+	width: 100%;
 }
 
 #settings table {
@@ -285,7 +319,7 @@ textarea, input, select {
 
 ul#settings_categories {
 	padding-left: 0px;
-	padding-bottom: 4px;
+	padding-bottom: 5px;
 	border-bottom: 1px solid #000;
 }
 
@@ -428,4 +462,10 @@ ul.context-menu {
 .ui-menu-item.inline {
 	clear: none !important;
 	width: auto !important;
+}
+
+.clear {
+	height: 0px;
+	width: 0px;
+	clear: both;
 }

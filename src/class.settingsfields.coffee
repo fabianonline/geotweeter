@@ -9,7 +9,7 @@ class SettingsField
 	get_id: -> (@category+@name).replace(/[^A-Za-z0-9]/g, "")
 	
 	get_html: ->
-		$("<div id='#{@get_id()}'>" + @get_head_html() + "</div>").append(@get_field_html())
+		$("<div id='#{@get_id()}' class='setting'>" + @get_head_html() + "</div>").append(@get_field_html()).append("<br class='clear' />")
 	
 	get_head_html: ->
 		"<h2>#{@name}:</h2> "
@@ -29,6 +29,7 @@ class SettingsText extends SettingsField
 				.change((elm) => 
 					@_setValue(elm.target.value)
 				)
+		elm.addClass(@values.style) if @values.style
 		return elm
 
 class SettingsPassword extends SettingsText
@@ -51,10 +52,11 @@ class SettingsList extends SettingsField
 	
 	get_html: ->
 		div = $('<div>').append(@get_head_html()).addClass('list')
-		button = $("<a href='#'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click( =>
+		button = $("<a href='#' style='float: right;'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click( =>
 			@_addValue()
 		)
 		div.append(button)
+		div.append("<br class='break' />")
 		table = $('<table>')
 		
 		tr = $('<tr>')
