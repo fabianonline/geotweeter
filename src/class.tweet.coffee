@@ -201,7 +201,7 @@ class Tweet extends TwitterMessage
 	
 	delete: ->
 		return unless confirm("Wirklich diesen Tweet löschen?")
-		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: -> $(@div_id()).remove()})
+		@account.twitter_request("statuses/destroy/#{@id}.json", {success_string: "Tweet gelöscht", success: => $(@div_id()).remove()})
 	
 	toggle_favorite: ->
 		if @data.favorited
