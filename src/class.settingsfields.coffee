@@ -12,7 +12,7 @@ class SettingsField
 		$("<div id='#{@get_id()}'>" + @get_head_html() + "</div>").append(@get_field_html())
 	
 	get_head_html: ->
-		"<h2>#{@name}:</h2>"
+		"<strong>#{@name}:</strong>"
 	
 	_setValue: (val) -> @values.setValue(val); Settings.save()
 	_addValue: -> @values.addValue(val); Settings.save()
@@ -34,6 +34,15 @@ class SettingsText extends SettingsField
 class SettingsPassword extends SettingsText
 	get_field_html: ->
 		return super().attr({type: "password"})
+
+class SettingsBoolean extends SettingsField
+	get_field_html: ->
+		elm = $('<input>')
+			.attr({type: "checkbox", checked: @values.getValue()})
+			.change((elm) =>
+				@_setValue($(elm.target).is(':checked'))
+			)
+		return elm
 	
 class SettingsList extends SettingsField
 	constructor: (values) ->

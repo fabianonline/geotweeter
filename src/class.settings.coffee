@@ -135,3 +135,13 @@ Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPa
 	getValue: -> settings.instapaper_credentials.user && settings.instapaper_credentials.user.length>0 ? "12345678" : ""
 	setValue: (value) -> settings.instapaper_credentials.password = value
 }))
+
+Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", new SettingsBoolean({
+	getValue: -> settings.debug
+	setValue: (value) -> settings.debug = value
+}))
+
+Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
+	getValue: -> settings.timings.max_double_enter_time
+	setValue: (value) -> settings.timings.max_double_enter_time = value
+}))

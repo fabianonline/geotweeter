@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2827,7 +2827,22 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_head_html = function() {
-    return "<h2>" + this.name + ":</h2>";
+    return "<strong>" + this.name + ":</strong>";
+  };
+
+  SettingsField.prototype._setValue = function(val) {
+    this.values.setValue(val);
+    return Settings.save();
+  };
+
+  SettingsField.prototype._addValue = function() {
+    this.values.addValue(val);
+    return Settings.save();
+  };
+
+  SettingsField.prototype._deleteValue = function(i) {
+    this.values.deleteValue(i);
+    return Settings.save();
   };
 
   return SettingsField;
@@ -2851,7 +2866,7 @@ SettingsText = (function(_super) {
       elm = $('<input>').attr({
         type: "text"
       }).val(this.values.getValue()).change(function(elm) {
-        return _this.values.setValue(elm.target.value);
+        return _this._setValue(elm.target.value);
       });
     }
     return elm;
@@ -2879,6 +2894,30 @@ SettingsPassword = (function(_super) {
 
 })(SettingsText);
 
+SettingsBoolean = (function(_super) {
+
+  __extends(SettingsBoolean, _super);
+
+  function SettingsBoolean() {
+    return SettingsBoolean.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsBoolean.prototype.get_field_html = function() {
+    var elm,
+      _this = this;
+    elm = $('<input>').attr({
+      type: "checkbox",
+      checked: this.values.getValue()
+    }).change(function(elm) {
+      return _this._setValue($(elm.target).is(':checked'));
+    });
+    return elm;
+  };
+
+  return SettingsBoolean;
+
+})(SettingsField);
+
 SettingsList = (function(_super) {
 
   __extends(SettingsList, _super);
@@ -2899,7 +2938,7 @@ SettingsList = (function(_super) {
     button = $("<a href='#'>").attr({
       style: "float: right; margin-top: -25px;"
     }).html("Hinzufügen").click(function() {
-      _this.values.addValue();
+      _this._addValue();
       return Settings.refresh_view();
     });
     div.append(button);
@@ -2926,7 +2965,7 @@ SettingsList = (function(_super) {
           tr.append($('<td>').html(cells));
         }
         tr.append($('<td>').html("X").click(function(elm) {
-          _this.values.deleteValue(i);
+          _this._deleteValue(i);
           return Settings.refresh_view();
         }));
         return table.append(tr);
@@ -3011,6 +3050,7 @@ Settings = (function() {
   };
 
   Settings.save = function() {
+    Application.log("Settings", "", "Saving Settings");
     return localStorage.setItem("geotweeter.settings", JSON.stringify(settings));
   };
 
@@ -3168,6 +3208,24 @@ Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPa
   },
   setValue: function(value) {
     return settings.instapaper_credentials.password = value;
+  }
+}));
+
+Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", new SettingsBoolean({
+  getValue: function() {
+    return settings.debug;
+  },
+  setValue: function(value) {
+    return settings.debug = value;
+  }
+}));
+
+Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
+  getValue: function() {
+    return settings.timings.max_double_enter_time;
+  },
+  setValue: function(value) {
+    return settings.timings.max_double_enter_time = value;
   }
 }));
 
