@@ -12,11 +12,11 @@ class SettingsField
 		$("<div id='#{@get_id()}'>" + @get_head_html() + "</div>").append(@get_field_html())
 	
 	get_head_html: ->
-		"<strong>#{@name}:</strong>"
+		"<h2>#{@name}:</h2> "
 	
-	_setValue: (val) -> @values.setValue(val); Settings.save()
-	_addValue: -> @values.addValue()
-	_deleteValue: (i) -> @values.deleteValue(i); Settings.save()
+	_setValue: (val) -> @values.setValue(val); Settings.save(); Settings.refresh_view(true)
+	_addValue: -> @values.addValue(); Settings.refresh_view(true)
+	_deleteValue: (i) -> @values.deleteValue(i); Settings.save(); Settings.refresh_view(true)
 	
 class SettingsText extends SettingsField
 	get_field_html: ->
@@ -48,11 +48,10 @@ class SettingsList extends SettingsField
 	constructor: (values) ->
 		super(values)
 		@values.listHeaders ?= ["Name"]
-		@values.listHeaders.push("Aktionen")
 	
 	get_html: ->
-		div = $('<div>').append(@get_head_html())
-		button = $("<a href='#'>").html("Hinzufügen").click( =>
+		div = $('<div>').append(@get_head_html()).addClass('list')
+		button = $("<a href='#'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click( =>
 			@_addValue()
 		)
 		div.append(button)
@@ -60,6 +59,7 @@ class SettingsList extends SettingsField
 		
 		tr = $('<tr>')
 		tr.append($('<th>').html(val)) for val in @values.listHeaders
+		tr.append($('<th>').html("Aktionen").addClass("grey"))
 		table.append(tr)
 		
 		count = @values.count()
@@ -71,7 +71,7 @@ class SettingsList extends SettingsField
 					tr.append($('<td>').html(val)) for val in cells
 				else
 					tr.append($('<td>').html(cells))
-				tr.append($('<td>').html("X").click((elm) => 
+				tr.append($('<td>').html("<a href='#' onClick='return false;'><img src='icons/cancel.png' title='Löschen' /> Löschen</a>").addClass("grey").click((elm) => 
 					@_deleteValue(i)
 					Settings.refresh_view()
 				))

@@ -2828,21 +2828,24 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_head_html = function() {
-    return "<strong>" + this.name + ":</strong>";
+    return "<h2>" + this.name + ":</h2> ";
   };
 
   SettingsField.prototype._setValue = function(val) {
     this.values.setValue(val);
-    return Settings.save();
+    Settings.save();
+    return Settings.refresh_view(true);
   };
 
   SettingsField.prototype._addValue = function() {
-    return this.values.addValue();
+    this.values.addValue();
+    return Settings.refresh_view(true);
   };
 
   SettingsField.prototype._deleteValue = function(i) {
     this.values.deleteValue(i);
-    return Settings.save();
+    Settings.save();
+    return Settings.refresh_view(true);
   };
 
   return SettingsField;
@@ -2928,14 +2931,13 @@ SettingsList = (function(_super) {
     if ((_ref = (_base = this.values).listHeaders) == null) {
       _base.listHeaders = ["Name"];
     }
-    this.values.listHeaders.push("Aktionen");
   }
 
   SettingsList.prototype.get_html = function() {
     var button, count, div, i, table, tr, val, _fn, _i, _j, _len, _ref, _ref1,
       _this = this;
-    div = $('<div>').append(this.get_head_html());
-    button = $("<a href='#'>").html("Hinzufügen").click(function() {
+    div = $('<div>').append(this.get_head_html()).addClass('list');
+    button = $("<a href='#'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click(function() {
       return _this._addValue();
     });
     div.append(button);
@@ -2946,6 +2948,7 @@ SettingsList = (function(_super) {
       val = _ref[_i];
       tr.append($('<th>').html(val));
     }
+    tr.append($('<th>').html("Aktionen").addClass("grey"));
     table.append(tr);
     count = this.values.count();
     if (count > 0) {
@@ -2961,7 +2964,7 @@ SettingsList = (function(_super) {
         } else {
           tr.append($('<td>').html(cells));
         }
-        tr.append($('<td>').html("X").click(function(elm) {
+        tr.append($('<td>').html("<a href='#' onClick='return false;'><img src='icons/cancel.png' title='Löschen' /> Löschen</a>").addClass("grey").click(function(elm) {
           _this._deleteValue(i);
           return Settings.refresh_view();
         }));
@@ -3009,10 +3012,13 @@ Settings = (function() {
     }
   };
 
-  Settings.show = function(category) {
+  Settings.show = function(category, refresh_only) {
     var entry, html, name, _ref, _ref1;
     if (category == null) {
       category = this.categories[0];
+    }
+    if (refresh_only == null) {
+      refresh_only = false;
     }
     this.save();
     this.current_category = category;
@@ -3029,7 +3035,9 @@ Settings = (function() {
     }
     $('ul#settings_categories li').removeClass("selected");
     $("ul#settings_categories li#category_" + category).addClass("selected");
-    return $('#settings').show();
+    if (!refresh_only) {
+      return $('#settings').show();
+    }
   };
 
   Settings.close = function() {
@@ -3044,8 +3052,11 @@ Settings = (function() {
     }
   };
 
-  Settings.refresh_view = function() {
-    return this.show(this.current_category);
+  Settings.refresh_view = function(refresh_only) {
+    if (refresh_only == null) {
+      refresh_only = false;
+    }
+    return this.show(this.current_category, refresh_only);
   };
 
   Settings.save = function() {
@@ -3073,7 +3084,9 @@ Settings = (function() {
         var li;
         li = $('<li>').click(function() {
           return Settings.show(cat);
-        }).html($('<a>').html(cat)).attr("id", "category_" + cat);
+        }).html($('<a href="#" onClick="return false;">').html(cat)).attr({
+          id: "category_" + cat
+        });
         return ul.append(li);
       })(cat));
     }

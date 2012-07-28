@@ -27,10 +27,9 @@
 
 <div id="settings">
 	<h1>Einstellungen</h1>
+	<div><a href="." class="close" onClick="return Settings.close();">Speichern und schließen</a></div>
 	<ul id="settings_categories"></ul>
-	<div><a href="#" class="close" onClick="return Settings.close();">Speichern und schließen</a></div>
 	<div id="settings_content"></div>
-	<div><a href="#" class="close" onClick="return Settings.close();">Speichern und schließen</a></div>
 </div>
 
 <div id="infoarea">
@@ -42,7 +41,7 @@
 
 <div id="top">
 <div id="users">
-    <a href="#" onClick="return Hooks.add();" style="float: right;"><img src="icons/add.png" /></a>
+    <a href="#" onClick="Settings.show(); return false;" style="float: right;"><img src="icons/cog.png" /></a>
 </div>
 <div id="buttonbar" style="clear: both;">
     <a href="#" onClick="return Account.hooks.mark_as_read();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>

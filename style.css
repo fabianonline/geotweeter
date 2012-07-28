@@ -249,6 +249,40 @@ textarea, input, select {
 #infoarea { z-index: 106; }
 #settings { z-index: 105; }
 
+#settings h2 {
+	display: inline;
+}
+
+#settings a {
+	text-decoration: none;
+	color: #000;
+}
+
+#settings div.list {
+	border: 1px dotted #aaa;
+	margin-bottom: 5px;
+	padding-bottom: 5px; 
+}
+
+#settings table {
+	border-collapse: collapse;
+}
+
+#settings table th {
+	border-bottom: 2px solid #000;
+}
+
+#settings table .grey {
+	color: #aaa;
+	border-color: #aaa;
+}
+
+#settings table td,
+#settings table th {
+	border-left: 1px dotted #000;
+	border-right: 1px dotted #000;
+}
+
 ul#settings_categories {
 	padding-left: 0px;
 	padding-bottom: 4px;

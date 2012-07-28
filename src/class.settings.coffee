@@ -17,7 +17,7 @@ class Settings
 		}
 		@categories.push(category) if @categories.indexOf(category)==-1
 	
-	@show: (category = @categories[0]) -> 
+	@show: (category = @categories[0], refresh_only=false) -> 
 		@save()
 		@current_category = category
 		html = $("<div></div>")
@@ -27,7 +27,7 @@ class Settings
 		Application.current_account?.hide()
 		$('ul#settings_categories li').removeClass("selected")
 		$("ul#settings_categories li#category_#{category}").addClass("selected")
-		$('#settings').show()
+		$('#settings').show() unless refresh_only
 	
 	@close: ->
 		@save()
@@ -39,7 +39,7 @@ class Settings
 			Application.current_account.show()
 			return false
 	
-	@refresh_view: -> @show(@current_category)
+	@refresh_view: (refresh_only = false) -> @show(@current_category, refresh_only)
 	
 	@save: -> 
 		Application.log("Settings", "", "Saving Settings")
@@ -54,7 +54,7 @@ class Settings
 		ul = $('#settings ul')
 		for cat in @categories
 			do (cat) ->
-				li = $('<li>').click( -> Settings.show(cat) ).html($('<a>').html(cat)).attr("id", "category_#{cat}")
+				li = $('<li>').click( -> Settings.show(cat) ).html($('<a href="#" onClick="return false;">').html(cat)).attr({id: "category_#{cat}"})
 				ul.append(li)
 
 
@@ -73,16 +73,6 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
 	listHeaders: ["Account", "Streaming"]
 	addValue: Hooks.add_user_1
 }))
-
-#Settings.add("Allgemeines", "ConsumerKey", "Der vom Geotweeter verwendete ConsumerKey. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
-#	getValue: -> settings.twitter.consumerKey
-#	readOnly: true
-#}))
-
-#Settings.add("Allgemeines", "ConsumerSecret", "Der vom Geotweeter verwendete ConsumerSecret. Achtung: Wird er geändert, müssen alle Accounts neu hinzugefügt werden!", new SettingsText({
-#	getValue: -> settings.twitter.consumerSecret
-#	readOnly: true
-#}))
 
 Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new SettingsList({
 	count: -> settings.places.length
