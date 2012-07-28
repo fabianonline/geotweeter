@@ -1739,13 +1739,14 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype["delete"] = function() {
+    var _this = this;
     if (!confirm("Wirklich diesen Tweet löschen?")) {
       return;
     }
     return this.account.twitter_request("statuses/destroy/" + this.id + ".json", {
       success_string: "Tweet gelöscht",
       success: function() {
-        return $(this.div_id()).remove();
+        return $(_this.div_id()).remove();
       }
     });
   };
