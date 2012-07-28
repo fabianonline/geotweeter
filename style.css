@@ -317,6 +317,8 @@ textarea, input, select {
 #settings table th {
 	border-left: 1px dotted #000;
 	border-right: 1px dotted #000;
+	padding-left: 3px;
+	padding-right: 5px;
 }
 
 ul#settings_categories {

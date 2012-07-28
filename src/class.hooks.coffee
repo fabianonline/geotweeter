@@ -96,6 +96,10 @@ class Hooks
 		Application.infoarea.hide()
 
 	@add_location_1: ->
+		if settings.twitter.users.length==0
+			alert("Bitte zunächst einen User anlegen!")
+			return
+		
 		html = "
 			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem
 			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />
@@ -137,7 +141,7 @@ class Hooks
 				html = "Folgende POIs wurden in der Umgebung der Koordinaten gefunden:<br />
 					<ul>"
 				for place in data.result.places
-					html += "<li><a href='#' onClick=\"return Hooks.add_location_final('#{place.id}');\">#{place.name}</a> (<a href='#' onClick=\"Application.temp.contained_within='#{place.id}'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>"
+					html += "<li><a href='#' onClick=\"return Hooks.add_location_final('#{place.id}', '#{place.name.replace(/'/g, '"')}');\">#{place.name}</a> (<a href='#' onClick=\"Application.temp.contained_within='#{place.id}'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>"
 				html += "</ul><br />
 					Kein passender Ort dabei? Dann erstellen wir halt einen neuen.<br />
 					Bitte zunächst bei einem übergeordneten Place aus der Liste oben auf 'umgebend' klicken.<br />
@@ -192,11 +196,16 @@ class Hooks
 				Hooks.add_location_final(data.id)
 		})
 	
-	@add_location_final: (id) ->
-		html = "Bitte folgenden Code zum places-Bereich der Settings hinzufügen:<br />
-			<textarea width='70' height='5'>{name:'#{Application.temp.name}', lat:#{Application.temp.lat}, lon:#{Application.temp.long}, place_id:'#{id}'},</textarea><br />
-			Anschließend den Geotweeter bitte neu starten."
-		Application.infoarea.show("Ort hinzufügen", html)
+	@add_location_final: (id, name) ->
+		settings.places.push({
+			name: name || Application.temp.name
+			lat: Application.temp.lat
+			lon: Application.temp.long
+			place_id: id
+		})
+		Settings.save()
+		Application.fill_places()
+		Application.infoarea.hide()
 	
 	@add_user_1:->
 		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
@@ -272,11 +281,14 @@ class Hooks
 		oauth_results = {}
 		result = result.split("&")
 		(x = x.split("=") ; oauth_results[x[0]] = x[1]) for x in result
-		settings.twitter.users.push {
+		id = settings.twitter.users.push {
 			token: oauth_results.oauth_token
 			tokenSecret: oauth_results.oauth_token_secret
 			screen_name: oauth_results.screen_name
 			stream: use_streaming
 		}
 		Settings.save()
+		acct = new Account(id - 1)
+		Application.accounts[id - 1] = acct
+		Application.current_account ?= acct
 		Application.infoarea.hide()

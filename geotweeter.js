@@ -1090,6 +1090,10 @@ Hooks = (function() {
 
   Hooks.add_location_1 = function() {
     var html;
+    if (settings.twitter.users.length === 0) {
+      alert("Bitte zunächst einen User anlegen!");
+      return;
+    }
     html = "			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />			Tipp: Das ist exakt das Format, dass bei Google Maps in den			LatLng-Markern zu finden ist. ;-)<br /><br />			<input type='text' id='location_coords' />			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />";
     Application.infoarea.show("Places suchen", html);
     if (navigator.geolocation != null) {
@@ -1123,7 +1127,7 @@ Hooks = (function() {
         _ref = data.result.places;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           place = _ref[_i];
-          html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "');\">" + place.name + "</a> (<a href='#' onClick=\"Application.temp.contained_within='" + place.id + "'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>";
+          html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "', '" + (place.name.replace(/'/g, '"')) + "');\">" + place.name + "</a> (<a href='#' onClick=\"Application.temp.contained_within='" + place.id + "'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>";
         }
         html += "</ul><br />					Kein passender Ort dabei? Dann erstellen wir halt einen neuen.<br />					Bitte zunächst bei einem übergeordneten Place aus der Liste oben auf 'umgebend' klicken.<br />					<div id='location_add_hidden' style='display: none;'>					Bitte hier die Bezeichnung für den neuen Ort angeben:<br />					<input type='text' id='location_place_name' />					<input type='button' value='Go!' onClick=\"return Hooks.add_location_3();\" />					</div>";
         return $('#infoarea_content').html(html);
@@ -1179,10 +1183,16 @@ Hooks = (function() {
     });
   };
 
-  Hooks.add_location_final = function(id) {
-    var html;
-    html = "Bitte folgenden Code zum places-Bereich der Settings hinzufügen:<br />			<textarea width='70' height='5'>{name:'" + Application.temp.name + "', lat:" + Application.temp.lat + ", lon:" + Application.temp.long + ", place_id:'" + id + "'},</textarea><br />			Anschließend den Geotweeter bitte neu starten.";
-    return Application.infoarea.show("Ort hinzufügen", html);
+  Hooks.add_location_final = function(id, name) {
+    settings.places.push({
+      name: name || Application.temp.name,
+      lat: Application.temp.lat,
+      lon: Application.temp.long,
+      place_id: id
+    });
+    Settings.save();
+    Application.fill_places();
+    return Application.infoarea.hide();
   };
 
   Hooks.add_user_1 = function() {
@@ -1230,7 +1240,7 @@ Hooks = (function() {
   };
 
   Hooks.add_user_2 = function(oauth_token) {
-    var data, keys, message, oauth_results, parameters, pin, request, result, url, use_streaming, x, _i, _len;
+    var acct, data, id, keys, message, oauth_results, parameters, pin, request, result, url, use_streaming, x, _i, _len, _ref;
     pin = $('#pin').val();
     use_streaming = $('#use_streaming').is(':checked');
     Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
@@ -1270,13 +1280,18 @@ Hooks = (function() {
       x = x.split("=");
       oauth_results[x[0]] = x[1];
     }
-    settings.twitter.users.push({
+    id = settings.twitter.users.push({
       token: oauth_results.oauth_token,
       tokenSecret: oauth_results.oauth_token_secret,
       screen_name: oauth_results.screen_name,
       stream: use_streaming
     });
     Settings.save();
+    acct = new Account(id - 1);
+    Application.accounts[id - 1] = acct;
+    if ((_ref = Application.current_account) == null) {
+      Application.current_account = acct;
+    }
     return Application.infoarea.hide();
   };
 
@@ -3123,6 +3138,9 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
   },
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten User-Account löschen?")) {
+      if (settings.twitter.users[i].stream) {
+        Application.accounts[i].request.stop_request();
+      }
       settings.twitter.users.splice(i, 1);
       return Settings.force_restart = true;
     }
@@ -3143,7 +3161,7 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
   deleteValue: function(i) {
     if (confirm("Wirklich den gewählten Ort löschen?")) {
       settings.places.splice(i, 1);
-      return Settings.force_restart = true;
+      return Application.fill_places();
     }
   },
   listHeaders: ["Name", "Lat", "Lon"],
@@ -3337,20 +3355,24 @@ Application = (function() {
   };
 
   Application.fill_places = function() {
-    var id, p, place, _i, _len, _ref;
+    var i, id, p, place, _i, _j, _len, _ref, _ref1;
     if (settings.places.length === 0) {
-      return $('#place').remove();
+      return $('#place').hide();
     } else {
       p = $('#place')[0];
+      for (i = _i = 0, _ref = p.options.length; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        p.options.remove();
+      }
       p.options[0] = new Option("-- leer --", 0);
-      _ref = settings.places;
-      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
-        place = _ref[id];
+      _ref1 = settings.places;
+      for (id = _j = 0, _len = _ref1.length; _j < _len; id = ++_j) {
+        place = _ref1[id];
         p.options[p.options.length] = new Option(place.name, id + 1);
       }
       if ($.cookie('last_place')) {
-        return $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
+        $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
       }
+      return $('#place').show();
     }
   };
 

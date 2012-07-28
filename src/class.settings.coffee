@@ -69,6 +69,7 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
 	getValue: (i) -> [settings.twitter.users[i].screen_name, if settings.twitter.users[i].stream then 'Ja' else '']
 	deleteValue: (i) -> 
 		if confirm("Wirklich den gewählten User-Account löschen?")
+			Application.accounts[i].request.stop_request() if settings.twitter.users[i].stream
 			settings.twitter.users.splice(i, 1) 
 			Settings.force_restart = true
 	listHeaders: ["Account", "Streaming"]
@@ -83,7 +84,7 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
 	deleteValue: (i) -> 
 		if confirm("Wirklich den gewählten Ort löschen?")
 			settings.places.splice(i, 1) 
-			Settings.force_restart = true
+			Application.fill_places()
 	listHeaders: ["Name", "Lat", "Lon"]
 	addValue: Hooks.add_location_1
 }))
