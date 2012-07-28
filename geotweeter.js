@@ -3251,7 +3251,10 @@ Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Dr
     return settings.timings.max_double_enter_time;
   },
   setValue: function(value) {
-    return settings.timings.max_double_enter_time = value;
+    value = parseInt(value);
+    if ((value != null) && !isNaN(value)) {
+      return settings.timings.max_double_enter_time = value;
+    }
   }
 }));
 

@@ -138,5 +138,7 @@ Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", n
 
 Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
 	getValue: -> settings.timings.max_double_enter_time
-	setValue: (value) -> settings.timings.max_double_enter_time = value
+	setValue: (value) -> 
+		value = parseInt(value)
+		settings.timings.max_double_enter_time = value if value? && !isNaN(value)
 }))
