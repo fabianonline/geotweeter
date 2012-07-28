@@ -249,6 +249,25 @@ textarea, input, select {
 #infoarea { z-index: 106; }
 #settings { z-index: 105; }
 
+ul#settings_categories {
+	padding-left: 0px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #000;
+}
+
+ul#settings_categories li {
+	display: inline;
+	padding: 5px;
+	border: 1px solid #000;
+	background-color: #ddd;
+	font-weight: bold;
+}
+
+ul#settings_categories li.selected {
+	background-color: #fff;
+	border-bottom: none;
+}
+
 #infoarea #info_spinner {
     text-align: center;
     padding-top: 15px;

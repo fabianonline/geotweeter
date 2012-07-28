@@ -3030,6 +3030,8 @@ Settings = (function() {
     if ((_ref1 = Application.current_account) != null) {
       _ref1.hide();
     }
+    $('ul#settings_categories li').removeClass("selected");
+    $("ul#settings_categories li#category_" + category).addClass("selected");
     return $('#settings').show();
   };
 
@@ -3074,7 +3076,7 @@ Settings = (function() {
         var li;
         li = $('<li>').click(function() {
           return Settings.show(cat);
-        }).html(cat);
+        }).html($('<a>').html(cat)).attr("id", "category_" + cat);
         return ul.append(li);
       })(cat));
     }

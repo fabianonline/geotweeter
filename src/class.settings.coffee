@@ -25,6 +25,8 @@ class Settings
 		$('#settings_content').empty().append(html)
 		$('#top').hide()
 		Application.current_account?.hide()
+		$('ul#settings_categories li').removeClass("selected")
+		$("ul#settings_categories li#category_#{category}").addClass("selected")
 		$('#settings').show()
 	
 	@close: ->
@@ -52,7 +54,7 @@ class Settings
 		ul = $('#settings ul')
 		for cat in @categories
 			do (cat) ->
-				li = $('<li>').click( -> Settings.show(cat) ).html(cat)
+				li = $('<li>').click( -> Settings.show(cat) ).html($('<a>').html(cat)).attr("id", "category_#{cat}")
 				ul.append(li)
 
 
