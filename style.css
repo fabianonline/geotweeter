@@ -261,12 +261,14 @@ textarea, input, select {
 	padding: 5px;
 	text-align: center;
 	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
 }
 
 #settings h2 {
 	display: inline;
 	font-size: 15px;
-	margin-right: 25px;
+	margin-right: 5px;
 }
 
 #settings a {
@@ -405,6 +407,14 @@ ul#settings_categories li.selected {
 
 #tooltip h3, #tooltip div {
     margin: 0;
+}
+
+#tooltip h3 {
+	font-size: 12px;
+}
+
+#tooltip.settings_tooltip {
+	width: 200px;
 }
 
 #dm_info {

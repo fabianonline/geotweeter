@@ -2,6 +2,7 @@ class SettingsField
 	values: null
 	name: null
 	category: null
+	help: ""
 	
 	constructor: (values) ->
 		@values = values
@@ -9,10 +10,10 @@ class SettingsField
 	get_id: -> (@category+@name).replace(/[^A-Za-z0-9]/g, "")
 	
 	get_html: ->
-		$("<div id='#{@get_id()}' class='setting'>" + @get_head_html() + "</div>").append(@get_field_html()).append("<br class='clear' />")
+		$("<div id='#{@get_id()}' class='setting'>").append(@get_head_html()).append(@get_field_html()).append("<br class='clear' />")
 	
 	get_head_html: ->
-		"<h2>#{@name}:</h2> "
+		$("<h2>").html("#{@name}:").after($('<img>').attr({src: "icons/help.png", title: @help}).tooltip({track: true, delay: 0, showURL: false, extraClass: "settings_tooltip"}))
 	
 	_setValue: (val) -> @values.setValue(val); Settings.save(); Settings.refresh_view(true)
 	_addValue: -> @values.addValue(); Settings.refresh_view(true)

@@ -2817,6 +2817,8 @@ SettingsField = (function() {
 
   SettingsField.prototype.category = null;
 
+  SettingsField.prototype.help = "";
+
   function SettingsField(values) {
     this.values = values;
   }
@@ -2826,11 +2828,19 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_html = function() {
-    return $(("<div id='" + (this.get_id()) + "' class='setting'>") + this.get_head_html() + "</div>").append(this.get_field_html()).append("<br class='clear' />");
+    return $("<div id='" + (this.get_id()) + "' class='setting'>").append(this.get_head_html()).append(this.get_field_html()).append("<br class='clear' />");
   };
 
   SettingsField.prototype.get_head_html = function() {
-    return "<h2>" + this.name + ":</h2> ";
+    return $("<h2>").html("" + this.name + ":").after($('<img>').attr({
+      src: "icons/help.png",
+      title: this.help
+    }).tooltip({
+      track: true,
+      delay: 0,
+      showURL: false,
+      extraClass: "settings_tooltip"
+    }));
   };
 
   SettingsField.prototype._setValue = function(val) {
@@ -3004,6 +3014,7 @@ Settings = (function() {
     var _base, _ref;
     object.category = category;
     object.name = name;
+    object.help = help;
     if ((_ref = (_base = this.fields)[category]) == null) {
       _base[category] = {};
     }

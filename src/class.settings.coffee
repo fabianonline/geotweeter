@@ -7,6 +7,7 @@ class Settings
 	@add: (category, name, help, object) ->
 		object.category = category
 		object.name = name
+		object.help = help
 		
 		@fields[category]?={}
 		@fields[category][name] = {
