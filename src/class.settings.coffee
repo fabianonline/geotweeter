@@ -142,3 +142,24 @@ Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Dr
 		value = parseInt(value)
 		settings.timings.max_double_enter_time = value if value? && !isNaN(value)
 }))
+
+Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Strea", new SettingsText({
+	getValue: -> settings.timeout_detect_factor
+	setValue: (value) ->
+		value = parseInt(value)
+		settings.timeout_detect_factor = value if value? && !isNaN(value) && value>=1
+}))
+
+Settings.add("Experten", "Timeout-Minimum", "Minimalwert, nach dem frühestens ein Timeout angenommen wird (Sekunden)", new SettingsText({
+	getValue: -> settings.timeout_minimum_delay
+	setValue: (value) ->
+		value = parseInt(value)
+		settings.timeout_minimum_delay = value if value? && !isNaN(value) && value>1 && value<settings.timeout_minimum_delay
+}))
+
+Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fall ein Timeout angenommen wird (Sekunden)", new SettingsText({
+	getValue: -> settings.timeout_maximum_delay
+	setValue: (value) ->
+		value = parseInt(value)
+		settings.timeout_maximum_delay = value if value? && !isNaN(value) && value>1 && value>settings.timeout_maximum_delay
+}))

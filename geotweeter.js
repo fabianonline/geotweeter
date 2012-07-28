@@ -3258,6 +3258,42 @@ Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Dr
   }
 }));
 
+Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Strea", new SettingsText({
+  getValue: function() {
+    return settings.timeout_detect_factor;
+  },
+  setValue: function(value) {
+    value = parseInt(value);
+    if ((value != null) && !isNaN(value) && value >= 1) {
+      return settings.timeout_detect_factor = value;
+    }
+  }
+}));
+
+Settings.add("Experten", "Timeout-Minimum", "Minimalwert, nach dem frühestens ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  getValue: function() {
+    return settings.timeout_minimum_delay;
+  },
+  setValue: function(value) {
+    value = parseInt(value);
+    if ((value != null) && !isNaN(value) && value > 1 && value < settings.timeout_minimum_delay) {
+      return settings.timeout_minimum_delay = value;
+    }
+  }
+}));
+
+Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fall ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  getValue: function() {
+    return settings.timeout_maximum_delay;
+  },
+  setValue: function(value) {
+    value = parseInt(value);
+    if ((value != null) && !isNaN(value) && value > 1 && value > settings.timeout_maximum_delay) {
+      return settings.timeout_maximum_delay = value;
+    }
+  }
+}));
+
 Application = (function() {
 
   function Application() {}
