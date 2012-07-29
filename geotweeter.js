@@ -2784,7 +2784,7 @@ Migrations = (function() {
   Migrations.migrations = [];
 
   Migrations.migrations[0] = {
-    description: "Settings erzeugt",
+    description: "Settings wurden neu erzeugt",
     blocking: true,
     change: function(settings) {
       settings = {
@@ -2843,7 +2843,9 @@ Migrations = (function() {
     }
     for (i = _i = start_version, _ref = this.migrations.length - 1; start_version <= _ref ? _i <= _ref : _i >= _ref; i = start_version <= _ref ? ++_i : --_i) {
       migration = this.migrations[i];
-      changes.push("  * " + migration.description);
+      if (migration.blocking) {
+        changes.push("  * " + migration.description);
+      }
       blocking || (blocking = migration.blocking);
       window.settings = migration.change(window.settings);
       window.settings.version = i + 1;

@@ -2,7 +2,7 @@ class Migrations
 	@migrations = []
 	
 	@migrations[0] = { # Migrating from Version 0 (non-existant setting) to Version 1
-		description: "Settings erzeugt",
+		description: "Settings wurden neu erzeugt",
 		blocking: true, # This update can be run "silently" (the default values are okay and GT will run with them)
 		change: (settings) ->
 			settings = {
@@ -55,7 +55,7 @@ class Migrations
 		
 		for i in [start_version..@migrations.length-1]
 			migration = @migrations[i]
-			changes.push "  * #{migration.description}"
+			changes.push "  * #{migration.description}" if migration.blocking
 			blocking ||= migration.blocking
 			window.settings = migration.change(window.settings)
 			window.settings.version = i+1
