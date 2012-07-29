@@ -3320,10 +3320,11 @@ Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsTe
 
 Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
   getValue: function() {
-    var _ref;
-    return (_ref = settings.instapaper_credentials.user && settings.instapaper_credentials.user.length > 0) != null ? _ref : {
-      "12345678": ""
-    };
+    if (settings.instapaper_credentials.user && settings.instapaper_credentials.user.length > 0) {
+      return "12345678";
+    } else {
+      return "";
+    }
   },
   setValue: function(value) {
     return settings.instapaper_credentials.password = value;

@@ -135,7 +135,7 @@ Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsTe
 }))
 
 Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
-	getValue: -> settings.instapaper_credentials.user && settings.instapaper_credentials.user.length>0 ? "12345678" : ""
+	getValue: -> if settings.instapaper_credentials.user && settings.instapaper_credentials.user.length>0 then "12345678" else ""
 	setValue: (value) -> settings.instapaper_credentials.password = value
 	style: "big"
 }))
