@@ -14,7 +14,10 @@ class SettingsField
 		$("<div id='#{@get_id()}' class='setting'>").append(@get_head_html()).append(@get_field_html()).append("<br class='clear' />")
 	
 	get_head_html: ->
-		$("<h2>").html("#{@name}:").after($('<img>').attr({src: "icons/help.png", title: @help}).tooltip({track: true, delay: 0, showURL: false, extraClass: "settings_tooltip"}))
+		$("<h2>").html("#{@name}:").after(@get_help_html())
+	
+	get_help_html: ->
+		$('<img>').attr({src: "icons/help.png", title: @help}).tooltip({track: true, delay: 0, showURL: false, extraClass: "settings_tooltip"})
 	
 	_setValue: (val, event) ->
 		val = switch @values.format
@@ -98,3 +101,10 @@ class SettingsList extends SettingsField
 				table.append(tr)
 		div.append(table)
 		return div
+
+class SettingsButton extends SettingsField
+	get_html: ->
+		elm = $('<div>')
+		elm.append($('<button>').html(@name).click( => @values.action() ))
+		elm.append(@get_help_html())
+		return elm

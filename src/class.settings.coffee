@@ -193,3 +193,19 @@ Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikatio
 			Settings.force_restart = true
 	style: "big"
 }))
+
+Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf einen anderen PC zu übertragen.", new SettingsButton({
+	action: -> prompt("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!", JSON.stringify(settings))
+}))
+
+Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
+	action: ->
+		text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.")
+		settings = JSON.parse(text)
+		Settings.save()
+		location.href = "."
+}))
+
+Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet den Geotweeter dann neu.", new SettingsButton({
+	action: -> Settings.reset() if confirm("Sicher? Alle (!) Einstellungen löschen?")
+}))

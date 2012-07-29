@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsButton, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -2889,7 +2889,11 @@ SettingsField = (function() {
   };
 
   SettingsField.prototype.get_head_html = function() {
-    return $("<h2>").html("" + this.name + ":").after($('<img>').attr({
+    return $("<h2>").html("" + this.name + ":").after(this.get_help_html());
+  };
+
+  SettingsField.prototype.get_help_html = function() {
+    return $('<img>').attr({
       src: "icons/help.png",
       title: this.help
     }).tooltip({
@@ -2897,7 +2901,7 @@ SettingsField = (function() {
       delay: 0,
       showURL: false,
       extraClass: "settings_tooltip"
-    }));
+    });
   };
 
   SettingsField.prototype._setValue = function(val, event) {
@@ -3076,6 +3080,29 @@ SettingsList = (function(_super) {
   };
 
   return SettingsList;
+
+})(SettingsField);
+
+SettingsButton = (function(_super) {
+
+  __extends(SettingsButton, _super);
+
+  function SettingsButton() {
+    return SettingsButton.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsButton.prototype.get_html = function() {
+    var elm,
+      _this = this;
+    elm = $('<div>');
+    elm.append($('<button>').html(this.name).click(function() {
+      return _this.values.action();
+    }));
+    elm.append(this.get_help_html());
+    return elm;
+  };
+
+  return SettingsButton;
 
 })(SettingsField);
 
@@ -3457,6 +3484,30 @@ Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikatio
     }
   },
   style: "big"
+}));
+
+Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf einen anderen PC zu übertragen.", new SettingsButton({
+  action: function() {
+    return prompt("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!", JSON.stringify(settings));
+  }
+}));
+
+Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
+  action: function() {
+    var settings, text;
+    text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.");
+    settings = JSON.parse(text);
+    Settings.save();
+    return location.href = ".";
+  }
+}));
+
+Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet den Geotweeter dann neu.", new SettingsButton({
+  action: function() {
+    if (confirm("Sicher? Alle (!) Einstellungen löschen?")) {
+      return Settings.reset();
+    }
+  }
 }));
 
 Application = (function() {
