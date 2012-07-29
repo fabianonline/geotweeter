@@ -2796,12 +2796,15 @@ Migrations = (function() {
     var blocking, changes, i, migration, start_version, text, _i, _ref;
     changes = [];
     blocking = false;
+    Application.log("Migration", "migrate", "Newest available Version: " + this.migrations.length);
     if (window.settings) {
+      Application.log("Migration", "migrate", "Current Version: " + window.settings.version);
       if (window.settings.version === this.migrations.length) {
         return true;
       }
       start_version = window.settings.version;
     } else {
+      Application.log("Migration", "migrate", "No Settings available - starting fresh.");
       start_version = 0;
     }
     for (i = _i = start_version, _ref = this.migrations.length - 1; start_version <= _ref ? _i <= _ref : _i >= _ref; i = start_version <= _ref ? ++_i : --_i) {
@@ -3097,6 +3100,7 @@ Settings = (function() {
   };
 
   Settings.load = function() {
+    Application.log("Settings", "", "Settings loaded");
     return window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"));
   };
 

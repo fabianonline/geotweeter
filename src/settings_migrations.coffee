@@ -37,11 +37,14 @@ class Migrations
 	@migrate: ->
 		changes = []
 		blocking = false
+		Application.log("Migration", "migrate", "Newest available Version: #{@migrations.length}")
 		if window.settings
+			Application.log("Migration", "migrate", "Current Version: #{window.settings.version}")
 			if window.settings.version == @migrations.length
 				return true
 			start_version = window.settings.version
 		else
+			Application.log("Migration", "migrate", "No Settings available - starting fresh.")
 			start_version = 0
 		
 		for i in [start_version..@migrations.length-1]
