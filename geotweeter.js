@@ -2875,6 +2875,9 @@ SettingsField = (function() {
 
   function SettingsField(values) {
     this.values = values;
+    if (this.values.validations == null) {
+      this.values.validations = [];
+    }
   }
 
   SettingsField.prototype.get_id = function() {
@@ -2897,7 +2900,31 @@ SettingsField = (function() {
     }));
   };
 
-  SettingsField.prototype._setValue = function(val) {
+  SettingsField.prototype._setValue = function(val, event) {
+    var validation, _i, _len, _ref;
+    val = (function() {
+      switch (this.values.format) {
+        case "integer":
+          this.values.validations.unshift({
+            message: "Bitte eine Zahl eingeben",
+            func: function(x) {
+              return !isNaN(x);
+            }
+          });
+          return parseInt(val);
+        default:
+          return val;
+      }
+    }).call(this);
+    _ref = this.values.validations;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      validation = _ref[_i];
+      if (!validation.func(val)) {
+        alert(validation.message);
+        event.target.focus();
+        return true;
+      }
+    }
     this.values.setValue(val);
     Settings.save();
     return Settings.refresh_view(true);
@@ -2934,8 +2961,8 @@ SettingsText = (function(_super) {
     } else {
       elm = $('<input>').attr({
         type: "text"
-      }).val(this.values.getValue()).change(function(elm) {
-        return _this._setValue(elm.target.value);
+      }).val(this.values.getValue()).blur(function(event) {
+        return _this._setValue(event.target.value, event);
       });
     }
     if (this.values.style) {
@@ -2980,8 +3007,8 @@ SettingsBoolean = (function(_super) {
     elm = $('<input>').attr({
       type: "checkbox",
       checked: this.values.getValue()
-    }).change(function(elm) {
-      return _this._setValue($(elm.target).is(':checked'));
+    }).change(function(event) {
+      return _this._setValue($(event.target).is(':checked'), event);
     });
     return elm;
   };
@@ -3314,50 +3341,76 @@ Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", n
 }));
 
 Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
+  format: "integer",
   getValue: function() {
     return settings.timings.max_double_enter_time;
   },
   setValue: function(value) {
-    value = parseInt(value);
-    if ((value != null) && !isNaN(value)) {
-      return settings.timings.max_double_enter_time = value;
-    }
+    return settings.timings.max_double_enter_time = value;
   }
 }));
 
-Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Strea", new SettingsText({
+Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Stream", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Der Faktor muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }
+  ],
   getValue: function() {
     return settings.timeout_detect_factor;
   },
   setValue: function(value) {
-    value = parseInt(value);
-    if ((value != null) && !isNaN(value) && value >= 1) {
-      return settings.timeout_detect_factor = value;
-    }
+    return settings.timeout_detect_factor = value;
   }
 }));
 
 Settings.add("Experten", "Timeout-Minimum", "Minimalwert, nach dem frühestens ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Wert muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }, {
+      message: "Wert muss kleiner als das Maximum sein",
+      func: function(x) {
+        return x < settings.timeout_maximum_delay;
+      }
+    }
+  ],
   getValue: function() {
     return settings.timeout_minimum_delay;
   },
   setValue: function(value) {
-    value = parseInt(value);
-    if ((value != null) && !isNaN(value) && value > 1 && value < settings.timeout_minimum_delay) {
-      return settings.timeout_minimum_delay = value;
-    }
+    return settings.timeout_minimum_delay = value;
   }
 }));
 
 Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fall ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Wert muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }, {
+      message: "Wert muss größer als das Minimum sein",
+      func: function(x) {
+        return x > settings.timeout_minimum_delay;
+      }
+    }
+  ],
   getValue: function() {
     return settings.timeout_maximum_delay;
   },
   setValue: function(value) {
-    value = parseInt(value);
-    if ((value != null) && !isNaN(value) && value > 1 && value > settings.timeout_maximum_delay) {
-      return settings.timeout_maximum_delay = value;
-    }
+    return settings.timeout_maximum_delay = value;
   }
 }));
 

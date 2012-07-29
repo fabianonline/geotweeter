@@ -146,31 +146,30 @@ Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", n
 }))
 
 Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
+	format: "integer"
 	getValue: -> settings.timings.max_double_enter_time
-	setValue: (value) -> 
-		value = parseInt(value)
-		settings.timings.max_double_enter_time = value if value? && !isNaN(value)
+	setValue: (value) -> settings.timings.max_double_enter_time = value
 }))
 
-Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Strea", new SettingsText({
+Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Stream", new SettingsText({
+	format: "integer"
+	validations: [{message: "Der Faktor muss mindestens 1 sein.", func: (x)->x>=1}]
 	getValue: -> settings.timeout_detect_factor
-	setValue: (value) ->
-		value = parseInt(value)
-		settings.timeout_detect_factor = value if value? && !isNaN(value) && value>=1
+	setValue: (value) -> settings.timeout_detect_factor = value
 }))
 
 Settings.add("Experten", "Timeout-Minimum", "Minimalwert, nach dem frühestens ein Timeout angenommen wird (Sekunden)", new SettingsText({
+	format: "integer"
+	validations: [{message: "Wert muss mindestens 1 sein.", func: (x)->x>=1}, {message: "Wert muss kleiner als das Maximum sein", func: (x)->x<settings.timeout_maximum_delay}]
 	getValue: -> settings.timeout_minimum_delay
-	setValue: (value) ->
-		value = parseInt(value)
-		settings.timeout_minimum_delay = value if value? && !isNaN(value) && value>1 && value<settings.timeout_minimum_delay
+	setValue: (value) -> settings.timeout_minimum_delay = value
 }))
 
 Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fall ein Timeout angenommen wird (Sekunden)", new SettingsText({
+	format: "integer"
+	validations: [{message: "Wert muss mindestens 1 sein.", func: (x)->x>=1}, {message: "Wert muss größer als das Minimum sein", func: (x)->x>settings.timeout_minimum_delay}]
 	getValue: -> settings.timeout_maximum_delay
-	setValue: (value) ->
-		value = parseInt(value)
-		settings.timeout_maximum_delay = value if value? && !isNaN(value) && value>1 && value>settings.timeout_maximum_delay
+	setValue: (value) -> settings.timeout_maximum_delay = value
 }))
 
 Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit Twitter. Wird er geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({

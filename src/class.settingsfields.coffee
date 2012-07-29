@@ -6,6 +6,7 @@ class SettingsField
 	
 	constructor: (values) ->
 		@values = values
+		@values.validations = [] unless @values.validations?
 	
 	get_id: -> (@category+@name).replace(/[^A-Za-z0-9]/g, "")
 	
@@ -15,7 +16,23 @@ class SettingsField
 	get_head_html: ->
 		$("<h2>").html("#{@name}:").after($('<img>').attr({src: "icons/help.png", title: @help}).tooltip({track: true, delay: 0, showURL: false, extraClass: "settings_tooltip"}))
 	
-	_setValue: (val) -> @values.setValue(val); Settings.save(); Settings.refresh_view(true)
+	_setValue: (val, event) ->
+		val = switch @values.format
+			when "integer"
+				@values.validations.unshift({message: "Bitte eine Zahl eingeben", func: (x) -> !isNaN(x)})
+				parseInt(val)
+			else val
+		
+		for validation in @values.validations
+			if !validation.func(val)
+				alert(validation.message)
+				event.target.focus()
+				return true
+		
+		@values.setValue(val)
+		Settings.save()
+		Settings.refresh_view(true)
+	
 	_addValue: -> @values.addValue(); Settings.refresh_view(true)
 	_deleteValue: (i) -> @values.deleteValue(i); Settings.save(); Settings.refresh_view(true)
 	
@@ -27,8 +44,8 @@ class SettingsText extends SettingsField
 			elm = $('<input>')
 				.attr({type: "text"})
 				.val(@values.getValue())
-				.change((elm) => 
-					@_setValue(elm.target.value)
+				.blur((event) => 
+					@_setValue(event.target.value, event)
 				)
 		elm.addClass(@values.style) if @values.style
 		return elm
@@ -41,8 +58,8 @@ class SettingsBoolean extends SettingsField
 	get_field_html: ->
 		elm = $('<input>')
 			.attr({type: "checkbox", checked: @values.getValue()})
-			.change((elm) =>
-				@_setValue($(elm.target).is(':checked'))
+			.change((event) =>
+				@_setValue($(event.target).is(':checked'), event)
 			)
 		return elm
 	
