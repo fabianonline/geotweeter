@@ -3316,6 +3316,50 @@ Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fal
   }
 }));
 
+Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit Twitter. Wird er geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+  getValue: function() {
+    return "abcdefghijklmno";
+  },
+  setValue: function(value) {
+    var acc, id, _i, _len, _ref;
+    if (confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+      _ref = Application.accounts;
+      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+        acc = _ref[id];
+        if (settings.twitter.users[id].stream) {
+          acc.request.stop_request();
+        }
+      }
+      settings.twitter.consumerKey = value;
+      settings.twitter.users = [];
+      return Settings.force_restart = true;
+    }
+  },
+  style: "big"
+}));
+
+Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikation mit Twitter. Wird es geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+  getValue: function() {
+    return "abcdefghijklmnokjhkjhkjh";
+  },
+  setValue: function(value) {
+    var acc, id, _i, _len, _ref;
+    if (confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+      _ref = Application.accounts;
+      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+        acc = _ref[id];
+        if (settings.twitter.users[id].stream) {
+          acc.request.stop_request();
+        }
+      }
+      settings.twitter.consumerSecret = value;
+      settings.twitter.users = [];
+      return Settings.force_restart = true;
+    }
+  },
+  style: "big"
+}));
+
 Application = (function() {
 
   function Application() {}

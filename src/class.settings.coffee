@@ -167,3 +167,25 @@ Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fal
 		value = parseInt(value)
 		settings.timeout_maximum_delay = value if value? && !isNaN(value) && value>1 && value>settings.timeout_maximum_delay
 }))
+
+Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit Twitter. Wird er geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+	getValue: -> "abcdefghijklmno"
+	setValue: (value) ->
+		if confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
+			acc.request.stop_request() for acc, id in Application.accounts when settings.twitter.users[id].stream
+			settings.twitter.consumerKey = value
+			settings.twitter.users = []
+			Settings.force_restart = true
+	style: "big"
+}))
+
+Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikation mit Twitter. Wird es geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+	getValue: -> "abcdefghijklmnokjhkjhkjh"
+	setValue: (value) ->
+		if confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
+			acc.request.stop_request() for acc, id in Application.accounts when settings.twitter.users[id].stream
+			settings.twitter.consumerSecret = value
+			settings.twitter.users = []
+			Settings.force_restart = true
+	style: "big"
+}))
