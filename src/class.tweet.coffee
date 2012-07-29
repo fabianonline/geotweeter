@@ -55,15 +55,23 @@ class Tweet extends TwitterMessage
 	get_html: ->
 		return "" if @is_ignoreable_tweet()
 		
-		"<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
-		@get_single_thumb_html() +
-		@get_sender_html() +
-		"<span class='text'>#{@text}</span>" +
-		@get_multi_thumb_html() +
-		@get_permanent_info_html() +
-		@get_temporary_info_html() +
-		"<div style='clear: both;'></div>" +
-		"</div>"
+		html = $("<div id='#{@id}' class='#{@get_classes().join(" ")}' data-tweet-id='#{@id}' data-account-id='#{@account.id}'>" +
+			@get_single_thumb_html() +
+			@get_sender_html() +
+			"<span class='text'>#{@text}</span>" +
+			@get_multi_thumb_html() +
+			@get_permanent_info_html() +
+			@get_temporary_info_html() +
+			"<div style='clear: both;'></div>" +
+			"</div>")
+		$(html).find('.lightbox').lightBox({
+			imageLoading: "icons/lightbox-ico-loading.gif"
+			imageBtnClose: "icons/lightbox-btn-close.gif"
+			imageBtnPrev: "icons/lightbox-btn-prev.gif"
+			imageBtnNext: "icons/lightbox-btn-next.gif"
+			imageBlank: "icons/lightbox-blank.gif"
+		})
+		return html
 	
 	is_ignoreable_tweet: ->
 		# Word based Blacklist
@@ -242,7 +250,7 @@ class Tweet extends TwitterMessage
 		return unless @data.entities?
 		if @data.entities.media?
 			for media in @data.entities.media
-				@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url))
+				@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url, "#{media.media_url_https}:medium"))
 		if @data.entities.urls?
 			for entity in @data.entities.urls
 				url = entity.expanded_url ? entity.url
@@ -257,18 +265,18 @@ class Tweet extends TwitterMessage
 		# of the files, otherwise the HTTP version will be used. Automagically. :D
 		# Note that not all of the services offer HTTPS versions, hence the differences.
 		return (new Thumbnail("//img.youtube.com/#{res[1]}/1.jpg", url)) if (res=url.match(/(?:http:\/\/(?:www\.)?youtube.com\/.*v=|http:\/\/youtu.be\/)([0-9a-zA-Z_]+)/)) 
-		return (new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url)) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
-		return (new Thumbnail("//yfrog.#{res[1]}/#{res[2]}.th.jpg", url)) if (res=url.match(/yfrog.(com|us|ru)\/([a-zA-Z0-9]+)/)) 
-		return (new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url)) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) 
-		return (new Thumbnail("http://moby.to/#{res[1]}:square", url)) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) 
-		return (new Thumbnail("http://ragefac.es/#{res[1]}/i", url)) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
-		return (new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url)) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
-		return (new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url)) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
-		return (new Thumbnail("http://flic.kr/p/img/#{encdec().encode(res[1])}_s.jpg", url)) if (res=url.match(/flickr.com\/photos\/[^\/]+\/([0-9]+)/))
-		return (new Thumbnail("http://flic.kr/p/img/#{encdec().encode(res[1])}_s.jpg", url)) if (res=url.match(/static.flickr.com\/[0-9]+\/([0-9]+)_/))
-		return (new Thumbnail("http://flic.kr/p/img/#{res[1]}_s.jpg", url)) if (res=url.match(/flic.kr\/p\/(.+)/))
-		return (new Thumbnail("http://#{res[1]}.imgur.com/#{res[2]}s.jpg", url)) if (res=url.match(/http:\/\/([^\/]+)\.imgur\.com\/([a-zA-Z0-9]+)\.jpg/))
-		return (new Thumbnail("//instagr.am/p/#{res[1]}/media/?size=t", url)) if (res=url.match(/(?:instagr\.am|instagram\.com)\/p\/([^\/]+)/))
+		return (new Thumbnail("//twitpic.com/show/mini/#{res[1]}", url, "//twitpic.com/show/large/#{res[1]}")) if (res=url.match(/twitpic.com\/([0-9a-zA-Z]+)/)) 
+		return (new Thumbnail("//yfrog.#{res[1]}/#{res[2]}.th.jpg", url, "//yfrog.#{res[1]}/#{res[2]}:medium")) if (res=url.match(/yfrog.(com|us|ru)\/([a-zA-Z0-9]+)/)) # http://yfrog.com/page/api#a5
+		return (new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=thumbnail", url, "//api.plixi.com/api/tpapi.svc/imagefromurl?url=#{url}&size=medium")) if (res=url.match(/lockerz.com\/s\/[0-9]+/)) # http://support.lockerz.com/entries/350297-image-from-url
+		return (new Thumbnail("http://moby.to/#{res[1]}:square", url, "http://moby.to/#{res[1]}:medium")) if (res=url.match(/moby\.to\/([a-zA-Z0-9]+)/)) # http://developers.mobypicture.com/documentation/additional/inline-thumbnails/
+		return (new Thumbnail("http://ragefac.es/#{res[1]}/i", url, "http://ragefac.es/#{res[1]}/i")) if (res=url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))
+		return (new Thumbnail("http://lauerfac.es/#{res[1]}/thumb", url, "http://lauerfac.es/#{res[1]}/full")) if (res=url.match(/lauerfac\.es\/([0-9]+)/)) 
+		return (new Thumbnail("http://ponyfac.es/#{res[1]}/thumb", url, "http://ponyfac.es/#{res[1]}/full")) if (res=url.match(/ponyfac\.es\/([0-9]+)/))
+		return (new Thumbnail("http://flic.kr/p/img/#{encdec().encode(res[1])}_s.jpg", url, "http://flic.kr/p/img/#{encdec().encode(res[1])}_z.jpg")) if (res=url.match(/flickr.com\/photos\/[^\/]+\/([0-9]+)/)) # http://www.flickr.com/services/api/misc.urls.html
+		return (new Thumbnail("http://flic.kr/p/img/#{encdec().encode(res[1])}_s.jpg", url, "http://flic.kr/p/img/#{encdec().encode(res[1])}_z.jpg")) if (res=url.match(/static.flickr.com\/[0-9]+\/([0-9]+)_/)) # http://www.flickr.com/services/api/misc.urls.html
+		return (new Thumbnail("http://flic.kr/p/img/#{res[1]}_s.jpg", url, "http://flic.kr/p/img/#{res[1]}_z.jpg")) if (res=url.match(/flic.kr\/p\/(.+)/)) # http://www.flickr.com/services/api/misc.urls.html
+		return (new Thumbnail("http://#{res[1]}.imgur.com/#{res[2]}s.jpg", url, "http://#{res[1]}.imgur.com/#{res[2]}l.jpg")) if (res=url.match(/http:\/\/([^\/]+)\.imgur\.com\/([a-zA-Z0-9]+)\.jpg/))
+		return (new Thumbnail("//instagr.am/p/#{res[1]}/media/?size=t", url, "//instagr.am/p/#{res[1]}/media/?size=m")) if (res=url.match(/(?:instagr\.am|instagram\.com)\/p\/([^\/]+)/))
 		
 		return null
 	

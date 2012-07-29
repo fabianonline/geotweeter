@@ -384,8 +384,7 @@ Account = (function() {
     if (add_at_bottom == null) {
       add_at_bottom = false;
     }
-    element = document.createElement("div");
-    element.innerHTML = html;
+    element = $("<div>").append(html);
     if (add_at_bottom) {
       return this.get_my_element().find(".bottom").before(element);
     } else {
@@ -678,7 +677,7 @@ Account = (function() {
     if (responses.length === 1 && responses[0][0] === null) {
       return;
     }
-    html = "";
+    html = $('<div>');
     last_id = "";
     while (responses.length > 0) {
       newest_date = null;
@@ -719,7 +718,7 @@ Account = (function() {
       }
       this_id = object.id;
       if (this_id !== old_id) {
-        html = html + object.get_html();
+        html.append(object.get_html());
       }
       if (object.constructor === Tweet) {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
@@ -1281,17 +1280,22 @@ Hooks = (function() {
 
 Thumbnail = (function() {
 
-  function Thumbnail(thumbnail, link) {
+  function Thumbnail(thumbnail, link, full_size) {
     this.thumbnail = thumbnail;
     this.link = link;
+    this.full_size = full_size;
   }
 
   Thumbnail.prototype.get_single_thumb_html = function() {
-    return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+    var cl;
+    cl = this.full_size ? "lightbox" : "";
+    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
   };
 
   Thumbnail.prototype.get_multi_thumb_html = function() {
-    return "<a href='" + this.link + "' target='_blank'>			<img src='" + this.thumbnail + "' />		</a>";
+    var cl;
+    cl = this.full_size ? "lightbox" : "";
+    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
   };
 
   return Thumbnail;
@@ -1421,10 +1425,19 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_html = function() {
+    var html;
     if (this.is_ignoreable_tweet()) {
       return "";
     }
-    return ("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>";
+    html = $(("<div id='" + this.id + "' class='" + (this.get_classes().join(" ")) + "' data-tweet-id='" + this.id + "' data-account-id='" + this.account.id + "'>") + this.get_single_thumb_html() + this.get_sender_html() + ("<span class='text'>" + this.text + "</span>") + this.get_multi_thumb_html() + this.get_permanent_info_html() + this.get_temporary_info_html() + "<div style='clear: both;'></div>" + "</div>");
+    $(html).find('.lightbox').lightBox({
+      imageLoading: "icons/lightbox-ico-loading.gif",
+      imageBtnClose: "icons/lightbox-btn-close.gif",
+      imageBtnPrev: "icons/lightbox-btn-prev.gif",
+      imageBtnNext: "icons/lightbox-btn-next.gif",
+      imageBlank: "icons/lightbox-blank.gif"
+    });
+    return html;
   };
 
   Tweet.prototype.is_ignoreable_tweet = function() {
@@ -1811,7 +1824,7 @@ Tweet = (function(_super) {
       _ref = this.data.entities.media;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         media = _ref[_i];
-        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url));
+        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url, "" + media.media_url_https + ":medium"));
       }
     }
     if (this.data.entities.urls != null) {
@@ -1837,40 +1850,40 @@ Tweet = (function(_super) {
       return new Thumbnail("//img.youtube.com/" + res[1] + "/1.jpg", url);
     }
     if ((res = url.match(/twitpic.com\/([0-9a-zA-Z]+)/))) {
-      return new Thumbnail("//twitpic.com/show/mini/" + res[1], url);
+      return new Thumbnail("//twitpic.com/show/mini/" + res[1], url, "//twitpic.com/show/large/" + res[1]);
     }
     if ((res = url.match(/yfrog.(com|us|ru)\/([a-zA-Z0-9]+)/))) {
-      return new Thumbnail("//yfrog." + res[1] + "/" + res[2] + ".th.jpg", url);
+      return new Thumbnail("//yfrog." + res[1] + "/" + res[2] + ".th.jpg", url, "//yfrog." + res[1] + "/" + res[2] + ":medium");
     }
     if ((res = url.match(/lockerz.com\/s\/[0-9]+/))) {
-      return new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url);
+      return new Thumbnail("//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=thumbnail", url, "//api.plixi.com/api/tpapi.svc/imagefromurl?url=" + url + "&size=medium");
     }
     if ((res = url.match(/moby\.to\/([a-zA-Z0-9]+)/))) {
-      return new Thumbnail("http://moby.to/" + res[1] + ":square", url);
+      return new Thumbnail("http://moby.to/" + res[1] + ":square", url, "http://moby.to/" + res[1] + ":medium");
     }
     if ((res = url.match(/ragefac\.es\/(?:mobile\/)?([0-9]+)/))) {
-      return new Thumbnail("http://ragefac.es/" + res[1] + "/i", url);
+      return new Thumbnail("http://ragefac.es/" + res[1] + "/i", url, "http://ragefac.es/" + res[1] + "/i");
     }
     if ((res = url.match(/lauerfac\.es\/([0-9]+)/))) {
-      return new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url);
+      return new Thumbnail("http://lauerfac.es/" + res[1] + "/thumb", url, "http://lauerfac.es/" + res[1] + "/full");
     }
     if ((res = url.match(/ponyfac\.es\/([0-9]+)/))) {
-      return new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url);
+      return new Thumbnail("http://ponyfac.es/" + res[1] + "/thumb", url, "http://ponyfac.es/" + res[1] + "/full");
     }
     if ((res = url.match(/flickr.com\/photos\/[^\/]+\/([0-9]+)/))) {
-      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url);
+      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url, "http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_z.jpg");
     }
     if ((res = url.match(/static.flickr.com\/[0-9]+\/([0-9]+)_/))) {
-      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url);
+      return new Thumbnail("http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_s.jpg", url, "http://flic.kr/p/img/" + (encdec().encode(res[1])) + "_z.jpg");
     }
     if ((res = url.match(/flic.kr\/p\/(.+)/))) {
-      return new Thumbnail("http://flic.kr/p/img/" + res[1] + "_s.jpg", url);
+      return new Thumbnail("http://flic.kr/p/img/" + res[1] + "_s.jpg", url, "http://flic.kr/p/img/" + res[1] + "_z.jpg");
     }
     if ((res = url.match(/http:\/\/([^\/]+)\.imgur\.com\/([a-zA-Z0-9]+)\.jpg/))) {
-      return new Thumbnail("http://" + res[1] + ".imgur.com/" + res[2] + "s.jpg", url);
+      return new Thumbnail("http://" + res[1] + ".imgur.com/" + res[2] + "s.jpg", url, "http://" + res[1] + ".imgur.com/" + res[2] + "l.jpg");
     }
     if ((res = url.match(/(?:instagr\.am|instagram\.com)\/p\/([^\/]+)/))) {
-      return new Thumbnail("//instagr.am/p/" + res[1] + "/media/?size=t", url);
+      return new Thumbnail("//instagr.am/p/" + res[1] + "/media/?size=t", url, "//instagr.am/p/" + res[1] + "/media/?size=m");
     }
     return null;
   };
