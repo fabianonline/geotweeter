@@ -1307,15 +1307,27 @@ Thumbnail = (function() {
   }
 
   Thumbnail.prototype.get_single_thumb_html = function() {
-    var cl;
-    cl = this.full_size ? "lightbox" : "";
-    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+    var cl, url;
+    if (settings.show_images_in_lightbox && this.full_size) {
+      cl = "lightbox";
+      url = this.full_size;
+    } else {
+      cl = "";
+      url = this.link;
+    }
+    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
   };
 
   Thumbnail.prototype.get_multi_thumb_html = function() {
-    var cl;
-    cl = this.full_size ? "lightbox" : "";
-    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
+    var cl, url;
+    if (settings.show_images_in_lightbox && this.full_size) {
+      cl = "lightbox";
+      url = this.full_size;
+    } else {
+      cl = "";
+      url = this.link;
+    }
+    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
   };
 
   return Thumbnail;
@@ -2805,6 +2817,15 @@ Migrations = (function() {
     }
   };
 
+  Migrations.migrations[1] = {
+    description: "Feld für die Anzeige von Bilder in der Lightbox hinzugefügt.",
+    blocking: false,
+    change: function(settings) {
+      settings.show_images_in_lightbox = false;
+      return settings;
+    }
+  };
+
   Migrations.migrate = function() {
     var blocking, changes, i, migration, start_version, text, _i, _ref;
     changes = [];
@@ -2834,6 +2855,8 @@ Migrations = (function() {
       Settings.show();
       return false;
     }
+    Settings.save();
+    return true;
   };
 
   return Migrations;
@@ -3183,6 +3206,15 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
   },
   listHeaders: ["Name", "Lat", "Lon"],
   addValue: Hooks.add_location_1
+}));
+
+Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu den Bildern verlinken oder aber nach einem Klick die Bilder (falls möglich) direkt im Geotweeter anzeigen? (Änderungen wirken sich nur auf neu kommende Tweets oder nach einem Neustart aus!)", new SettingsBoolean({
+  getValue: function() {
+    return settings.show_images_in_lightbox;
+  },
+  setValue: function(value) {
+    return settings.show_images_in_lightbox = value;
+  }
 }));
 
 Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({

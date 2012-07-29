@@ -92,6 +92,11 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
 	addValue: Hooks.add_location_1
 }))
 
+Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu den Bildern verlinken oder aber nach einem Klick die Bilder (falls möglich) direkt im Geotweeter anzeigen? (Änderungen wirken sich nur auf neu kommende Tweets oder nach einem Neustart aus!)", new SettingsBoolean({
+	getValue: -> settings.show_images_in_lightbox
+	setValue: (value) -> settings.show_images_in_lightbox = value
+}))
+
 Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({
 	count: -> settings.muted_strings.length
 	getValue: (i) -> settings.muted_strings[i]
