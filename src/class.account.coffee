@@ -229,8 +229,7 @@ class Account
 	# to a new `div` element which is then added to the DOM. That method is
 	# much, much, much, much faster than adding the html directly.
 	add_html: (html, add_at_bottom=false) -> 
-		element = document.createElement("div")
-		element.innerHTML = html
+		element = $("<div>").append(html)
 		if add_at_bottom
 			@get_my_element().find(".bottom").before(element)
 		else
@@ -507,7 +506,7 @@ class Account
 		# the first dimension.
 		# Anyway, we have to get through the multiple arrays and sort the
 		# tweets in there. Let's go.
-		html = ""
+		html = $('<div>')
 		last_id = ""
 		while responses.length > 0
 			# Save the Date and the index of the array holding the newest
@@ -546,7 +545,7 @@ class Account
 			# Add the html to the temporary html code. But look out for duplicate
 			# tweets (e.g. mentions from friends will be in `home_timeline` as
 			# well as in `mentions`).
-			html = html + object.get_html() unless this_id==old_id
+			html.append(object.get_html()) unless this_id==old_id
 			# If we have a `Tweet` or `DirectMessage`, note it's `id`, if
 			# necessary.
 			if object.constructor==Tweet
