@@ -48,7 +48,11 @@ class Settings
 	
 	@load: -> 
 		Application.log("Settings", "", "Settings loaded")
-		window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"))
+		try
+			window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"))
+		catch error
+			prompt("Die bisherigen Settings sind kein valides JSON. Die Settings werden daher notgedrungen zurückgesetzt. Zur Sicherheit: Unten steht der bisherige Wert der Settings. Bitte sichern, für den Fall, dass der Programmierer einen Fehler gemacht hat und die Daten doch OK sind...", localStorage.getItem("geotweeter.settings"))
+			window.settings = null
 	
 	@reset: -> 
 		localStorage.clear("geotweeter.settings")
