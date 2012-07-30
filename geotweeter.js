@@ -1922,10 +1922,10 @@ Tweet = (function(_super) {
 
   Tweet.prototype.show_replies = function() {
     var html, new_id, tweet;
-    html = "";
+    html = $('<div>');
     tweet = this;
     while (true) {
-      html += tweet.get_html();
+      html.append(tweet.get_html());
       if (tweet.data.in_reply_to_status_id_str == null) {
         break;
       }
