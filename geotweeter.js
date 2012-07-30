@@ -1094,7 +1094,7 @@ Hooks = (function() {
       return;
     }
     html = "			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />			Tipp: Das ist exakt das Format, dass bei Google Maps in den			LatLng-Markern zu finden ist. ;-)<br /><br />			<input type='text' id='location_coords' />			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />";
-    Application.infoarea.show("Places suchen", html);
+    Application.infoarea.show("Places suchen", html, true);
     if (navigator.geolocation != null) {
       navigator.geolocation.getCurrentPosition(function(position) {
         if ($('#location_coords').val() === "") {
@@ -1111,7 +1111,7 @@ Hooks = (function() {
     Application.temp.lat = parts[0].replace(/,/, ".");
     Application.temp.long = parts[1].replace(/,/, ".");
     html = "			Suche nach Locations...<br />			<img src='icons/spinner_big.gif' />";
-    Application.infoarea.show("Location hinzufügen", html);
+    Application.infoarea.show("Location hinzufügen", html, true);
     Account.first.twitter_request("geo/search.json", {
       silent: true,
       parameters: {
@@ -1137,7 +1137,7 @@ Hooks = (function() {
 
   Hooks.add_location_3 = function() {
     Application.temp.name = $('#location_place_name').val();
-    Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />");
+    Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />", true);
     Account.first.twitter_request("geo/similar_places.json", {
       silent: true,
       method: "GET",
@@ -1196,7 +1196,7 @@ Hooks = (function() {
 
   Hooks.add_user_1 = function() {
     var data, html, keys, message, oauth_results, parameters, request, result, url, x, _i, _len;
-    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
+    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true);
     parameters = {
       oauth_callback: "oob"
     };
@@ -1242,7 +1242,7 @@ Hooks = (function() {
     var acct, data, id, keys, message, oauth_results, parameters, pin, request, result, url, use_streaming, x, _i, _len, _ref;
     pin = $('#pin').val();
     use_streaming = $('#use_streaming').is(':checked');
-    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
+    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true);
     parameters = {
       oauth_token: oauth_token,
       oauth_verifier: pin
@@ -3754,9 +3754,16 @@ Application = (function() {
 
   Application.infoarea = {
     visible: false,
-    show: function(title, content) {
+    return_to_settings: false,
+    show: function(title, content, return_to_settings) {
+      if (return_to_settings == null) {
+        return_to_settings = false;
+      }
+      Application.current_account.hide();
       $('#settings').hide();
+      $('#top').hide();
       Application.infoarea.visible = true;
+      Application.infoarea.return_to_settings = return_to_settings;
       $('#infoarea_title').html(title);
       $('#infoarea_content').html(content);
       $('#infoarea').show();
@@ -3765,7 +3772,12 @@ Application = (function() {
     hide: function() {
       Application.infoarea.visible = false;
       $('#infoarea').hide();
-      Settings.refresh_view();
+      if (Application.infoarea.return_to_settings) {
+        Settings.refresh_view();
+      } else {
+        $('#top').show();
+        Application.current_account.show();
+      }
       return false;
     }
   };

@@ -153,10 +153,13 @@ class Application
 	
 	@infoarea: {
 		visible: false
-		show: (title, content) ->
-			#Application.current_account.hide()
+		return_to_settings: false
+		show: (title, content, return_to_settings=false) ->
+			Application.current_account.hide()
 			$('#settings').hide()
+			$('#top').hide()
 			Application.infoarea.visible = true
+			Application.infoarea.return_to_settings = return_to_settings
 			$('#infoarea_title').html(title)
 			$('#infoarea_content').html(content)
 			$('#infoarea').show()
@@ -165,8 +168,11 @@ class Application
 		hide: ->
 			Application.infoarea.visible = false
 			$('#infoarea').hide()
-			#$('#top').show()
-			#Application.current_account.show()
-			Settings.refresh_view()
+			if Application.infoarea.return_to_settings
+				Settings.refresh_view()
+			else
+				$('#top').show()
+				Application.current_account.show()
+			
 			return false
 	}

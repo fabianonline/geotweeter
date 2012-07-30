@@ -107,7 +107,7 @@ class Hooks
 			LatLng-Markern zu finden ist. ;-)<br /><br />
 			<input type='text' id='location_coords' />
 			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />"
-		Application.infoarea.show("Places suchen", html)
+		Application.infoarea.show("Places suchen", html, true)
 		if navigator.geolocation?
 			navigator.geolocation.getCurrentPosition(
 				(position) ->
@@ -127,7 +127,7 @@ class Hooks
 		html = "
 			Suche nach Locations...<br />
 			<img src='icons/spinner_big.gif' />"
-		Application.infoarea.show("Location hinzufügen", html)
+		Application.infoarea.show("Location hinzufügen", html, true)
 		
 		Account.first.twitter_request("geo/search.json", {
 			silent: true
@@ -156,7 +156,7 @@ class Hooks
 	
 	@add_location_3: ->
 		Application.temp.name = $('#location_place_name').val()
-		Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />")
+		Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />", true)
 		
 		Account.first.twitter_request("geo/similar_places.json", {
 			silent: true
@@ -208,7 +208,7 @@ class Hooks
 		Application.infoarea.hide()
 	
 	@add_user_1:->
-		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true)
 		parameters = { oauth_callback: "oob" }
 		message = {
 			action: "https://api.twitter.com/oauth/request_token",
@@ -253,7 +253,7 @@ class Hooks
 	@add_user_2: (oauth_token) ->
 		pin = $('#pin').val()
 		use_streaming = $('#use_streaming').is(':checked')
-		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true)
 		parameters = { oauth_token: oauth_token, oauth_verifier: pin }
 		message = {
 			action: "https://api.twitter.com/oauth/access_token",
