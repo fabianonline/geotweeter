@@ -281,10 +281,10 @@ class Tweet extends TwitterMessage
 		return null
 	
 	show_replies: ->
-		html = ""
+		html = $('<div>')
 		tweet = this
 		while true
-			html += tweet.get_html()
+			html.append(tweet.get_html())
 			break unless tweet.data.in_reply_to_status_id_str?
 			new_id = tweet.data.in_reply_to_status_id_str
 			tweet = @account.tweets[new_id]
