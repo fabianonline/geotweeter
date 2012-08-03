@@ -3,6 +3,7 @@ class Settings
 	@categories = []
 	@current_category = null
 	@force_restart = false
+	@local_storage_key = ""
 	
 	@add: (category, name, help, object) ->
 		object.category = category
@@ -44,18 +45,55 @@ class Settings
 	
 	@save: -> 
 		Application.log("Settings", "", "Saving Settings")
-		localStorage.setItem("geotweeter.settings", JSON.stringify(settings))
+		localStorage.setItem(@local_storage_key, JSON.stringify(settings))
 	
 	@load: -> 
-		Application.log("Settings", "", "Settings loaded")
+		found_settings = {}
+		Application.log("Settings", "load", "Loading...")
+		key = @local_storage_key = "geotweeter.settings." + window.location.pathname.replace(/\/$/, "")
+		Application.log("Settings", "load", "Standard-Key: #{@local_storage_key}")
+		if localStorage.getItem(@local_storage_key) == null
+			Application.log("Settings", "load", "Keine Settings gefunden. Suche nach Alternativen...")
+			if localStorage.length>0
+				for i in [0..localStorage.length-1]
+					temp_key = localStorage.key(i)
+					if temp_key.match(/^geotweeter\.settings(?:\.|$)/)
+						Application.log("Settings", "load", "Key '#{temp_key}' schaut gut aus...")
+						try
+							data = JSON.parse(localStorage.getItem(temp_key))
+							# Wenn wir hier noch sind, schaut das doch schonmal ganz gut aus...
+							if data.version
+								Application.log("Settings", "load", "   ... und ist Version #{data.version}. Nehmen wir.")
+								key = temp_key
+								break
+							else
+								Application.log("Settings", "load", "   ... hat aber keine Version. Also nicht gut.")
+						catch error
+							Application.log("Settings", "load", "   ... ist aber kein valides JSON.")
+		
+		Application.log("Settings", "load", "Key zum initialen Laden der Daten:    #{key}")
+		Application.log("Settings", "load", "Key zum weiteren Speichern der Daten: #{@local_storage_key}")
 		try
-			window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"))
+			window.settings = JSON.parse(localStorage.getItem(key))
 		catch error
 			prompt("Die bisherigen Settings sind kein valides JSON. Die Settings werden daher notgedrungen zurückgesetzt. Zur Sicherheit: Unten steht der bisherige Wert der Settings. Bitte sichern, für den Fall, dass der Programmierer einen Fehler gemacht hat und die Daten doch OK sind...", localStorage.getItem("geotweeter.settings"))
 			window.settings = null
 	
 	@reset: -> 
-		localStorage.clear("geotweeter.settings")
+		delete_other_settings = false
+		localStorage.removeItem(@local_storage_key)
+		if localStorage.length>0
+			for i in [0..localStorage.length-1]
+				key = localStorage.key(i)
+				if key.match(/^geotweeter\.settings(?:\.|$)/)
+					delete_other_settings = confirm("Es wurden noch weitere Geotweeter-Settings gefunden. Sollen diese auch gelöscht werden?") unless delete_other_settings
+					
+					if delete_other_settings
+						Application.log("Settings", "reset", "Lösche '#{key}'.")
+						localStorage.removeItem(key)
+					else
+						break
+		localStorage.setItem(@local_storage_key, JSON.stringify({version: 0, debug: true}))
 		window.location.href = "."
 	
 	@list_categories: ->

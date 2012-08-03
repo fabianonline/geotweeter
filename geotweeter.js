@@ -2804,7 +2804,7 @@ Migrations = (function() {
         },
         show_error_if_no_place_is_set: true,
         unshorten_links: false,
-        debug: true,
+        debug: false,
         timeout_detect_factor: 4,
         timeout_minimum_delay: 120,
         timeout_maximum_delay: 600,
@@ -3120,6 +3120,8 @@ Settings = (function() {
 
   Settings.force_restart = false;
 
+  Settings.local_storage_key = "";
+
   Settings.add = function(category, name, help, object) {
     var _base, _ref;
     object.category = category;
@@ -3188,13 +3190,42 @@ Settings = (function() {
 
   Settings.save = function() {
     Application.log("Settings", "", "Saving Settings");
-    return localStorage.setItem("geotweeter.settings", JSON.stringify(settings));
+    return localStorage.setItem(this.local_storage_key, JSON.stringify(settings));
   };
 
   Settings.load = function() {
-    Application.log("Settings", "", "Settings loaded");
+    var data, found_settings, i, key, temp_key, _i, _ref;
+    found_settings = {};
+    Application.log("Settings", "load", "Loading...");
+    key = this.local_storage_key = "geotweeter.settings." + window.location.pathname.replace(/\/$/, "");
+    Application.log("Settings", "load", "Standard-Key: " + this.local_storage_key);
+    if (localStorage.getItem(this.local_storage_key) === null) {
+      Application.log("Settings", "load", "Keine Settings gefunden. Suche nach Alternativen...");
+      if (localStorage.length > 0) {
+        for (i = _i = 0, _ref = localStorage.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+          temp_key = localStorage.key(i);
+          if (temp_key.match(/^geotweeter\.settings(?:\.|$)/)) {
+            Application.log("Settings", "load", "Key '" + temp_key + "' schaut gut aus...");
+            try {
+              data = JSON.parse(localStorage.getItem(temp_key));
+              if (data.version) {
+                Application.log("Settings", "load", "   ... und ist Version " + data.version + ". Nehmen wir.");
+                key = temp_key;
+                break;
+              } else {
+                Application.log("Settings", "load", "   ... hat aber keine Version. Also nicht gut.");
+              }
+            } catch (error) {
+              Application.log("Settings", "load", "   ... ist aber kein valides JSON.");
+            }
+          }
+        }
+      }
+    }
+    Application.log("Settings", "load", "Key zum initialen Laden der Daten:    " + key);
+    Application.log("Settings", "load", "Key zum weiteren Speichern der Daten: " + this.local_storage_key);
     try {
-      return window.settings = JSON.parse(localStorage.getItem("geotweeter.settings"));
+      return window.settings = JSON.parse(localStorage.getItem(key));
     } catch (error) {
       prompt("Die bisherigen Settings sind kein valides JSON. Die Settings werden daher notgedrungen zurückgesetzt. Zur Sicherheit: Unten steht der bisherige Wert der Settings. Bitte sichern, für den Fall, dass der Programmierer einen Fehler gemacht hat und die Daten doch OK sind...", localStorage.getItem("geotweeter.settings"));
       return window.settings = null;
@@ -3202,7 +3233,29 @@ Settings = (function() {
   };
 
   Settings.reset = function() {
-    localStorage.clear("geotweeter.settings");
+    var delete_other_settings, i, key, _i, _ref;
+    delete_other_settings = false;
+    localStorage.removeItem(this.local_storage_key);
+    if (localStorage.length > 0) {
+      for (i = _i = 0, _ref = localStorage.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        key = localStorage.key(i);
+        if (key.match(/^geotweeter\.settings(?:\.|$)/)) {
+          if (!delete_other_settings) {
+            delete_other_settings = confirm("Es wurden noch weitere Geotweeter-Settings gefunden. Sollen diese auch gelöscht werden?");
+          }
+          if (delete_other_settings) {
+            Application.log("Settings", "reset", "Lösche '" + key + "'.");
+            localStorage.removeItem(key);
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    localStorage.setItem(this.local_storage_key, JSON.stringify({
+      version: 0,
+      debug: true
+    }));
     return window.location.href = ".";
   };
 
@@ -3540,6 +3593,9 @@ Application = (function() {
   Application.temp = {};
 
   Application.start = function() {
+    window.settings = {
+      debug: true
+    };
     Application.log(this, "", "Starting...");
     Settings.list_categories();
     Settings.load();

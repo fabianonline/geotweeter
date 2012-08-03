@@ -10,6 +10,7 @@ class Application
 	@temp: {}
 
 	@start: ->
+		window.settings = {debug: true}
 		Application.log(this, "", "Starting...")
 		Settings.list_categories()
 		Settings.load()
