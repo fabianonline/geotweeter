@@ -22,7 +22,7 @@ class Migrations
 			    },
 			    show_error_if_no_place_is_set: true,
 			    unshorten_links: false,
-			    debug: true,
+			    debug: false,
 			    timeout_detect_factor: 4,
 			    timeout_minimum_delay: 120,
 			    timeout_maximum_delay: 600,
