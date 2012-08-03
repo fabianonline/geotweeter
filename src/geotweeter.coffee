@@ -155,7 +155,7 @@ class Application
 		visible: false
 		return_to_settings: false
 		show: (title, content, return_to_settings=false) ->
-			Application.current_account.hide()
+			Application.current_account?.hide()
 			$('#settings').hide()
 			$('#top').hide()
 			Application.infoarea.visible = true

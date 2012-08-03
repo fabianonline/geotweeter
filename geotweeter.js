@@ -3756,10 +3756,13 @@ Application = (function() {
     visible: false,
     return_to_settings: false,
     show: function(title, content, return_to_settings) {
+      var _ref;
       if (return_to_settings == null) {
         return_to_settings = false;
       }
-      Application.current_account.hide();
+      if ((_ref = Application.current_account) != null) {
+        _ref.hide();
+      }
       $('#settings').hide();
       $('#top').hide();
       Application.infoarea.visible = true;
