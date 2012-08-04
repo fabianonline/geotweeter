@@ -638,7 +638,7 @@ Account = (function() {
   };
 
   Account.prototype.parse_data = function(json, options) {
-    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+    var all_objects, array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _results;
     if (options == null) {
       options = {};
     }
@@ -677,6 +677,7 @@ Account = (function() {
     if (responses.length === 1 && responses[0][0] === null) {
       return;
     }
+    all_objects = [];
     html = $('<div>');
     last_id = "";
     while (responses.length > 0) {
@@ -720,6 +721,7 @@ Account = (function() {
       if (this_id !== old_id) {
         html.append(object.get_html());
       }
+      all_objects.push(object);
       if (object.constructor === Tweet) {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
           this.max_known_tweet_id = object.id;
@@ -742,7 +744,14 @@ Account = (function() {
       old_id = this_id;
     }
     this.add_html(html, options.fill_bottom != null);
-    return this.update_user_counter();
+    this.update_user_counter();
+    all_objects.reverse();
+    _results = [];
+    for (_m = 0, _len4 = all_objects.length; _m < _len4; _m++) {
+      object = all_objects[_m];
+      _results.push(typeof object.add_to_collections === "function" ? object.add_to_collections() : void 0);
+    }
+    return _results;
   };
 
   Account.prototype.scroll_to = function(tweet_id, alternate_target) {
@@ -1387,7 +1396,6 @@ Tweet = (function(_super) {
     this.linkify_text();
     this.get_thumbnails();
     this.date = new Date(this.data.created_at);
-    this.add_to_collections();
   }
 
   Tweet.prototype.add_to_collections = function() {
@@ -1792,7 +1800,11 @@ Tweet = (function(_super) {
   Tweet.prototype.reply = function() {
     var mention, mentions, sender, _i, _len, _ref;
     Application.set_dm_recipient_name(null);
-    Application.reply_to(this);
+    if (this.sender.screen_name === this.account.screen_name && (this.in_reply_to != null)) {
+      Application.reply_to(this.in_reply_to);
+    } else {
+      Application.reply_to(this);
+    }
     mentions = [];
     if (this.sender.screen_name !== this.account.screen_name) {
       mentions.push("@" + this.sender.screen_name);

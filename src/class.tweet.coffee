@@ -31,7 +31,7 @@ class Tweet extends TwitterMessage
 		@linkify_text()
 		@get_thumbnails()
 		@date = new Date(@data.created_at)
-		@add_to_collections()
+		#@add_to_collections()
 		
 	add_to_collections: ->
 		@account.tweets[@id] = this
@@ -233,7 +233,10 @@ class Tweet extends TwitterMessage
 	
 	reply: ->
 		Application.set_dm_recipient_name(null)
-		Application.reply_to(this)
+		if @sender.screen_name==@account.screen_name && @in_reply_to?
+			Application.reply_to(@in_reply_to)
+		else
+			Application.reply_to(this)
 		mentions = []
 		mentions.push("@#{@sender.screen_name}") unless @sender.screen_name==@account.screen_name
 		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name
