@@ -173,6 +173,7 @@ class Account
 				settings.twitter.users[@id].screen_name = @screen_name
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
+				Application.log(this, "RateLimit", "#{req.getResponseHeader("X-RateLimit-Remaining")}/#{req.getResponseHeader("X-RateLimit-Limit")}")
 				try @get_followers()
 				try @get_friends()
 				@fill_list({clip: true})
@@ -506,6 +507,7 @@ class Account
 		# the first dimension.
 		# Anyway, we have to get through the multiple arrays and sort the
 		# tweets in there. Let's go.
+		all_objects = []
 		html = $('<div>')
 		last_id = ""
 		while responses.length > 0
@@ -546,6 +548,7 @@ class Account
 			# tweets (e.g. mentions from friends will be in `home_timeline` as
 			# well as in `mentions`).
 			html.append(object.get_html()) unless this_id==old_id
+			all_objects.push(object)
 			# If we have a `Tweet` or `DirectMessage`, note it's `id`, if
 			# necessary.
 			if object.constructor==Tweet
@@ -561,6 +564,9 @@ class Account
 		@add_html(html, options.fill_bottom?)
 		# Update the counter to display the right number of unread tweets.
 		@update_user_counter()
+		# Call `add_to_collections` (again) in order to correctly link this tweet
+		all_objects.reverse()
+		object.add_to_collections?() for object in all_objects
 	
 	# Scrolls down to a specified tweet.
 	scroll_to: (tweet_id, alternate_target) ->

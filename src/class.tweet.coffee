@@ -31,7 +31,7 @@ class Tweet extends TwitterMessage
 		@linkify_text()
 		@get_thumbnails()
 		@date = new Date(@data.created_at)
-		@add_to_collections()
+		#@add_to_collections()
 		
 	add_to_collections: ->
 		@account.tweets[@id] = this
@@ -233,7 +233,10 @@ class Tweet extends TwitterMessage
 	
 	reply: ->
 		Application.set_dm_recipient_name(null)
-		Application.reply_to(this)
+		if @sender.screen_name==@account.screen_name && @in_reply_to?
+			Application.reply_to(@in_reply_to)
+		else
+			Application.reply_to(this)
 		mentions = []
 		mentions.push("@#{@sender.screen_name}") unless @sender.screen_name==@account.screen_name
 		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name
@@ -372,12 +375,12 @@ class Tweet extends TwitterMessage
 				parameters.display_coordinates = true
 			parameters.in_reply_to_status_id = Application.reply_to().id if Application.reply_to()?
 			
-			if $('#file')[0].files[0]
+			if Application.attached_files.length > 0
 				data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null)
 				url = "proxy/upload/statuses/update_with_media.json?#{data}"
 				content_type = false
 				data = new FormData()
-				data.append("media[]", $('#file')[0].files[0])
+				data.append("media[]", Application.attached_files[0])
 				data.append(key, value) for key, value of parameters
 				show_progress = true
 			else
@@ -413,7 +416,8 @@ class Tweet extends TwitterMessage
 						$('#text').val('')
 						Hooks.update_counter()
 						Application.reply_to(null)
-						Hooks.toggle_file(false)
+						Application.attached_files = []
+						Application.update_file_display()
 						$('#success_info').html(html)
 						$('#success').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
 					else

@@ -285,6 +285,7 @@ Account = (function() {
         settings.twitter.users[_this.id].screen_name = _this.screen_name;
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
+        Application.log(_this, "RateLimit", "" + (req.getResponseHeader("X-RateLimit-Remaining")) + "/" + (req.getResponseHeader("X-RateLimit-Limit")));
         try {
           _this.get_followers();
         } catch (_error) {}
@@ -639,7 +640,7 @@ Account = (function() {
   };
 
   Account.prototype.parse_data = function(json, options) {
-    var array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+    var all_objects, array, data, html, index, json_data, last_id, newest_date, newest_index, object, old_id, responses, temp, temp_elements, this_id, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _results;
     if (options == null) {
       options = {};
     }
@@ -678,6 +679,7 @@ Account = (function() {
     if (responses.length === 1 && responses[0][0] === null) {
       return;
     }
+    all_objects = [];
     html = $('<div>');
     last_id = "";
     while (responses.length > 0) {
@@ -721,6 +723,7 @@ Account = (function() {
       if (this_id !== old_id) {
         html.append(object.get_html());
       }
+      all_objects.push(object);
       if (object.constructor === Tweet) {
         if (object.id.is_bigger_than(this.max_known_tweet_id)) {
           this.max_known_tweet_id = object.id;
@@ -743,7 +746,14 @@ Account = (function() {
       old_id = this_id;
     }
     this.add_html(html, options.fill_bottom != null);
-    return this.update_user_counter();
+    this.update_user_counter();
+    all_objects.reverse();
+    _results = [];
+    for (_m = 0, _len4 = all_objects.length; _m < _len4; _m++) {
+      object = all_objects[_m];
+      _results.push(typeof object.add_to_collections === "function" ? object.add_to_collections() : void 0);
+    }
+    return _results;
   };
 
   Account.prototype.scroll_to = function(tweet_id, alternate_target) {
@@ -965,8 +975,6 @@ Hooks = (function() {
 
   function Hooks() {}
 
-  Hooks.display_file = false;
-
   Hooks.time_of_last_enter = new Date();
 
   Hooks.text_before_enter = "";
@@ -990,11 +998,12 @@ Hooks = (function() {
       Application.set_dm_recipient_name(parts[1]);
       text = parts[2];
       $('#text').val(text);
+      $('#fileinfo').hide();
     }
     color = '#0b0';
     text = text.trim();
     length = text.length;
-    if ($('#file')[0].files[0]) {
+    if (Application.attached_files.length > 0 && !(Application.get_dm_recipient_name() != null)) {
       length += Application.twitter_config.characters_reserved_per_media + 1;
     }
     urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig);
@@ -1023,39 +1032,9 @@ Hooks = (function() {
     var receiver;
     receiver = Application.get_dm_recipient_name();
     Application.set_dm_recipient_name(null);
-    return $('#text').val("@" + receiver + " " + ($('#text').val()));
-  };
-
-  Hooks.toggle_file = function(new_value) {
-    if (new_value != null) {
-      this.display_file = new_value;
-    } else {
-      this.display_file = !this.display_file;
-    }
-    $('#file_div').toggle(this.display_file);
-    if (!this.display_file) {
-      $('#file').val('');
-    }
-    return false;
-  };
-
-  Hooks.check_file = function() {
-    var error, file;
-    file = $('#file')[0].files[0];
-    error = false;
-    if (file == null) {
-      return;
-    }
-    if (file.fileSize > Application.twitter_config.photo_size_limit) {
-      alert("Die Datei ist zu groß.\n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + Application.twitter_config.photo_size_limit + " Bytes");
-      error = true;
-    } else if ($.inArray(file.type, ["image/png", "image/gif", "image/jpeg"]) === -1) {
-      alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
-      error = true;
-    }
-    if (error) {
-      return $('#file').val('');
-    }
+    $('#text').val("@" + receiver + " " + ($('#text').val()));
+    $('#fileinfo').show();
+    return Hooks.update_counter();
   };
 
   Hooks.add = function() {
@@ -1419,7 +1398,6 @@ Tweet = (function(_super) {
     this.linkify_text();
     this.get_thumbnails();
     this.date = new Date(this.data.created_at);
-    this.add_to_collections();
   }
 
   Tweet.prototype.add_to_collections = function() {
@@ -1824,7 +1802,11 @@ Tweet = (function(_super) {
   Tweet.prototype.reply = function() {
     var mention, mentions, sender, _i, _len, _ref;
     Application.set_dm_recipient_name(null);
-    Application.reply_to(this);
+    if (this.sender.screen_name === this.account.screen_name && (this.in_reply_to != null)) {
+      Application.reply_to(this.in_reply_to);
+    } else {
+      Application.reply_to(this);
+    }
     mentions = [];
     if (this.sender.screen_name !== this.account.screen_name) {
       mentions.push("@" + this.sender.screen_name);
@@ -2053,12 +2035,12 @@ Tweet = (function(_super) {
       if (Application.reply_to() != null) {
         parameters.in_reply_to_status_id = Application.reply_to().id;
       }
-      if ($('#file')[0].files[0]) {
+      if (Application.attached_files.length > 0) {
         data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null);
         url = "proxy/upload/statuses/update_with_media.json?" + data;
         content_type = false;
         data = new FormData();
-        data.append("media[]", $('#file')[0].files[0]);
+        data.append("media[]", Application.attached_files[0]);
         for (key in parameters) {
           value = parameters[key];
           data.append(key, value);
@@ -2102,7 +2084,8 @@ Tweet = (function(_super) {
             $('#text').val('');
             Hooks.update_counter();
             Application.reply_to(null);
-            Hooks.toggle_file(false);
+            Application.attached_files = [];
+            Application.update_file_display();
             $('#success_info').html(html);
             return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
               return $('#form').fadeTo(500, 1);
@@ -2245,11 +2228,11 @@ DirectMessage = (function(_super) {
             Hooks.update_counter();
             Application.reply_to(null);
             Application.set_dm_recipient_name(null);
-            Hooks.toggle_file(false);
             $('#success_info').html("DM erfolgreich verschickt.");
-            return $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
+            $('#success').fadeIn(500).delay(2000).fadeOut(500, function() {
               return $('#form').fadeTo(500, 1);
             });
+            return $('#fileinfo').show();
           } else {
             $('#failure_info').html(data.error);
             return $('#failure').fadeIn(500).delay(2000).fadeOut(500, function() {
@@ -3592,6 +3575,8 @@ Application = (function() {
 
   Application.temp = {};
 
+  Application.attached_files = [];
+
   Application.start = function() {
     window.settings = {
       debug: true
@@ -3656,7 +3641,6 @@ Application = (function() {
         expires: 365
       });
     });
-    $('#file').change(Hooks.check_file);
     $('#text').keyup(Hooks.update_counter);
     $('#text').autocomplete({
       minLength: 1,
@@ -3717,7 +3701,7 @@ Application = (function() {
         return DirectMessage.hooks.get_menu_items(elm);
       }
     });
-    return $(document).delegate(".avatar", "mouseover", function(e) {
+    $(document).delegate(".avatar", "mouseover", function(e) {
       var obj;
       obj = $(e.target);
       if (!obj.data("has-tooltip")) {
@@ -3732,6 +3716,22 @@ Application = (function() {
         obj.data("has-tooltip", "true");
         return obj.mouseover(e);
       }
+    });
+    $('#top *').live('dragover', function(e) {
+      if (_this.sending_dm_to == null) {
+        return $('#dropzone').show();
+      }
+    });
+    $('body').bind('dragleave', function(e) {
+      if (e.pageX === 0) {
+        return $('#dropzone').hide();
+      }
+    });
+    return $('#dropzone').bind('drop', function(e) {
+      $('#dropzone').hide();
+      e.stopPropagation();
+      e.preventDefault();
+      return Application.attach_files(e.originalEvent.dataTransfer.files);
     });
   };
 
@@ -3758,15 +3758,12 @@ Application = (function() {
   Application.set_dm_recipient_name = function(recipient_name) {
     this.sending_dm_to = recipient_name;
     if (recipient_name != null) {
-      Hooks.toggle_file(false);
       $('#dm_info_text').html("DM @" + recipient_name);
       $('#dm_info').show();
-      $('#place').hide();
-      return $('#file_choose').hide();
+      return $('#place').hide();
     } else {
       $('#dm_info').hide();
-      $('#place').show();
-      return $('#file_choose').show();
+      return $('#place').show();
     }
   };
 
@@ -3775,6 +3772,51 @@ Application = (function() {
       return this.reply_to_tweet;
     }
     return this.reply_to_tweet = tweet;
+  };
+
+  Application.attach_files = function(files) {
+    var file;
+    if (this.attached_files.length > 0) {
+      alert("Es ist bereits ein Bild angehängt. Mehr lässt Twitter nicht zu.");
+      return;
+    }
+    if (files.length > 1) {
+      alert("Man kann immer nur ein Bild anhängen!");
+      return;
+    }
+    file = files[0];
+    if (file.fileSize > this.twitter_config.photo_size_limit) {
+      alert("Die Datei ist zu groß.n\nDateigröße:\t" + file.fileSize + " Bytes\nMaximum:\t" + this.twitter_config.photo_size_limit + " Bytes");
+      return;
+    }
+    if ($.inArray(file.type, ["image/png", "image/gif", "image/jpeg"]) === -1) {
+      alert("Der Dateityp " + file.type + " wird von Twitter nicht akzeptiert.");
+      return;
+    }
+    this.attached_files = [files[0]];
+    return this.update_file_display();
+  };
+
+  Application.update_file_display = function() {
+    var area, reader;
+    area = $('#fileinfo');
+    Hooks.update_counter();
+    if (this.attached_files.length === 0) {
+      area.html("").hide();
+      return;
+    }
+    reader = new FileReader();
+    reader.onloadend = function(event) {
+      if (event.target.readyState === FileReader.DONE) {
+        area.append($('<img>').attr('src', event.target.result), $('<a>').click(function() {
+          Application.attached_files = [];
+          Application.update_file_display();
+          return false;
+        }).attr('href', '#').append($('<img>').attr('src', 'icons/cross.png').attr('title', 'Bild entfernen')));
+        return area.show();
+      }
+    };
+    return reader.readAsDataURL(this.attached_files[0]);
   };
 
   Application.toString = function() {

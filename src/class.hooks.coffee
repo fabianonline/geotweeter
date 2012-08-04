@@ -1,5 +1,4 @@
 class Hooks
-	@display_file: false
 	@time_of_last_enter: new Date()
 	@text_before_enter: ""
 	@update_counter: (event) ->
@@ -19,10 +18,11 @@ class Hooks
 			Application.set_dm_recipient_name(parts[1])
 			text = parts[2]
 			$('#text').val(text)
+			$('#fileinfo').hide()
 		color = '#0b0'
 		text = text.trim()
 		length = text.length
-		length += Application.twitter_config.characters_reserved_per_media + 1 if $('#file')[0].files[0]
+		length += Application.twitter_config.characters_reserved_per_media + 1 if Application.attached_files.length>0 && !Application.get_dm_recipient_name()?
 		urls = text.match(/((https?:\/\/)(([^ :]+(:[^ ]+)?@)?[a-zäüöß0-9]([a-zäöüß0-9i\-]{0,61}[a-zäöüß0-9])?(\.[a-zäöüß0-9]([a-zäöüß0-9\-]{0,61}[a-zäöüß0-9])?){0,32}\.[a-z]{2,5}(\/[^ \"@\n]*[^" \.,;\)@\n])?))/ig)
 		for url in urls ? []
 			length -= url.length
@@ -38,27 +38,8 @@ class Hooks
 		receiver = Application.get_dm_recipient_name()
 		Application.set_dm_recipient_name(null)
 		$('#text').val("@#{receiver} #{$('#text').val()}")
-	
-	@toggle_file: (new_value) ->
-		if new_value?
-			@display_file = new_value
-		else
-			@display_file = !@display_file
-		$('#file_div').toggle(@display_file)
-		$('#file').val('') unless @display_file
-		return false
-	
-	@check_file: ->
-		file = $('#file')[0].files[0]
-		error = false
-		return unless file?
-		if file.fileSize > Application.twitter_config.photo_size_limit
-			alert("Die Datei ist zu groß.\n\nDateigröße:\t#{file.fileSize} Bytes\nMaximum:\t#{Application.twitter_config.photo_size_limit} Bytes")
-			error = true
-		else if $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1
-			alert("Der Dateityp #{file.type} wird von Twitter nicht akzeptiert.")
-			error = true
-		$('#file').val('') if error
+		$('#fileinfo').show()
+		Hooks.update_counter()
 	
 	@add: ->
 		html = "
