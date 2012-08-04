@@ -64,9 +64,9 @@ class DirectMessage extends Tweet
 						Hooks.update_counter()
 						Application.reply_to(null)
 						Application.set_dm_recipient_name(null)
-						Hooks.toggle_file(false)
 						$('#success_info').html("DM erfolgreich verschickt.")
 						$('#success').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))
+						$('#fileinfo').show()
 					else
 						$('#failure_info').html(data.error);
 						$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1))

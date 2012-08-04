@@ -8,6 +8,7 @@ class Application
 	@twitter_config: {}
 	@autocompletes: []
 	@temp: {}
+	@attached_files: []
 
 	@start: ->
 		Application.log(this, "", "Starting...")
@@ -46,7 +47,6 @@ class Application
 
 	@attach_hooks: ->
 		$('#place').change( -> $.cookie('last_place', $('#place option:selected').val(), {expires: 365}))
-		$('#file').change( Hooks.check_file )
 		$('#text').keyup( Hooks.update_counter )
 		$('#text').autocomplete({
 			minLength: 1
@@ -99,6 +99,19 @@ class Application
 				obj.data("has-tooltip", "true")
 				obj.mouseover(e)
 		)
+		
+		$('#top *').live('dragover', (e) => 
+			$('#dropzone').show() unless @sending_dm_to?
+		)
+		$('body').bind('dragleave', (e) -> 
+			$('#dropzone').hide() if e.pageX==0
+		)
+		$('#dropzone').bind('drop', (e) ->
+			$('#dropzone').hide()
+			e.stopPropagation()
+			e.preventDefault()
+			Application.attach_files(e.originalEvent.dataTransfer.files)
+		)
 
 	@initialize_accounts: ->
 		for data, id in settings.twitter.users
@@ -111,20 +124,48 @@ class Application
 	@set_dm_recipient_name: (recipient_name) ->
 		@sending_dm_to = recipient_name
 		if recipient_name?
-			Hooks.toggle_file(false)
 			$('#dm_info_text').html("DM @#{recipient_name}")
 			$('#dm_info').show()
 			$('#place').hide()
-			$('#file_choose').hide()
 		else
 			$('#dm_info').hide()
 			$('#place').show()
-			$('#file_choose').show()
 	
 	@reply_to: (tweet) ->
 		return @reply_to_tweet unless tweet?
 		@reply_to_tweet = tweet
 		# TODO
+	
+	@attach_files: (files) ->
+		(alert("Es ist bereits ein Bild angehängt. Mehr lässt Twitter nicht zu.") ; return) if @attached_files.length>0
+		(alert("Man kann immer nur ein Bild anhängen!") ; return) if files.length>1
+		file = files[0]
+		(alert("Die Datei ist zu groß.n\nDateigröße:\t#{file.fileSize} Bytes\nMaximum:\t#{@twitter_config.photo_size_limit} Bytes") ; return) if file.fileSize>@twitter_config.photo_size_limit
+		(alert("Der Dateityp #{file.type} wird von Twitter nicht akzeptiert.") ; return) if $.inArray(file.type, ["image/png", "image/gif", "image/jpeg"])==-1
+		@attached_files = [files[0]]
+		@update_file_display()
+	
+	@update_file_display: ->
+		area = $('#fileinfo')
+		Hooks.update_counter()
+		if @attached_files.length==0
+			area.html("").hide()
+			return
+		reader = new FileReader()
+		reader.onloadend = (event) ->
+			if event.target.readyState == FileReader.DONE
+				area.append(
+					$('<img>').attr('src', event.target.result),
+					$('<a>').click(->
+						Application.attached_files = []
+						Application.update_file_display()
+						return false
+					).attr('href', '#').append(
+						$('<img>').attr('src', 'icons/cross.png').attr('title', 'Bild entfernen')
+					)
+				)
+				area.show()
+		reader.readAsDataURL(@attached_files[0])
 	
 	@toString: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
