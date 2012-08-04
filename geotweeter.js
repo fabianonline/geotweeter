@@ -284,6 +284,7 @@ Account = (function() {
         _this.screen_name = _this.user.screen_name;
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
+        Application.log(_this, "RateLimit", "" + (req.getResponseHeader("X-RateLimit-Remaining")) + "/" + (req.getResponseHeader("X-RateLimit-Limit")));
         try {
           _this.get_followers();
         } catch (_error) {}

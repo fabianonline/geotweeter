@@ -172,6 +172,7 @@ class Account
 				@screen_name = @user.screen_name
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
+				Application.log(this, "RateLimit", "#{req.getResponseHeader("X-RateLimit-Remaining")}/#{req.getResponseHeader("X-RateLimit-Limit")}")
 				try @get_followers()
 				try @get_friends()
 				@fill_list({clip: true})
