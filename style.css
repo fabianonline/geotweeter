@@ -276,6 +276,10 @@ textarea, input, select {
 	color: #000;
 }
 
+#settings a:hover {
+	text-decoration: underline;
+}
+
 #settings div.list {
 	border: 1px dotted #aaa;
 	margin-bottom: 5px;
@@ -296,6 +300,10 @@ textarea, input, select {
 #settings .list {
 	padding-left: 3px;
 	padding-right: 3px;
+}
+
+#settings .list a {
+	margin-right: 5px;
 }
 
 #settings input {
@@ -328,6 +336,7 @@ textarea, input, select {
 #settings table th {
 	border-left: 1px dotted #000;
 	border-right: 1px dotted #000;
+	border-top: 1px dotted #000;
 	padding-left: 3px;
 	padding-right: 5px;
 }
