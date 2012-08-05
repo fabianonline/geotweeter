@@ -2804,7 +2804,7 @@ Migrations = (function() {
     description: "Feld für die Anzeige von Bilder in der Lightbox hinzugefügt.",
     blocking: false,
     change: function(settings) {
-      settings.show_images_in_lightbox = false;
+      settings.show_images_in_lightbox = true;
       return settings;
     }
   };

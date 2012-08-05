@@ -37,7 +37,7 @@ class Migrations
 	@migrations[1] = {
 		description: "Feld für die Anzeige von Bilder in der Lightbox hinzugefügt."
 		blocking: false
-		change: (settings) -> settings.show_images_in_lightbox = false; return settings
+		change: (settings) -> settings.show_images_in_lightbox = true; return settings
 	}
 	
 	@migrate: ->
