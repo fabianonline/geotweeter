@@ -1087,8 +1087,8 @@ Hooks = (function() {
   Hooks.add_location_2 = function() {
     var html, parts;
     parts = $('#location_coords').val().split(" ");
-    Application.temp.lat = parts[0].replace(/,/, ".");
-    Application.temp.long = parts[1].replace(/,/, ".");
+    Application.temp.lat = parseFloat(parts[0].replace(/,/, "."));
+    Application.temp.long = parseFloat(parts[1].replace(/,/, "."));
     html = "			Suche nach Locations...<br />			<img src='icons/spinner_big.gif' />";
     Application.infoarea.show("Location hinzufügen", html, true);
     Account.first.twitter_request("geo/search.json", {

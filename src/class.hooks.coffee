@@ -103,8 +103,8 @@ class Hooks
 	
 	@add_location_2: ->
 		parts = $('#location_coords').val().split(" ")
-		Application.temp.lat = parts[0].replace(/,/, ".")
-		Application.temp.long = parts[1].replace(/,/, ".")
+		Application.temp.lat = parseFloat(parts[0].replace(/,/, "."))
+		Application.temp.long = parseFloat(parts[1].replace(/,/, "."))
 		html = "
 			Suche nach Locations...<br />
 			<img src='icons/spinner_big.gif' />"
