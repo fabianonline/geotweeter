@@ -3947,7 +3947,7 @@ Application = (function() {
       Application.infoarea.visible = true;
       Application.infoarea.return_to_settings = return_to_settings;
       $('#infoarea_title').html(title);
-      $('#infoarea_content').append(content);
+      $('#infoarea_content').html("").append(content);
       $('#infoarea').show();
       return false;
     },
