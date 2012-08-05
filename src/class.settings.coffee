@@ -138,10 +138,7 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
 
 Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new SettingsList({
 	count: -> settings.places.length
-	getValue: (i) -> 
-		p = settings.places[i]
-		[p.name, p.lat, p.lon]
-	listHeaders: ["Name", "Lat", "Lon"]
+	getValue: (i) -> settings.places[i].name
 	actions: [
 		{
 			name: "Löschen"
@@ -152,6 +149,7 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
 					Application.fill_places()
 		}]
 		
+	listHeaders: ["Name"]
 	addValue: Hooks.add_location_1
 }))
 

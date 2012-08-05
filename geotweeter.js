@@ -3327,9 +3327,7 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
     return settings.places.length;
   },
   getValue: function(i) {
-    var p;
-    p = settings.places[i];
-    return [p.name, p.lat, p.lon];
+    return settings.places[i].name;
   },
   actions: [
     {
@@ -3343,8 +3341,8 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
       }
       }
     }
-  listHeaders: ["Name", "Lat", "Lon"],
   ],
+  listHeaders: ["Name"],
   addValue: Hooks.add_location_1
 }));
 
