@@ -2924,12 +2924,6 @@ SettingsField = (function() {
     return Settings.refresh_view(true);
   };
 
-  SettingsField.prototype._deleteValue = function(i) {
-    this.values.deleteValue(i);
-    Settings.save();
-    return Settings.refresh_view(true);
-  };
-
   return SettingsField;
 
 })();
@@ -3039,7 +3033,7 @@ SettingsList = (function(_super) {
     count = this.values.count();
     if (count > 0) {
       _fn = function(i, table) {
-        var cells, _k, _len1;
+        var action, cells, td, _fn1, _k, _l, _len1, _len2, _ref2;
         tr = $('<tr>');
         cells = _this.values.getValue(i);
         if (cells.constructor === Array) {
@@ -3050,10 +3044,26 @@ SettingsList = (function(_super) {
         } else {
           tr.append($('<td>').html(cells));
         }
-        tr.append($('<td>').html("<a href='#' onClick='return false;'><img src='icons/cancel.png' title='Löschen' /> Löschen</a>").addClass("grey").click(function(elm) {
-          _this._deleteValue(i);
-          return Settings.refresh_view();
-        }));
+        td = $('<td>');
+        _ref2 = _this.values.actions;
+        _fn1 = function(action) {
+          var elm;
+          return td.append(elm = $("<a>").attr({
+            href: "#"
+          }).addClass("grey").click(function() {
+            action.action(i);
+            Settings.save();
+            return Settings.refresh_view();
+          }), action.icon != null ? elm.append($('<img>').attr({
+            src: action.icon,
+            title: action.name
+          })) : void 0, elm.append(action.name));
+        };
+        for (_l = 0, _len2 = _ref2.length; _l < _len2; _l++) {
+          action = _ref2[_l];
+          _fn1(action);
+        }
+        tr.append(td);
         return table.append(tr);
       };
       for (i = _j = 0, _ref1 = count - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
@@ -3293,15 +3303,21 @@ Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twit
   getValue: function(i) {
     return [settings.twitter.users[i].screen_name, settings.twitter.users[i].stream ? 'Ja' : ''];
   },
-  deleteValue: function(i) {
-    if (confirm("Wirklich den gewählten User-Account löschen?")) {
-      if (settings.twitter.users[i].stream) {
-        Application.accounts[i].request.stop_request();
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        if (confirm("Wirklich den gewählten User-Account löschen?")) {
+          if (settings.twitter.users[i].stream) {
+            Application.accounts[i].request.stop_request();
+          }
+          settings.twitter.users.splice(i, 1);
+          return Settings.force_restart = true;
+        }
       }
-      settings.twitter.users.splice(i, 1);
-      return Settings.force_restart = true;
     }
-  },
+  ],
   listHeaders: ["Account", "Streaming"],
   addValue: Hooks.add_user_1
 }));
@@ -3315,13 +3331,20 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
     p = settings.places[i];
     return [p.name, p.lat, p.lon];
   },
-  deleteValue: function(i) {
-    if (confirm("Wirklich den gewählten Ort löschen?")) {
-      settings.places.splice(i, 1);
-      return Application.fill_places();
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        if (confirm("Wirklich den gewählten Ort löschen?")) {
+          settings.places.splice(i, 1);
+          return Application.fill_places();
+        }
+      }
+      }
     }
-  },
   listHeaders: ["Name", "Lat", "Lon"],
+  ],
   addValue: Hooks.add_location_1
 }));
 
@@ -3341,9 +3364,15 @@ Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht ang
   getValue: function(i) {
     return settings.muted_strings[i];
   },
-  deleteValue: function(i) {
-    return settings.muted_strings.splice(i, 1);
-  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_strings.splice(i, 1);
+      }
+    }
+  ],
   listHeaders: ["Begriff"],
   addValue: function() {
     var answer;
@@ -3361,9 +3390,15 @@ Settings.add("Filter", "Benutzer", "Tweets von diesen Usern werden nicht angezei
   getValue: function(i) {
     return settings.muted_users[i];
   },
-  deleteValue: function(i) {
-    return settings.muted_users.splice(i, 1);
-  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_users.splice(i, 1);
+      }
+    }
+  ],
   listHeaders: ["User"],
   addValue: function() {
     var answer;
@@ -3381,9 +3416,15 @@ Settings.add("Filter", "Kombinationen", "Tweets mit diesen User-Begriff-Kombinat
   getValue: function(i) {
     return [settings.muted_combinations[i].user, settings.muted_combinations[i].string];
   },
-  deleteValue: function(i) {
-    return settings.muted_combinations.splice(i, 1);
-  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_combinations.splice(i, 1);
+      }
+    }
+  ],
   listHeaders: ["User", "Begriff"],
   addValue: function() {
     var answer1, answer2;

@@ -122,11 +122,16 @@ class Settings
 Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twitter-Accounts.", new SettingsList({
 	count: -> settings.twitter.users.length
 	getValue: (i) -> [settings.twitter.users[i].screen_name, if settings.twitter.users[i].stream then 'Ja' else '']
-	deleteValue: (i) -> 
-		if confirm("Wirklich den gewählten User-Account löschen?")
-			Application.accounts[i].request.stop_request() if settings.twitter.users[i].stream
-			settings.twitter.users.splice(i, 1) 
-			Settings.force_restart = true
+	actions: [
+		{
+			name: "Löschen"
+			icon: "icons/cancel.png"
+			action: (i) -> 
+				if confirm("Wirklich den gewählten User-Account löschen?")
+					Application.accounts[i].request.stop_request() if settings.twitter.users[i].stream
+					settings.twitter.users.splice(i, 1) 
+					Settings.force_restart = true
+		}]
 	listHeaders: ["Account", "Streaming"]
 	addValue: Hooks.add_user_1
 }))
@@ -136,11 +141,17 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
 	getValue: (i) -> 
 		p = settings.places[i]
 		[p.name, p.lat, p.lon]
-	deleteValue: (i) -> 
-		if confirm("Wirklich den gewählten Ort löschen?")
-			settings.places.splice(i, 1) 
-			Application.fill_places()
 	listHeaders: ["Name", "Lat", "Lon"]
+	actions: [
+		{
+			name: "Löschen"
+			icon: "icons/cancel.png"
+			action: (i) ->
+				if confirm("Wirklich den gewählten Ort löschen?")
+					settings.places.splice(i, 1) 
+					Application.fill_places()
+		}]
+		
 	addValue: Hooks.add_location_1
 }))
 
@@ -152,7 +163,12 @@ Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu 
 Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({
 	count: -> settings.muted_strings.length
 	getValue: (i) -> settings.muted_strings[i]
-	deleteValue: (i) -> settings.muted_strings.splice(i, 1)
+	actions: [
+		{ 
+			name: "Löschen",
+			icon: "icons/cancel.png"
+			action: (i) -> settings.muted_strings.splice(i, 1)
+		}]
 	listHeaders: ["Begriff"]
 	addValue: ->
 		answer = prompt("Bitte den zu filternden Begriff eingeben.")
@@ -162,7 +178,12 @@ Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht ang
 Settings.add("Filter", "Benutzer", "Tweets von diesen Usern werden nicht angezeigt", new SettingsList({
 	count: -> settings.muted_users.length
 	getValue: (i) -> settings.muted_users[i]
-	deleteValue: (i) -> settings.muted_users.splice(i, 1)
+	actions: [
+		{ 
+			name: "Löschen",
+			icon: "icons/cancel.png"
+			action: (i) -> settings.muted_users.splice(i, 1)
+		}]
 	listHeaders: ["User"]
 	addValue: ->
 		answer = prompt("Bitte den zu filternden Usernamen eingeben.")
@@ -172,7 +193,12 @@ Settings.add("Filter", "Benutzer", "Tweets von diesen Usern werden nicht angezei
 Settings.add("Filter", "Kombinationen", "Tweets mit diesen User-Begriff-Kombinationen werden nicht angezeigt", new SettingsList({
 	count: -> settings.muted_combinations.length
 	getValue: (i) -> [settings.muted_combinations[i].user, settings.muted_combinations[i].string]
-	deleteValue: (i) -> settings.muted_combinations.splice(i, 1)
+	actions: [
+		{ 
+			name: "Löschen",
+			icon: "icons/cancel.png"
+			action: (i) -> settings.muted_combinations.splice(i, 1)
+		}]
 	listHeaders: ["User", "Begriff"]
 	addValue: ->
 		answer1 = prompt("Bitte den zu filternden Usernamen eingeben.")

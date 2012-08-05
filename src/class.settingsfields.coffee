@@ -37,7 +37,6 @@ class SettingsField
 		Settings.refresh_view(true)
 	
 	_addValue: -> @values.addValue(); Settings.refresh_view(true)
-	_deleteValue: (i) -> @values.deleteValue(i); Settings.save(); Settings.refresh_view(true)
 	
 class SettingsText extends SettingsField
 	get_field_html: ->
@@ -94,10 +93,19 @@ class SettingsList extends SettingsField
 					tr.append($('<td>').html(val)) for val in cells
 				else
 					tr.append($('<td>').html(cells))
-				tr.append($('<td>').html("<a href='#' onClick='return false;'><img src='icons/cancel.png' title='Löschen' /> Löschen</a>").addClass("grey").click((elm) => 
-					@_deleteValue(i)
-					Settings.refresh_view()
-				))
+				td = $('<td>')
+				for action in @values.actions
+					do (action) =>
+						td.append(
+							elm = $("<a>").attr({href: "#"}).addClass("grey").click(=>
+								action.action(i)
+								Settings.save()
+								Settings.refresh_view()
+							)
+							elm.append($('<img>').attr({src: action.icon, title: action.name})) if action.icon?
+							elm.append(action.name)
+						)
+				tr.append(td)
 				table.append(tr)
 		div.append(table)
 		return div
