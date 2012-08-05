@@ -292,7 +292,7 @@ class Tweet extends TwitterMessage
 			new_id = tweet.data.in_reply_to_status_id_str
 			tweet = @account.tweets[new_id]
 			unless tweet?
-				html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>'
+				html.append($('<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>'))
 				@fetch_reply(new_id)
 				break
 		Application.infoarea.show("Replies", html)

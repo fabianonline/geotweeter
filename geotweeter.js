@@ -1914,7 +1914,7 @@ Tweet = (function(_super) {
       new_id = tweet.data.in_reply_to_status_id_str;
       tweet = this.account.tweets[new_id];
       if (tweet == null) {
-        html += '<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>';
+        html.append($('<div id="info_spinner"><img src="icons/spinner_big.gif" /></div>'));
         this.fetch_reply(new_id);
         break;
       }
@@ -3947,7 +3947,7 @@ Application = (function() {
       Application.infoarea.visible = true;
       Application.infoarea.return_to_settings = return_to_settings;
       $('#infoarea_title').html(title);
-      $('#infoarea_content').html(content);
+      $('#infoarea_content').append(content);
       $('#infoarea').show();
       return false;
     },
