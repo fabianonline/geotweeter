@@ -112,6 +112,7 @@ class Settings
 			set.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x") 
 		try set.instapaper_credentials.user = set.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x")
 		try set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x")
+		set.logs = Application.logs
 		return set
 
 

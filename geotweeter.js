@@ -3289,6 +3289,7 @@ Settings = (function() {
     try {
       set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x");
     } catch (_error) {}
+    set.logs = Application.logs;
     return set;
   };
 
@@ -3654,6 +3655,8 @@ Application = (function() {
 
   Application.attached_files = [];
 
+  Application.logs = [];
+
   Application.start = function() {
     window.settings = {
       debug: true
@@ -3905,12 +3908,13 @@ Application = (function() {
   };
 
   Application.log = function(place, category, message) {
-    var place_str;
-    if (!((typeof settings !== "undefined" && settings !== null) && settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
-      return;
-    }
+    var place_str, string;
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
-    return console.log("" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
+    string = "" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message;
+    this.logs.push(string);
+    if (settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null)) {
+      return console.log(string);
+    }
   };
 
   Application.add_to_autocomplete = function(term) {
