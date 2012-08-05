@@ -3263,22 +3263,23 @@ Settings = (function() {
   };
 
   Settings.scrub = function(settings) {
-    var i, user, _i, _len, _ref;
-    settings.twitter.consumerKey = settings.twitter.consumerKey.replace(/[a-z0-9]/ig, "x");
-    settings.twitter.consumerSecret = settings.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x");
-    _ref = settings.twitter.users;
+    var i, set, user, _i, _len, _ref;
+    set = jQuery.extend(true, {}, settings);
+    set.twitter.consumerKey = set.twitter.consumerKey.replace(/[a-z0-9]/ig, "x");
+    set.twitter.consumerSecret = set.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x");
+    _ref = set.twitter.users;
     for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
       user = _ref[i];
-      settings.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x");
-      settings.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x");
+      set.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x");
+      set.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x");
     }
     try {
-      settings.instapaper_credentials.user = settings.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x");
+      set.instapaper_credentials.user = set.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x");
     } catch (_error) {}
     try {
-      settings.instapaper_credentials.password = settings.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x");
+      set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x");
     } catch (_error) {}
-    return settings;
+    return set;
   };
 
   return Settings;

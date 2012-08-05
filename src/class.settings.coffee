@@ -104,14 +104,15 @@ class Settings
 				ul.append(li)
 	
 	@scrub: (settings) ->
-		settings.twitter.consumerKey = settings.twitter.consumerKey.replace(/[a-z0-9]/ig, "x")
-		settings.twitter.consumerSecret = settings.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x")
-		for user, i in settings.twitter.users
-			settings.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x") 
-			settings.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x") 
-		try settings.instapaper_credentials.user = settings.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x")
-		try settings.instapaper_credentials.password = settings.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x")
-		return settings
+		set = jQuery.extend(true, {}, settings) # clone settings
+		set.twitter.consumerKey = set.twitter.consumerKey.replace(/[a-z0-9]/ig, "x")
+		set.twitter.consumerSecret = set.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x")
+		for user, i in set.twitter.users
+			set.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x") 
+			set.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x") 
+		try set.instapaper_credentials.user = set.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x")
+		try set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x")
+		return set
 
 
 
