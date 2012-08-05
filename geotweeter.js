@@ -3339,6 +3339,16 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
           return Application.fill_places();
         }
       }
+    }, {
+      name: "Umbenennen",
+      icon: "icons/pencil.png",
+      action: function(i) {
+        var new_name;
+        new_name = prompt("Bitte den neuen Namen für diesen Ort eingeben.\nAchtung, dies ändert nur den lokal in der Liste angezeigten Namen!");
+        if (new_name != null) {
+          settings.places[i].name = new_name;
+        }
+        return Application.fill_places();
       }
     }
   ],

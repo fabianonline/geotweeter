@@ -147,6 +147,14 @@ Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new Sett
 				if confirm("Wirklich den gewählten Ort löschen?")
 					settings.places.splice(i, 1) 
 					Application.fill_places()
+		},
+		{
+			name: "Umbenennen"
+			icon: "icons/pencil.png"
+			action: (i) ->
+				new_name = prompt("Bitte den neuen Namen für diesen Ort eingeben.\nAchtung, dies ändert nur den lokal in der Liste angezeigten Namen!")
+				settings.places[i].name = new_name if new_name?
+				Application.fill_places()
 		}]
 		
 	listHeaders: ["Name"]
