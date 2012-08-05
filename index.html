@@ -21,11 +21,18 @@
 <script src="lib/jquery.ui.min.js"></script>
 <script src="lib/jquery.ui.autocomplete.html.js"></script>
 
-<script src="settings.js"></script>
 <script src="geotweeter.js"></script>
 </head>
 
 <body onload="Application.start();">
+
+<div id="settings">
+	<h1>Einstellungen</h1>
+	<a href="." id="save_button" class="close" onClick="return Settings.close();"><img src="icons/accept.png" /> Speichern und schließen</a>
+	<ul id="settings_categories"></ul>
+	<div id="settings_content"></div>
+</div>
+
 <div id="infoarea">
     <h3 id="infoarea_title"></h3>
     <div><a href="#" onClick="return Application.infoarea.hide();">Close</a></div>
@@ -35,7 +42,7 @@
 
 <div id="top">
 <div id="users">
-    <a href="#" onClick="return Hooks.add();" style="float: right;"><img src="icons/add.png" /></a>
+    <a href="#" onClick="Settings.show(); return false;" style="float: right;"><img src="icons/cog.png" /></a>
 </div>
 <div id="buttonbar" style="clear: both;">
     <a href="#" onClick="return Account.hooks.mark_as_read();"><img src="icons/tick.png" title="Alle als gelesen markieren." /></a>

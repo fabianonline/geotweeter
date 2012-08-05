@@ -9,13 +9,20 @@ class Application
 	@autocompletes: []
 	@temp: {}
 	@attached_files: []
+	@logs = []
 
 	@start: ->
+		window.settings = {debug: true}
 		Application.log(this, "", "Starting...")
+		Settings.list_categories()
+		Settings.load()
 		return unless Migrations.migrate()
 		@fill_places()
 		@attach_hooks()
 		@set_time_diff()
+		if settings.twitter.users.length==0
+			Settings.show()
+			return
 		@initialize_accounts()
 		@get_twitter_configuration()
 		@accounts[0].show()
@@ -29,12 +36,14 @@ class Application
 	@fill_places: ->
 		if settings.places.length == 0
 			# remove the dropdown field if there are no places defined
-			$('#place').remove()
+			$('#place').hide()
 		else
 			p = $('#place')[0]
+			p.options.remove() for i in [0..p.options.length]
 			p.options[0] = new Option("-- leer --", 0)
 			p.options[p.options.length] = new Option(place.name, id+1) for place, id in settings.places
 			$("#place option[value='#{$.cookie('last_place')}']").attr('selected', true) if $.cookie('last_place')
+			$('#place').show()
 	
 	@set_time_diff: ->
 		$.ajax("proxy/api/help/test.json?suppress_response_codes", {
@@ -170,9 +179,10 @@ class Application
 	@toString: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
 	@log: (place, category, message) ->
-		return unless settings.debug && console? && console.log?
 		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
-		console.log("#{(new Date()).format("%H:%M:%S")} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}")
+		string = "#{(new Date()).format("%H:%M:%S")} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}"
+		@logs.push(string)
+		console.log(string) if settings.debug && console? && console.log?
 	
 	@add_to_autocomplete: (term) ->
 		if $.inArray(term, @autocompletes)==-1
@@ -187,10 +197,13 @@ class Application
 	
 	@infoarea: {
 		visible: false
-		show: (title, content) ->
-			Application.current_account.hide()
+		return_to_settings: false
+		show: (title, content, return_to_settings=false) ->
+			Application.current_account?.hide()
+			$('#settings').hide()
 			$('#top').hide()
 			Application.infoarea.visible = true
+			Application.infoarea.return_to_settings = return_to_settings
 			$('#infoarea_title').html(title)
 			$('#infoarea_content').html(content)
 			$('#infoarea').show()
@@ -199,7 +212,11 @@ class Application
 		hide: ->
 			Application.infoarea.visible = false
 			$('#infoarea').hide()
-			$('#top').show()
-			Application.current_account.show()
+			if Application.infoarea.return_to_settings
+				Settings.refresh_view()
+			else
+				$('#top').show()
+				Application.current_account.show()
+			
 			return false
 	}

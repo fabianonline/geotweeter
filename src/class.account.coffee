@@ -58,7 +58,7 @@ class Account
 			left: 5
 		})
 		# Initialize an adequate Stream object.
-		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
+		@request = if settings.twitter.users[settings_id].stream then new StreamRequest(this) else new PullRequest(this)
 		# Try to validate the keys and get informations about this account.
 		@validate_credentials()
 		
@@ -170,6 +170,7 @@ class Account
 					return
 				@user = new User(data)
 				@screen_name = @user.screen_name
+				settings.twitter.users[@id].screen_name = @screen_name
 				$("#user_#{@id} img").attr('src', @user.get_avatar_image())
 				@get_max_read_id()
 				Application.log(this, "RateLimit", "#{req.getResponseHeader("X-RateLimit-Remaining")}/#{req.getResponseHeader("X-RateLimit-Limit")}")

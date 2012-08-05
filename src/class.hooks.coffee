@@ -77,6 +77,10 @@ class Hooks
 		Application.infoarea.hide()
 
 	@add_location_1: ->
+		if settings.twitter.users.length==0
+			alert("Bitte zunächst einen User anlegen!")
+			return
+		
 		html = "
 			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem
 			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />
@@ -84,7 +88,7 @@ class Hooks
 			LatLng-Markern zu finden ist. ;-)<br /><br />
 			<input type='text' id='location_coords' />
 			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />"
-		Application.infoarea.show("Places suchen", html)
+		Application.infoarea.show("Places suchen", html, true)
 		if navigator.geolocation?
 			navigator.geolocation.getCurrentPosition(
 				(position) ->
@@ -99,12 +103,12 @@ class Hooks
 	
 	@add_location_2: ->
 		parts = $('#location_coords').val().split(" ")
-		Application.temp.lat = parts[0].replace(/,/, ".")
-		Application.temp.long = parts[1].replace(/,/, ".")
+		Application.temp.lat = parseFloat(parts[0].replace(/,/, "."))
+		Application.temp.long = parseFloat(parts[1].replace(/,/, "."))
 		html = "
 			Suche nach Locations...<br />
 			<img src='icons/spinner_big.gif' />"
-		Application.infoarea.show("Location hinzufügen", html)
+		Application.infoarea.show("Location hinzufügen", html, true)
 		
 		Account.first.twitter_request("geo/search.json", {
 			silent: true
@@ -118,7 +122,7 @@ class Hooks
 				html = "Folgende POIs wurden in der Umgebung der Koordinaten gefunden:<br />
 					<ul>"
 				for place in data.result.places
-					html += "<li><a href='#' onClick=\"return Hooks.add_location_final('#{place.id}');\">#{place.name}</a> (<a href='#' onClick=\"Application.temp.contained_within='#{place.id}'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>"
+					html += "<li><a href='#' onClick=\"return Hooks.add_location_final('#{place.id}', '#{place.name.replace(/'/g, '"')}');\">#{place.name}</a> (<a href='#' onClick=\"Application.temp.contained_within='#{place.id}'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>"
 				html += "</ul><br />
 					Kein passender Ort dabei? Dann erstellen wir halt einen neuen.<br />
 					Bitte zunächst bei einem übergeordneten Place aus der Liste oben auf 'umgebend' klicken.<br />
@@ -133,7 +137,7 @@ class Hooks
 	
 	@add_location_3: ->
 		Application.temp.name = $('#location_place_name').val()
-		Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />")
+		Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />", true)
 		
 		Account.first.twitter_request("geo/similar_places.json", {
 			silent: true
@@ -173,14 +177,19 @@ class Hooks
 				Hooks.add_location_final(data.id)
 		})
 	
-	@add_location_final: (id) ->
-		html = "Bitte folgenden Code zum places-Bereich der Settings hinzufügen:<br />
-			<textarea width='70' height='5'>{name:'#{Application.temp.name}', lat:#{Application.temp.lat}, lon:#{Application.temp.long}, place_id:'#{id}'},</textarea><br />
-			Anschließend den Geotweeter bitte neu starten."
-		Application.infoarea.show("Ort hinzufügen", html)
+	@add_location_final: (id, name) ->
+		settings.places.push({
+			name: name || Application.temp.name
+			lat: Application.temp.lat
+			lon: Application.temp.long
+			place_id: id
+		})
+		Settings.save()
+		Application.fill_places()
+		Application.infoarea.hide()
 	
 	@add_user_1:->
-		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true)
 		parameters = { oauth_callback: "oob" }
 		message = {
 			action: "https://api.twitter.com/oauth/request_token",
@@ -212,14 +221,20 @@ class Hooks
 		html = "
 			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />
 			<a href='#{url}' target='_blank'>Geotweeter authorisieren</a><br /><br />
-			<input type='text' name='pin' id='pin' />
+			<input type='text' name='pin' id='pin' /><br /><br />
+			<input type='checkbox' name='use_streaming' id='use_streaming' /> <strong>Streaming nutzen</strong><br />
+			Durch Nutzung der Streaming-Funktion erscheinen Tweets quasi in Echtzeit im Geotweeter. 
+			Allerdings unterstützt der Browser nur einie gewisse Zahl an Verbindungen - zwei oder drei Streams 
+			sollten funktionieren, irgedwann wird der Geotweeter dann aber langsamer bzw. funktioniert 
+			irgendwann überhaupt nicht mehr.<br /><br />
 			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('#{oauth_results.oauth_token}');\" />"
 		$('#info_spinner').before(html)
 		$('#info_spinner').hide()
 	
 	@add_user_2: (oauth_token) ->
 		pin = $('#pin').val()
-		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>")
+		use_streaming = $('#use_streaming').is(':checked')
+		Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true)
 		parameters = { oauth_token: oauth_token, oauth_verifier: pin }
 		message = {
 			action: "https://api.twitter.com/oauth/access_token",
@@ -247,14 +262,14 @@ class Hooks
 		oauth_results = {}
 		result = result.split("&")
 		(x = x.split("=") ; oauth_results[x[0]] = x[1]) for x in result
-		code = "{ // #{oauth_results.screen_name}\n" + 
-		       "    token: '#{oauth_results.oauth_token}',\n" +
-		       "    tokenSecret: '#{oauth_results.oauth_token_secret}'\n" +
-		       "}"
-		html = "
-			Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />
-			<textarea cols='100' rows='4'>#{code}</textarea><br />
-			Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden."
-		$('#info_spinner').before(html)
-		$('#info_spinner').hide()
-		return false
+		id = settings.twitter.users.push {
+			token: oauth_results.oauth_token
+			tokenSecret: oauth_results.oauth_token_secret
+			screen_name: oauth_results.screen_name
+			stream: use_streaming
+		}
+		Settings.save()
+		acct = new Account(id - 1)
+		Application.accounts[id - 1] = acct
+		Application.current_account ?= acct
+		Application.infoarea.hide()

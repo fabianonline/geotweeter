@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsButton, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -168,7 +168,7 @@ Account = (function() {
         left: 5
       });
     }
-    this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
+    this.request = settings.twitter.users[settings_id].stream ? new StreamRequest(this) : new PullRequest(this);
     this.validate_credentials();
   }
 
@@ -282,6 +282,7 @@ Account = (function() {
         }
         _this.user = new User(data);
         _this.screen_name = _this.user.screen_name;
+        settings.twitter.users[_this.id].screen_name = _this.screen_name;
         $("#user_" + _this.id + " img").attr('src', _this.user.get_avatar_image());
         _this.get_max_read_id();
         Application.log(_this, "RateLimit", "" + (req.getResponseHeader("X-RateLimit-Remaining")) + "/" + (req.getResponseHeader("X-RateLimit-Limit")));
@@ -1067,8 +1068,12 @@ Hooks = (function() {
 
   Hooks.add_location_1 = function() {
     var html;
+    if (settings.twitter.users.length === 0) {
+      alert("Bitte zunächst einen User anlegen!");
+      return;
+    }
     html = "			Bitte die Koordinaten des aktuellen Ortes im Dezimalsystem			durch Leerzeichen getrennt eingeben. Beispiel: '51,2276 7,5234'.<br />			Tipp: Das ist exakt das Format, dass bei Google Maps in den			LatLng-Markern zu finden ist. ;-)<br /><br />			<input type='text' id='location_coords' />			<input type='button' value='Go!' onClick='return Hooks.add_location_2();' />";
-    Application.infoarea.show("Places suchen", html);
+    Application.infoarea.show("Places suchen", html, true);
     if (navigator.geolocation != null) {
       navigator.geolocation.getCurrentPosition(function(position) {
         if ($('#location_coords').val() === "") {
@@ -1082,10 +1087,10 @@ Hooks = (function() {
   Hooks.add_location_2 = function() {
     var html, parts;
     parts = $('#location_coords').val().split(" ");
-    Application.temp.lat = parts[0].replace(/,/, ".");
-    Application.temp.long = parts[1].replace(/,/, ".");
+    Application.temp.lat = parseFloat(parts[0].replace(/,/, "."));
+    Application.temp.long = parseFloat(parts[1].replace(/,/, "."));
     html = "			Suche nach Locations...<br />			<img src='icons/spinner_big.gif' />";
-    Application.infoarea.show("Location hinzufügen", html);
+    Application.infoarea.show("Location hinzufügen", html, true);
     Account.first.twitter_request("geo/search.json", {
       silent: true,
       parameters: {
@@ -1100,7 +1105,7 @@ Hooks = (function() {
         _ref = data.result.places;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           place = _ref[_i];
-          html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "');\">" + place.name + "</a> (<a href='#' onClick=\"Application.temp.contained_within='" + place.id + "'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>";
+          html += "<li><a href='#' onClick=\"return Hooks.add_location_final('" + place.id + "', '" + (place.name.replace(/'/g, '"')) + "');\">" + place.name + "</a> (<a href='#' onClick=\"Application.temp.contained_within='" + place.id + "'; $('#location_add_hidden').show(); return false;\">umgebend</a>)</li>";
         }
         html += "</ul><br />					Kein passender Ort dabei? Dann erstellen wir halt einen neuen.<br />					Bitte zunächst bei einem übergeordneten Place aus der Liste oben auf 'umgebend' klicken.<br />					<div id='location_add_hidden' style='display: none;'>					Bitte hier die Bezeichnung für den neuen Ort angeben:<br />					<input type='text' id='location_place_name' />					<input type='button' value='Go!' onClick=\"return Hooks.add_location_3();\" />					</div>";
         return $('#infoarea_content').html(html);
@@ -1111,7 +1116,7 @@ Hooks = (function() {
 
   Hooks.add_location_3 = function() {
     Application.temp.name = $('#location_place_name').val();
-    Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />");
+    Application.infoarea.show("Location erstellen", "<img src='icons/spinner_big.gif' />", true);
     Account.first.twitter_request("geo/similar_places.json", {
       silent: true,
       method: "GET",
@@ -1156,15 +1161,21 @@ Hooks = (function() {
     });
   };
 
-  Hooks.add_location_final = function(id) {
-    var html;
-    html = "Bitte folgenden Code zum places-Bereich der Settings hinzufügen:<br />			<textarea width='70' height='5'>{name:'" + Application.temp.name + "', lat:" + Application.temp.lat + ", lon:" + Application.temp.long + ", place_id:'" + id + "'},</textarea><br />			Anschließend den Geotweeter bitte neu starten.";
-    return Application.infoarea.show("Ort hinzufügen", html);
+  Hooks.add_location_final = function(id, name) {
+    settings.places.push({
+      name: name || Application.temp.name,
+      lat: Application.temp.lat,
+      lon: Application.temp.long,
+      place_id: id
+    });
+    Settings.save();
+    Application.fill_places();
+    return Application.infoarea.hide();
   };
 
   Hooks.add_user_1 = function() {
     var data, html, keys, message, oauth_results, parameters, request, result, url, x, _i, _len;
-    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
+    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true);
     parameters = {
       oauth_callback: "oob"
     };
@@ -1201,15 +1212,16 @@ Hooks = (function() {
       oauth_results[x[0]] = x[1];
     }
     url = "https://api.twitter.com/oauth/authorize?oauth_token=" + oauth_results.oauth_token + "&force_login=true";
-    html = "			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />			<a href='" + url + "' target='_blank'>Geotweeter authorisieren</a><br /><br />			<input type='text' name='pin' id='pin' />			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('" + oauth_results.oauth_token + "');\" />";
+    html = "			Bitte folgendem Link folgen, den Geotweeter authorisieren und dann die angezeigte PIN hier eingeben:<br />			<a href='" + url + "' target='_blank'>Geotweeter authorisieren</a><br /><br />			<input type='text' name='pin' id='pin' /><br /><br />			<input type='checkbox' name='use_streaming' id='use_streaming' /> <strong>Streaming nutzen</strong><br />			Durch Nutzung der Streaming-Funktion erscheinen Tweets quasi in Echtzeit im Geotweeter. 			Allerdings unterstützt der Browser nur einie gewisse Zahl an Verbindungen - zwei oder drei Streams 			sollten funktionieren, irgedwann wird der Geotweeter dann aber langsamer bzw. funktioniert 			irgendwann überhaupt nicht mehr.<br /><br />			<input type='button' value='OK' onClick=\"return Hooks.add_user_2('" + oauth_results.oauth_token + "');\" />";
     $('#info_spinner').before(html);
     return $('#info_spinner').hide();
   };
 
   Hooks.add_user_2 = function(oauth_token) {
-    var code, data, html, keys, message, oauth_results, parameters, pin, request, result, url, x, _i, _len;
+    var acct, data, id, keys, message, oauth_results, parameters, pin, request, result, url, use_streaming, x, _i, _len, _ref;
     pin = $('#pin').val();
-    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>");
+    use_streaming = $('#use_streaming').is(':checked');
+    Application.infoarea.show("User hinzufügen", "<div id='info_spinner'><img src='icons/spinner_big.gif' /></div>", true);
     parameters = {
       oauth_token: oauth_token,
       oauth_verifier: pin
@@ -1246,11 +1258,19 @@ Hooks = (function() {
       x = x.split("=");
       oauth_results[x[0]] = x[1];
     }
-    code = ("{ // " + oauth_results.screen_name + "\n") + ("    token: '" + oauth_results.oauth_token + "',\n") + ("    tokenSecret: '" + oauth_results.oauth_token_secret + "'\n") + "}";
-    html = "			Bitte folgenden Code zur settings.js im Bereich twitter.users hinzufügen:<br />			<textarea cols='100' rows='4'>" + code + "</textarea><br />			Anschließend den Geotweeter neuladen, damit die Änderungen aktiv werden.";
-    $('#info_spinner').before(html);
-    $('#info_spinner').hide();
-    return false;
+    id = settings.twitter.users.push({
+      token: oauth_results.oauth_token,
+      tokenSecret: oauth_results.oauth_token_secret,
+      screen_name: oauth_results.screen_name,
+      stream: use_streaming
+    });
+    Settings.save();
+    acct = new Account(id - 1);
+    Application.accounts[id - 1] = acct;
+    if ((_ref = Application.current_account) == null) {
+      Application.current_account = acct;
+    }
+    return Application.infoarea.hide();
   };
 
   return Hooks;
@@ -1266,15 +1286,27 @@ Thumbnail = (function() {
   }
 
   Thumbnail.prototype.get_single_thumb_html = function() {
-    var cl;
-    cl = this.full_size ? "lightbox" : "";
-    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+    var cl, url;
+    if (settings.show_images_in_lightbox && this.full_size) {
+      cl = "lightbox";
+      url = this.full_size;
+    } else {
+      cl = "";
+      url = this.link;
+    }
+    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
   };
 
   Thumbnail.prototype.get_multi_thumb_html = function() {
-    var cl;
-    cl = this.full_size ? "lightbox" : "";
-    return "<a href='" + this.full_size + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
+    var cl, url;
+    if (settings.show_images_in_lightbox && this.full_size) {
+      cl = "lightbox";
+      url = this.full_size;
+    } else {
+      cl = "";
+      url = this.link;
+    }
+    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
   };
 
   return Thumbnail;
@@ -2734,94 +2766,870 @@ Migrations = (function() {
 
   Migrations.migrations = [];
 
-  Migrations.migrations[14] = {
-    description: "Felder für Instapaper-Zugangsdaten hinzugefügt.",
-    blocking: false,
+  Migrations.migrations[0] = {
+    description: "Settings wurden neu erzeugt",
+    blocking: true,
     change: function(settings) {
-      settings["instapaper_credentials"] = {
-        user: "",
-        password: ""
+      settings = {
+        twitter: {
+          users: [],
+          consumerKey: "57z3b4GB1n8fOBUh7RZuQ",
+          consumerSecret: "TcwsnNqJByzhnrWvukjjFoZnBu6NpeOCo5MQQ4maCio"
+        },
+        muted_strings: [],
+        muted_users: [],
+        muted_combinations: [],
+        places: [],
+        timings: {
+          mindelay: 2,
+          maxdelay: 160,
+          max_double_enter_time: 150
+        },
+        show_error_if_no_place_is_set: true,
+        unshorten_links: false,
+        debug: false,
+        timeout_detect_factor: 4,
+        timeout_minimum_delay: 120,
+        timeout_maximum_delay: 600,
+        instapaper_credentials: {
+          user: null,
+          password: null
+        }
       };
       return settings;
     }
   };
 
-  Migrations.migrations[13] = {
-    description: "Entfernt ein paar alte Settings; formatiert die Filter neu.",
+  Migrations.migrations[1] = {
+    description: "Feld für die Anzeige von Bilder in der Lightbox hinzugefügt.",
     blocking: false,
     change: function(settings) {
-      var i, _i, _len, _ref;
-      delete settings.fill_list;
-      delete settings.show_error_if_no_place_is_set;
-      delete settings.unshorten_links;
-      settings.muted_strings = settings.blacklist;
-      delete settings.blacklist;
-      settings.muted_users = settings.muted;
-      delete settings.muted;
-      settings.muted_combinations = [];
-      _ref = settings.troll;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        settings.muted_combinations.push({
-          user: settings.troll[i],
-          string: settings.trigger[i]
-        });
-      }
-      delete settings.troll;
-      delete settings.trigger;
-      return settings;
-    }
-  };
-
-  Migrations.migrations[12] = {
-    description: "Filter-Strings müssen komplett klein geschrieben sein.",
-    blocking: false,
-    change: function(settings) {
-      var i, _i, _len, _ref;
-      _ref = settings.blacklist;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        settings.blacklist[i] = settings.blacklist[i].toLowerCase;
-      }
+      settings.show_images_in_lightbox = false;
       return settings;
     }
   };
 
   Migrations.migrate = function() {
-    var blocking, changes, code, i, migration, text, update, _i, _ref, _ref1;
+    var blocking, changes, i, migration, start_version, text, _i, _ref;
     changes = [];
     blocking = false;
-    if (window.settings.version === this.migrations.length) {
-      return true;
+    Application.log("Migration", "migrate", "Newest available Version: " + this.migrations.length);
+    if (window.settings) {
+      Application.log("Migration", "migrate", "Current Version: " + window.settings.version);
+      if (window.settings.version === this.migrations.length) {
+        return true;
+      }
+      start_version = window.settings.version;
+    } else {
+      Application.log("Migration", "migrate", "No Settings available - starting fresh.");
+      start_version = 0;
     }
-    for (i = _i = _ref = settings.version, _ref1 = this.migrations.length - 1; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _ref <= _ref1 ? ++_i : --_i) {
+    for (i = _i = start_version, _ref = this.migrations.length - 1; start_version <= _ref ? _i <= _ref : _i >= _ref; i = start_version <= _ref ? ++_i : --_i) {
       migration = this.migrations[i];
-      changes.push("  * " + migration.description);
+      if (migration.blocking) {
+        changes.push("  * " + migration.description);
+      }
       blocking || (blocking = migration.blocking);
       window.settings = migration.change(window.settings);
       window.settings.version = i + 1;
     }
-    text = "Die settings müssen aktualisiert werden.\n\nFolgende Änderungen wurden eingepflegt:\n" + changes.join("\n");
-    update = false;
     if (blocking) {
-      text += "\n\nSie *müssen* settings.js aktualisieren, bevor Sie den Geotweeter nutzen können!";
+      text = "Die settings müssen aktualisiert werden.\n\nFolgende Neuerungen kamen insgesamt dazu:\n" + changes.join("\n");
       alert(text);
-      update = true;
-    } else {
-      text += "\n\nDie Aktualisierung ist freiwillig. Wenn Sie sie jetzt nicht vornehmen, sind neue Features evtl. nicht verfügbar. Sie werden bei jedem weiteren Start daran erinnert werden.\nWollen Sie die Aktualisierung jetzt vornehmen?";
-      update = confirm(text);
-    }
-    if (update) {
-      code = JSON.stringify(window.settings, null, "    ");
-      $('body').html("Bitte fügen Sie den folgenden Text in die settings.js ein (vorigen Inhalt bitte ersetzen). Anschließend laden Sie diese Seite bitte neu.<br /><br /><pre>var settings = " + code + "</pre>");
+      Settings.force_restart = true;
+      Settings.show();
       return false;
     }
+    Settings.save();
     return true;
   };
 
   return Migrations;
 
 })();
+
+SettingsField = (function() {
+
+  SettingsField.prototype.values = null;
+
+  SettingsField.prototype.name = null;
+
+  SettingsField.prototype.category = null;
+
+  SettingsField.prototype.help = "";
+
+  function SettingsField(values) {
+    this.values = values;
+    if (this.values.validations == null) {
+      this.values.validations = [];
+    }
+  }
+
+  SettingsField.prototype.get_id = function() {
+    return (this.category + this.name).replace(/[^A-Za-z0-9]/g, "");
+  };
+
+  SettingsField.prototype.get_html = function() {
+    return $("<div id='" + (this.get_id()) + "' class='setting'>").append(this.get_head_html()).append(this.get_field_html()).append("<br class='clear' />");
+  };
+
+  SettingsField.prototype.get_head_html = function() {
+    return $("<h2>").html("" + this.name + ":").after(this.get_help_html());
+  };
+
+  SettingsField.prototype.get_help_html = function() {
+    return $('<img>').attr({
+      src: "icons/help.png",
+      title: this.help
+    }).tooltip({
+      track: true,
+      delay: 0,
+      showURL: false,
+      extraClass: "settings_tooltip"
+    });
+  };
+
+  SettingsField.prototype._setValue = function(val, event) {
+    var validation, _i, _len, _ref;
+    val = (function() {
+      switch (this.values.format) {
+        case "integer":
+          this.values.validations.unshift({
+            message: "Bitte eine Zahl eingeben",
+            func: function(x) {
+              return !isNaN(x);
+            }
+          });
+          return parseInt(val);
+        default:
+          return val;
+      }
+    }).call(this);
+    _ref = this.values.validations;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      validation = _ref[_i];
+      if (!validation.func(val)) {
+        alert(validation.message);
+        event.target.focus();
+        return true;
+      }
+    }
+    this.values.setValue(val);
+    Settings.save();
+    return Settings.refresh_view(true);
+  };
+
+  SettingsField.prototype._addValue = function() {
+    this.values.addValue();
+    return Settings.refresh_view(true);
+  };
+
+  return SettingsField;
+
+})();
+
+SettingsText = (function(_super) {
+
+  __extends(SettingsText, _super);
+
+  function SettingsText() {
+    return SettingsText.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsText.prototype.get_field_html = function() {
+    var elm,
+      _this = this;
+    if (this.values.readOnly) {
+      elm = $('<div>').html(this.values.getValue());
+    } else {
+      elm = $('<input>').attr({
+        type: "text"
+      }).val(this.values.getValue()).blur(function(event) {
+        return _this._setValue(event.target.value, event);
+      });
+    }
+    if (this.values.style) {
+      elm.addClass(this.values.style);
+    }
+    return elm;
+  };
+
+  return SettingsText;
+
+})(SettingsField);
+
+SettingsPassword = (function(_super) {
+
+  __extends(SettingsPassword, _super);
+
+  function SettingsPassword() {
+    return SettingsPassword.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsPassword.prototype.get_field_html = function() {
+    return SettingsPassword.__super__.get_field_html.call(this).attr({
+      type: "password"
+    });
+  };
+
+  return SettingsPassword;
+
+})(SettingsText);
+
+SettingsBoolean = (function(_super) {
+
+  __extends(SettingsBoolean, _super);
+
+  function SettingsBoolean() {
+    return SettingsBoolean.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsBoolean.prototype.get_field_html = function() {
+    var elm,
+      _this = this;
+    elm = $('<input>').attr({
+      type: "checkbox",
+      checked: this.values.getValue()
+    }).change(function(event) {
+      return _this._setValue($(event.target).is(':checked'), event);
+    });
+    return elm;
+  };
+
+  return SettingsBoolean;
+
+})(SettingsField);
+
+SettingsList = (function(_super) {
+
+  __extends(SettingsList, _super);
+
+  function SettingsList(values) {
+    var _base, _ref;
+    SettingsList.__super__.constructor.call(this, values);
+    if ((_ref = (_base = this.values).listHeaders) == null) {
+      _base.listHeaders = ["Name"];
+    }
+  }
+
+  SettingsList.prototype.get_html = function() {
+    var button, count, div, i, table, tr, val, _fn, _i, _j, _len, _ref, _ref1,
+      _this = this;
+    div = $('<div>').append(this.get_head_html()).addClass('list');
+    button = $("<a href='#' style='float: right;'>").html("<img src='icons/add.png' title='Hinzufügen' /> Hinzufügen").click(function() {
+      return _this._addValue();
+    });
+    div.append(button);
+    div.append("<br class='break' />");
+    table = $('<table>');
+    tr = $('<tr>');
+    _ref = this.values.listHeaders;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      val = _ref[_i];
+      tr.append($('<th>').html(val));
+    }
+    tr.append($('<th>').html("Aktionen").addClass("grey"));
+    table.append(tr);
+    count = this.values.count();
+    if (count > 0) {
+      _fn = function(i, table) {
+        var action, cells, td, _fn1, _k, _l, _len1, _len2, _ref2;
+        tr = $('<tr>');
+        cells = _this.values.getValue(i);
+        if (cells.constructor === Array) {
+          for (_k = 0, _len1 = cells.length; _k < _len1; _k++) {
+            val = cells[_k];
+            tr.append($('<td>').html(val));
+          }
+        } else {
+          tr.append($('<td>').html(cells));
+        }
+        td = $('<td>');
+        _ref2 = _this.values.actions;
+        _fn1 = function(action) {
+          var elm;
+          return td.append(elm = $("<a>").attr({
+            href: "#"
+          }).addClass("grey").click(function() {
+            action.action(i);
+            Settings.save();
+            return Settings.refresh_view();
+          }), action.icon != null ? elm.append($('<img>').attr({
+            src: action.icon,
+            title: action.name
+          })) : void 0, elm.append(action.name));
+        };
+        for (_l = 0, _len2 = _ref2.length; _l < _len2; _l++) {
+          action = _ref2[_l];
+          _fn1(action);
+        }
+        tr.append(td);
+        return table.append(tr);
+      };
+      for (i = _j = 0, _ref1 = count - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+        _fn(i, table);
+      }
+    }
+    div.append(table);
+    return div;
+  };
+
+  return SettingsList;
+
+})(SettingsField);
+
+SettingsButton = (function(_super) {
+
+  __extends(SettingsButton, _super);
+
+  function SettingsButton() {
+    return SettingsButton.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsButton.prototype.get_html = function() {
+    var elm,
+      _this = this;
+    elm = $('<div>');
+    elm.append($('<button>').html(this.name).click(function() {
+      return _this.values.action();
+    }));
+    elm.append(this.get_help_html());
+    return elm;
+  };
+
+  return SettingsButton;
+
+})(SettingsField);
+
+Settings = (function() {
+
+  function Settings() {}
+
+  Settings.fields = {};
+
+  Settings.categories = [];
+
+  Settings.current_category = null;
+
+  Settings.force_restart = false;
+
+  Settings.local_storage_key = "";
+
+  Settings.add = function(category, name, help, object) {
+    var _base, _ref;
+    object.category = category;
+    object.name = name;
+    object.help = help;
+    if ((_ref = (_base = this.fields)[category]) == null) {
+      _base[category] = {};
+    }
+    this.fields[category][name] = {
+      object: object,
+      help: help,
+      category: category,
+      name: name
+    };
+    if (this.categories.indexOf(category) === -1) {
+      return this.categories.push(category);
+    }
+  };
+
+  Settings.show = function(category, refresh_only) {
+    var entry, html, name, _ref, _ref1;
+    if (category == null) {
+      category = this.categories[0];
+    }
+    if (refresh_only == null) {
+      refresh_only = false;
+    }
+    this.save();
+    this.current_category = category;
+    html = $("<div></div>");
+    _ref = this.fields[category];
+    for (name in _ref) {
+      entry = _ref[name];
+      html.append(entry.object.get_html());
+    }
+    $('#settings_content').empty().append(html);
+    $('#top').hide();
+    if ((_ref1 = Application.current_account) != null) {
+      _ref1.hide();
+    }
+    $('ul#settings_categories li').removeClass("selected");
+    $("ul#settings_categories li#category_" + category).addClass("selected");
+    if (!refresh_only) {
+      return $('#settings').show();
+    }
+  };
+
+  Settings.close = function() {
+    this.save();
+    if (this.force_restart) {
+      return true;
+    } else {
+      $('#settings').hide();
+      $('#top').show();
+      Application.current_account.show();
+      return false;
+    }
+  };
+
+  Settings.refresh_view = function(refresh_only) {
+    if (refresh_only == null) {
+      refresh_only = false;
+    }
+    return this.show(this.current_category, refresh_only);
+  };
+
+  Settings.save = function() {
+    Application.log("Settings", "", "Saving Settings");
+    return localStorage.setItem(this.local_storage_key, JSON.stringify(settings));
+  };
+
+  Settings.load = function() {
+    var data, found_settings, i, key, temp_key, _i, _ref;
+    found_settings = {};
+    Application.log("Settings", "load", "Loading...");
+    key = this.local_storage_key = "geotweeter.settings." + window.location.pathname.replace(/\/$/, "");
+    Application.log("Settings", "load", "Standard-Key: " + this.local_storage_key);
+    if (localStorage.getItem(this.local_storage_key) === null) {
+      Application.log("Settings", "load", "Keine Settings gefunden. Suche nach Alternativen...");
+      if (localStorage.length > 0) {
+        for (i = _i = 0, _ref = localStorage.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+          temp_key = localStorage.key(i);
+          if (temp_key.match(/^geotweeter\.settings(?:\.|$)/)) {
+            Application.log("Settings", "load", "Key '" + temp_key + "' schaut gut aus...");
+            try {
+              data = JSON.parse(localStorage.getItem(temp_key));
+              if (data.version) {
+                Application.log("Settings", "load", "   ... und ist Version " + data.version + ". Nehmen wir.");
+                key = temp_key;
+                break;
+              } else {
+                Application.log("Settings", "load", "   ... hat aber keine Version. Also nicht gut.");
+              }
+            } catch (error) {
+              Application.log("Settings", "load", "   ... ist aber kein valides JSON.");
+            }
+          }
+        }
+      }
+    }
+    Application.log("Settings", "load", "Key zum initialen Laden der Daten:    " + key);
+    Application.log("Settings", "load", "Key zum weiteren Speichern der Daten: " + this.local_storage_key);
+    try {
+      return window.settings = JSON.parse(localStorage.getItem(key));
+    } catch (error) {
+      prompt("Die bisherigen Settings sind kein valides JSON. Die Settings werden daher notgedrungen zurückgesetzt. Zur Sicherheit: Unten steht der bisherige Wert der Settings. Bitte sichern, für den Fall, dass der Programmierer einen Fehler gemacht hat und die Daten doch OK sind...", localStorage.getItem("geotweeter.settings"));
+      return window.settings = null;
+    }
+  };
+
+  Settings.reset = function() {
+    var delete_other_settings, i, key, _i, _ref;
+    delete_other_settings = false;
+    localStorage.removeItem(this.local_storage_key);
+    if (localStorage.length > 0) {
+      for (i = _i = 0, _ref = localStorage.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        key = localStorage.key(i);
+        if (key.match(/^geotweeter\.settings(?:\.|$)/)) {
+          if (!delete_other_settings) {
+            delete_other_settings = confirm("Es wurden noch weitere Geotweeter-Settings gefunden. Sollen diese auch gelöscht werden?");
+          }
+          if (delete_other_settings) {
+            Application.log("Settings", "reset", "Lösche '" + key + "'.");
+            localStorage.removeItem(key);
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    localStorage.setItem(this.local_storage_key, JSON.stringify({
+      version: 0,
+      debug: true
+    }));
+    return window.location.href = ".";
+  };
+
+  Settings.list_categories = function() {
+    var cat, ul, _i, _len, _ref, _results;
+    ul = $('#settings ul');
+    _ref = this.categories;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      cat = _ref[_i];
+      _results.push((function(cat) {
+        var li;
+        li = $('<li>').click(function() {
+          return Settings.show(cat);
+        }).html($('<a href="#" onClick="return false;">').html(cat)).attr({
+          id: "category_" + cat
+        });
+        return ul.append(li);
+      })(cat));
+    }
+    return _results;
+  };
+
+  Settings.scrub = function(settings) {
+    var i, set, user, _i, _len, _ref;
+    set = jQuery.extend(true, {}, settings);
+    set.twitter.consumerKey = set.twitter.consumerKey.replace(/[a-z0-9]/ig, "x");
+    set.twitter.consumerSecret = set.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x");
+    _ref = set.twitter.users;
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      user = _ref[i];
+      set.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x");
+      set.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x");
+    }
+    try {
+      set.instapaper_credentials.user = set.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x");
+    } catch (_error) {}
+    try {
+      set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x");
+    } catch (_error) {}
+    set.logs = Application.logs;
+    return set;
+  };
+
+  return Settings;
+
+})();
+
+Settings.add("Allgemeines", "Konten", "Liste aller dem Geotweeter bekannten Twitter-Accounts.", new SettingsList({
+  count: function() {
+    return settings.twitter.users.length;
+  },
+  getValue: function(i) {
+    return [settings.twitter.users[i].screen_name, settings.twitter.users[i].stream ? 'Ja' : ''];
+  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        if (confirm("Wirklich den gewählten User-Account löschen?")) {
+          if (settings.twitter.users[i].stream) {
+            Application.accounts[i].request.stop_request();
+          }
+          settings.twitter.users.splice(i, 1);
+          return Settings.force_restart = true;
+        }
+      }
+    }
+  ],
+  listHeaders: ["Account", "Streaming"],
+  addValue: Hooks.add_user_1
+}));
+
+Settings.add("Allgemeines", "Places", "Im Geotweeter verwendbare Orte", new SettingsList({
+  count: function() {
+    return settings.places.length;
+  },
+  getValue: function(i) {
+    return settings.places[i].name;
+  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        if (confirm("Wirklich den gewählten Ort löschen?")) {
+          settings.places.splice(i, 1);
+          return Application.fill_places();
+        }
+      }
+    }, {
+      name: "Umbenennen",
+      icon: "icons/pencil.png",
+      action: function(i) {
+        var new_name;
+        new_name = prompt("Bitte den neuen Namen für diesen Ort eingeben.\nAchtung, dies ändert nur den lokal in der Liste angezeigten Namen!");
+        if (new_name != null) {
+          settings.places[i].name = new_name;
+        }
+        return Application.fill_places();
+      }
+    }
+  ],
+  listHeaders: ["Name"],
+  addValue: Hooks.add_location_1
+}));
+
+Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu den Bildern verlinken oder aber nach einem Klick die Bilder (falls möglich) direkt im Geotweeter anzeigen? (Änderungen wirken sich nur auf neu kommende Tweets oder nach einem Neustart aus!)", new SettingsBoolean({
+  getValue: function() {
+    return settings.show_images_in_lightbox;
+  },
+  setValue: function(value) {
+    return settings.show_images_in_lightbox = value;
+  }
+}));
+
+Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_strings.length;
+  },
+  getValue: function(i) {
+    return settings.muted_strings[i];
+  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_strings.splice(i, 1);
+      }
+    }
+  ],
+  listHeaders: ["Begriff"],
+  addValue: function() {
+    var answer;
+    answer = prompt("Bitte den zu filternden Begriff eingeben.");
+    if (answer) {
+      return settings.muted_strings.push(answer.toLowerCase());
+    }
+  }
+}));
+
+Settings.add("Filter", "Benutzer", "Tweets von diesen Usern werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_users.length;
+  },
+  getValue: function(i) {
+    return settings.muted_users[i];
+  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_users.splice(i, 1);
+      }
+    }
+  ],
+  listHeaders: ["User"],
+  addValue: function() {
+    var answer;
+    answer = prompt("Bitte den zu filternden Usernamen eingeben.");
+    if (answer) {
+      return settings.muted_users.push(answer.toLowerCase());
+    }
+  }
+}));
+
+Settings.add("Filter", "Kombinationen", "Tweets mit diesen User-Begriff-Kombinationen werden nicht angezeigt", new SettingsList({
+  count: function() {
+    return settings.muted_combinations.length;
+  },
+  getValue: function(i) {
+    return [settings.muted_combinations[i].user, settings.muted_combinations[i].string];
+  },
+  actions: [
+    {
+      name: "Löschen",
+      icon: "icons/cancel.png",
+      action: function(i) {
+        return settings.muted_combinations.splice(i, 1);
+      }
+    }
+  ],
+  listHeaders: ["User", "Begriff"],
+  addValue: function() {
+    var answer1, answer2;
+    answer1 = prompt("Bitte den zu filternden Usernamen eingeben.");
+    answer2 = prompt("Bitte den zu filternden Begriff eingeben.");
+    if (answer1 && answer2) {
+      return settings.muted_combinations.push({
+        user: answer1.toLowerCase(),
+        string: answer2.toLowerCase()
+      });
+    }
+  }
+}));
+
+Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsText({
+  getValue: function() {
+    return settings.instapaper_credentials.user;
+  },
+  setValue: function(value) {
+    return settings.instapaper_credentials.user = value;
+  },
+  style: "big"
+}));
+
+Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
+  getValue: function() {
+    if (settings.instapaper_credentials.user && settings.instapaper_credentials.user.length > 0) {
+      return "12345678";
+    } else {
+      return "";
+    }
+  },
+  setValue: function(value) {
+    if (value !== "12345678") {
+      return settings.instapaper_credentials.password = value;
+    }
+  },
+  style: "big"
+}));
+
+Settings.add("Experten", "Debug-Modus", "Gibt mehr Infos auf der Konsole aus", new SettingsBoolean({
+  getValue: function() {
+    return settings.debug;
+  },
+  setValue: function(value) {
+    return settings.debug = value;
+  }
+}));
+
+Settings.add("Experten", "Doppelenterzeit", "Wie viele ms zwischen zwei Enter-Drücken liegen dürfen, damit das als Doppelenter erkannt wird", new SettingsText({
+  format: "integer",
+  getValue: function() {
+    return settings.timings.max_double_enter_time;
+  },
+  setValue: function(value) {
+    return settings.timings.max_double_enter_time = value;
+  }
+}));
+
+Settings.add("Experten", "Timeout-Faktor", "Ist DurchschnittszeitDerLetztenTweets * TimeoutFaktor Zeit seit dem letzten Tweet vergangen, resetten wir den Stream", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Der Faktor muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }
+  ],
+  getValue: function() {
+    return settings.timeout_detect_factor;
+  },
+  setValue: function(value) {
+    return settings.timeout_detect_factor = value;
+  }
+}));
+
+Settings.add("Experten", "Timeout-Minimum", "Minimalwert, nach dem frühestens ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Wert muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }, {
+      message: "Wert muss kleiner als das Maximum sein",
+      func: function(x) {
+        return x < settings.timeout_maximum_delay;
+      }
+    }
+  ],
+  getValue: function() {
+    return settings.timeout_minimum_delay;
+  },
+  setValue: function(value) {
+    return settings.timeout_minimum_delay = value;
+  }
+}));
+
+Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fall ein Timeout angenommen wird (Sekunden)", new SettingsText({
+  format: "integer",
+  validations: [
+    {
+      message: "Wert muss mindestens 1 sein.",
+      func: function(x) {
+        return x >= 1;
+      }
+    }, {
+      message: "Wert muss größer als das Minimum sein",
+      func: function(x) {
+        return x > settings.timeout_minimum_delay;
+      }
+    }
+  ],
+  getValue: function() {
+    return settings.timeout_maximum_delay;
+  },
+  setValue: function(value) {
+    return settings.timeout_maximum_delay = value;
+  }
+}));
+
+Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit Twitter. Wird er geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+  getValue: function() {
+    return "abcdefghijklmno";
+  },
+  setValue: function(value) {
+    var acc, id, _i, _len, _ref;
+    if (value !== settings.twitter.consumerKey && value !== "abcdefghijklmno" && confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+      _ref = Application.accounts;
+      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+        acc = _ref[id];
+        if (settings.twitter.users[id].stream) {
+          acc.request.stop_request();
+        }
+      }
+      settings.twitter.consumerKey = value;
+      settings.twitter.users = [];
+      return Settings.force_restart = true;
+    }
+  },
+  style: "big"
+}));
+
+Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikation mit Twitter. Wird es geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
+  getValue: function() {
+    return "abcdefghijklmnokjhkjhkjh";
+  },
+  setValue: function(value) {
+    var acc, id, _i, _len, _ref;
+    if (value !== settings.twitter.consumerSecret && value !== "abcdefghijklmnokjhkjhkjh" && confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+      _ref = Application.accounts;
+      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+        acc = _ref[id];
+        if (settings.twitter.users[id].stream) {
+          acc.request.stop_request();
+        }
+      }
+      settings.twitter.consumerSecret = value;
+      settings.twitter.users = [];
+      return Settings.force_restart = true;
+    }
+  },
+  style: "big"
+}));
+
+Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf einen anderen PC zu übertragen.", new SettingsButton({
+  action: function() {
+    return prompt("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!", JSON.stringify(settings));
+  }
+}));
+
+Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
+  action: function() {
+    var settings, text;
+    text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.");
+    settings = JSON.parse(text);
+    Settings.save();
+    return location.href = ".";
+  }
+}));
+
+Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet den Geotweeter dann neu.", new SettingsButton({
+  action: function() {
+    if (confirm("Sicher? Alle (!) Einstellungen löschen?")) {
+      return Settings.reset();
+    }
+  }
+}));
+
+Settings.add("Sonstiges", "Settings-Dump für Support", "Gibt einen Dump der Settings, bereinigt um sensible Daten, aus.", new SettingsButton({
+  action: function() {
+    return prompt("Folgenden Text bitte an den 'Support' weiterreichen. Sensible Daten wurden bereinigt.", JSON.stringify(Settings.scrub(settings), "\t"));
+  }
+}));
 
 Application = (function() {
 
@@ -2847,14 +3655,25 @@ Application = (function() {
 
   Application.attached_files = [];
 
+  Application.logs = [];
+
   Application.start = function() {
+    window.settings = {
+      debug: true
+    };
     Application.log(this, "", "Starting...");
+    Settings.list_categories();
+    Settings.load();
     if (!Migrations.migrate()) {
       return;
     }
     this.fill_places();
     this.attach_hooks();
     this.set_time_diff();
+    if (settings.twitter.users.length === 0) {
+      Settings.show();
+      return;
+    }
     this.initialize_accounts();
     this.get_twitter_configuration();
     this.accounts[0].show();
@@ -2862,20 +3681,24 @@ Application = (function() {
   };
 
   Application.fill_places = function() {
-    var id, p, place, _i, _len, _ref;
+    var i, id, p, place, _i, _j, _len, _ref, _ref1;
     if (settings.places.length === 0) {
-      return $('#place').remove();
+      return $('#place').hide();
     } else {
       p = $('#place')[0];
+      for (i = _i = 0, _ref = p.options.length; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        p.options.remove();
+      }
       p.options[0] = new Option("-- leer --", 0);
-      _ref = settings.places;
-      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
-        place = _ref[id];
+      _ref1 = settings.places;
+      for (id = _j = 0, _len = _ref1.length; _j < _len; id = ++_j) {
+        place = _ref1[id];
         p.options[p.options.length] = new Option(place.name, id + 1);
       }
       if ($.cookie('last_place')) {
-        return $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
+        $("#place option[value='" + ($.cookie('last_place')) + "']").attr('selected', true);
       }
+      return $('#place').show();
     }
   };
 
@@ -3085,12 +3908,13 @@ Application = (function() {
   };
 
   Application.log = function(place, category, message) {
-    var place_str;
-    if (!(settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null))) {
-      return;
-    }
+    var place_str, string;
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
-    return console.log("" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message);
+    string = "" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message;
+    this.logs.push(string);
+    if (settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null)) {
+      return console.log(string);
+    }
   };
 
   Application.add_to_autocomplete = function(term) {
@@ -3109,10 +3933,19 @@ Application = (function() {
 
   Application.infoarea = {
     visible: false,
-    show: function(title, content) {
-      Application.current_account.hide();
+    return_to_settings: false,
+    show: function(title, content, return_to_settings) {
+      var _ref;
+      if (return_to_settings == null) {
+        return_to_settings = false;
+      }
+      if ((_ref = Application.current_account) != null) {
+        _ref.hide();
+      }
+      $('#settings').hide();
       $('#top').hide();
       Application.infoarea.visible = true;
+      Application.infoarea.return_to_settings = return_to_settings;
       $('#infoarea_title').html(title);
       $('#infoarea_content').html(content);
       $('#infoarea').show();
@@ -3121,8 +3954,12 @@ Application = (function() {
     hide: function() {
       Application.infoarea.visible = false;
       $('#infoarea').hide();
-      $('#top').show();
-      Application.current_account.show();
+      if (Application.infoarea.return_to_settings) {
+        Settings.refresh_view();
+      } else {
+        $('#top').show();
+        Application.current_account.show();
+      }
       return false;
     }
   };

@@ -237,13 +237,129 @@ textarea, input, select {
     color: #333;
 }
 
-#infoarea {
+#infoarea, #settings {
     display: none;
     z-index: 105;
 	padding-bottom: 25px;
     width: 100%;
     height: 100%;
     background-color: #fff;
+}
+
+#infoarea { z-index: 106; }
+#settings { z-index: 105; }
+
+#settings h1 {
+	margin-top: 5px;
+	margin-bottom: 10px;
+}
+
+#settings #save_button {
+	display: block;
+	border: 1px solid #000;
+	background-color: #ddd;
+	padding: 5px;
+	text-align: center;
+	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+#settings h2 {
+	display: inline;
+	font-size: 15px;
+	margin-right: 5px;
+}
+
+#settings a {
+	text-decoration: none;
+	color: #000;
+}
+
+#settings a:hover {
+	text-decoration: underline;
+}
+
+#settings div.list {
+	border: 1px dotted #aaa;
+	margin-bottom: 5px;
+	padding-bottom: 5px; 
+}
+
+#settings .setting:nth-child(odd),
+#settings .list:nth-child(odd) {
+	background-color: #eef;
+}
+
+#settings .setting:hover,
+#settings .list:hover {
+	background-color: #eee;
+}
+
+#settings .setting,
+#settings .list {
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#settings .list a {
+	margin-right: 5px;
+}
+
+#settings input {
+	float: right;
+}
+
+#settings input[type="text"],
+#settings input[type="password"] {
+	width: 100px;
+}
+
+#settings input.big {
+	width: 99%;
+}
+
+#settings table {
+	border-collapse: collapse;
+}
+
+#settings table th {
+	border-bottom: 2px solid #000;
+}
+
+#settings table .grey {
+	color: #aaa;
+	border-color: #aaa;
+}
+
+#settings table td,
+#settings table th {
+	border-left: 1px dotted #000;
+	border-right: 1px dotted #000;
+	border-top: 1px dotted #000;
+	padding-left: 3px;
+	padding-right: 5px;
+}
+
+ul#settings_categories {
+	padding-left: 0px;
+	padding-bottom: 0px;
+	border-bottom: 1px solid #000;
+}
+
+ul#settings_categories li {
+	display: inline-block;
+	padding: 5px;
+	border: 1px solid #000;
+	background-color: #ddd;
+	font-weight: bold;
+	margin-left: -1px;
+	margin-bottom: -1px;
+	border-radius: 8px 8px 0px 0px;
+}
+
+ul#settings_categories li.selected {
+	background-color: #fff;
 }
 
 #infoarea #info_spinner {
@@ -317,6 +433,14 @@ textarea, input, select {
     margin: 0;
 }
 
+#tooltip h3 {
+	font-size: 12px;
+}
+
+#tooltip.settings_tooltip {
+	width: 120px;
+}
+
 #dm_info {
     display: none;
     background-color: #fd8;
@@ -374,6 +498,12 @@ ul.context-menu {
 	width: auto !important;
 }
 
+.clear {
+	height: 0px;
+	width: 0px;
+	clear: both;
+}
+
 #dropzone {
 	display: none;
 	width: 100%;
@@ -391,8 +521,6 @@ ul.context-menu {
 	max-height: 24px;
 	vertical-align: bottom;
 }
-
-
 
 
 
