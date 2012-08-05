@@ -292,6 +292,12 @@ textarea, input, select {
 	background-color: #eee;
 }
 
+#settings .setting,
+#settings .list {
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
 #settings input {
 	float: right;
 }
@@ -302,7 +308,7 @@ textarea, input, select {
 }
 
 #settings input.big {
-	width: 100%;
+	width: 99%;
 }
 
 #settings table {
