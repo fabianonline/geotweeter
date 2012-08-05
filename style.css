@@ -571,6 +571,7 @@ ul.context-menu {
 	text-align: center;
 	line-height: 0;
 }
+#lightbox-image { max-width: 100%; }
 #jquery-lightbox a img { border: none; }
 #lightbox-container-image-box {
 	position: relative;
