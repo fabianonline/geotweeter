@@ -3417,7 +3417,9 @@ Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPa
     }
   },
   setValue: function(value) {
-    return settings.instapaper_credentials.password = value;
+    if (value !== "12345678") {
+      return settings.instapaper_credentials.password = value;
+    }
   },
   style: "big"
 }));
@@ -3511,7 +3513,7 @@ Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit 
   },
   setValue: function(value) {
     var acc, id, _i, _len, _ref;
-    if (confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+    if (value !== settings.twitter.consumerKey && value !== "abcdefghijklmno" && confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
       _ref = Application.accounts;
       for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
         acc = _ref[id];
@@ -3533,7 +3535,7 @@ Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikatio
   },
   setValue: function(value) {
     var acc, id, _i, _len, _ref;
-    if (confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
+    if (value !== settings.twitter.consumerSecret && value !== "abcdefghijklmnokjhkjhkjh" && confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")) {
       _ref = Application.accounts;
       for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
         acc = _ref[id];

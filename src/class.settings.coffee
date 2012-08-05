@@ -188,7 +188,7 @@ Settings.add("Instapaper", "Username", "Username bei Instapaper", new SettingsTe
 
 Settings.add("Instapaper", "Password", "Password bei Instapaper", new SettingsPassword({
 	getValue: -> if settings.instapaper_credentials.user && settings.instapaper_credentials.user.length>0 then "12345678" else ""
-	setValue: (value) -> settings.instapaper_credentials.password = value
+	setValue: (value) -> settings.instapaper_credentials.password = value unless value=="12345678"
 	style: "big"
 }))
 
@@ -227,7 +227,7 @@ Settings.add("Experten", "Timeout-Maximum", "Maximalwert, nach dem auf jeden Fal
 Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit Twitter. Wird er geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
 	getValue: -> "abcdefghijklmno"
 	setValue: (value) ->
-		if confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
+		if value!=settings.twitter.consumerKey && value!="abcdefghijklmno" && confirm("Wirklich den ConsumerKey ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
 			acc.request.stop_request() for acc, id in Application.accounts when settings.twitter.users[id].stream
 			settings.twitter.consumerKey = value
 			settings.twitter.users = []
@@ -238,7 +238,7 @@ Settings.add("Experten", "ConsumerKey", "ConsumerKey für die Kommunikation mit 
 Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikation mit Twitter. Wird es geändert, müssen alle Account neu angelegt werden!", new SettingsPassword({
 	getValue: -> "abcdefghijklmnokjhkjhkjh"
 	setValue: (value) ->
-		if confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
+		if value!=settings.twitter.consumerSecret && value!="abcdefghijklmnokjhkjhkjh" && confirm("Wirklich das ConsumerSecret ändern? Dadurch werden alle Accounts gelöscht und müssen neu hinzugefügt werden!")
 			acc.request.stop_request() for acc, id in Application.accounts when settings.twitter.users[id].stream
 			settings.twitter.consumerSecret = value
 			settings.twitter.users = []
