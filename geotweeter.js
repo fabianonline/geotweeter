@@ -3262,6 +3262,25 @@ Settings = (function() {
     return _results;
   };
 
+  Settings.scrub = function(settings) {
+    var i, user, _i, _len, _ref;
+    settings.twitter.consumerKey = settings.twitter.consumerKey.replace(/[a-z0-9]/ig, "x");
+    settings.twitter.consumerSecret = settings.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x");
+    _ref = settings.twitter.users;
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      user = _ref[i];
+      settings.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x");
+      settings.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x");
+    }
+    try {
+      settings.instapaper_credentials.user = settings.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x");
+    } catch (_error) {}
+    try {
+      settings.instapaper_credentials.password = settings.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x");
+    } catch (_error) {}
+    return settings;
+  };
+
   return Settings;
 
 })();
@@ -3550,6 +3569,12 @@ Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet de
     if (confirm("Sicher? Alle (!) Einstellungen löschen?")) {
       return Settings.reset();
     }
+  }
+}));
+
+Settings.add("Sonstiges", "Settings-Dump für Support", "Gibt einen Dump der Settings, bereinigt um sensible Daten, aus.", new SettingsButton({
+  action: function() {
+    return prompt("Folgenden Text bitte an den 'Support' weiterreichen. Sensible Daten wurden bereinigt.", JSON.stringify(Settings.scrub(settings), "\t"));
   }
 }));
 

@@ -102,7 +102,16 @@ class Settings
 			do (cat) ->
 				li = $('<li>').click( -> Settings.show(cat) ).html($('<a href="#" onClick="return false;">').html(cat)).attr({id: "category_#{cat}"})
 				ul.append(li)
-
+	
+	@scrub: (settings) ->
+		settings.twitter.consumerKey = settings.twitter.consumerKey.replace(/[a-z0-9]/ig, "x")
+		settings.twitter.consumerSecret = settings.twitter.consumerSecret.replace(/[a-z0-9]/ig, "x")
+		for user, i in settings.twitter.users
+			settings.twitter.users[i].token = user.token.replace(/[a-z0-9]/ig, "x") 
+			settings.twitter.users[i].tokenSecret = user.tokenSecret.replace(/[a-z0-9]/ig, "x") 
+		try settings.instapaper_credentials.user = settings.instapaper_credentials.user.replace(/[a-z0-9]/ig, "x")
+		try settings.instapaper_credentials.password = settings.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x")
+		return settings
 
 
 
@@ -250,4 +259,8 @@ Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert 
 
 Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet den Geotweeter dann neu.", new SettingsButton({
 	action: -> Settings.reset() if confirm("Sicher? Alle (!) Einstellungen löschen?")
+}))
+
+Settings.add("Sonstiges", "Settings-Dump für Support", "Gibt einen Dump der Settings, bereinigt um sensible Daten, aus.", new SettingsButton({
+	action: -> prompt("Folgenden Text bitte an den 'Support' weiterreichen. Sensible Daten wurden bereinigt.", JSON.stringify(Settings.scrub(settings), "\t"))
 }))
