@@ -282,9 +282,14 @@ textarea, input, select {
 	padding-bottom: 5px; 
 }
 
+#settings .setting:nth-child(odd),
+#settings .list:nth-child(odd) {
+	background-color: #eef;
+}
+
 #settings .setting:hover,
 #settings .list:hover {
-	background-color: #eef;
+	background-color: #eee;
 }
 
 #settings input {
@@ -323,21 +328,23 @@ textarea, input, select {
 
 ul#settings_categories {
 	padding-left: 0px;
-	padding-bottom: 5px;
+	padding-bottom: 0px;
 	border-bottom: 1px solid #000;
 }
 
 ul#settings_categories li {
-	display: inline;
+	display: inline-block;
 	padding: 5px;
 	border: 1px solid #000;
 	background-color: #ddd;
 	font-weight: bold;
+	margin-left: -1px;
+	margin-bottom: -1px;
+	border-radius: 8px 8px 0px 0px;
 }
 
 ul#settings_categories li.selected {
 	background-color: #fff;
-	border-bottom: none;
 }
 
 #infoarea #info_spinner {
@@ -416,7 +423,7 @@ ul#settings_categories li.selected {
 }
 
 #tooltip.settings_tooltip {
-	width: 200px;
+	width: 120px;
 }
 
 #dm_info {
