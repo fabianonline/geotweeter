@@ -576,8 +576,9 @@ ul.context-menu {
 	position: relative;
 	background-color: #fff;
 	width: 250px;
-	height: 250px;
+	height: 100% !important;
 	margin: 0 auto;
+	max-width: 100% !important;
 }
 #lightbox-container-image { padding: 10px; }
 #lightbox-loading {
@@ -621,6 +622,7 @@ ul.context-menu {
 	overflow: auto;
 	width: 100%;
 	padding: 0 10px 0;
+	max-width: 100% !important;
 }
 #lightbox-container-image-data {
 	padding: 0 10px; 
