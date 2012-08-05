@@ -1294,7 +1294,7 @@ Thumbnail = (function() {
       cl = "";
       url = this.link;
     }
-    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
+    return "<a href='" + url + "' target='_blank' class='" + cl + "' data-url='" + this.link + "'>			<img src='" + this.thumbnail + "' class='media' style='float: right;' />		</a>";
   };
 
   Thumbnail.prototype.get_multi_thumb_html = function() {
@@ -1306,7 +1306,7 @@ Thumbnail = (function() {
       cl = "";
       url = this.link;
     }
-    return "<a href='" + url + "' target='_blank' class='" + cl + "'>			<img src='" + this.thumbnail + "' />		</a>";
+    return "<a href='" + url + "' target='_blank' class='" + cl + "' data-url='" + this.link + "'>			<img src='" + this.thumbnail + "' />		</a>";
   };
 
   return Thumbnail;

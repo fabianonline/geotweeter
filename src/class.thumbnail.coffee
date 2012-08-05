@@ -8,7 +8,7 @@ class Thumbnail
 			cl = ""
 			url = @link
 		
-		"<a href='#{url}' target='_blank' class='#{cl}'>
+		"<a href='#{url}' target='_blank' class='#{cl}' data-url='#{@link}'>
 			<img src='#{@thumbnail}' class='media' style='float: right;' />
 		</a>"
 	
@@ -20,7 +20,7 @@ class Thumbnail
 			cl = ""
 			url = @link
 		
-		"<a href='#{url}' target='_blank' class='#{cl}'>
+		"<a href='#{url}' target='_blank' class='#{cl}' data-url='#{@link}'>
 			<img src='#{@thumbnail}' />
 		</a>"
 	
