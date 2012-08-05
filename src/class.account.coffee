@@ -58,7 +58,7 @@ class Account
 			left: 5
 		})
 		# Initialize an adequate Stream object.
-		@request = if settings.twitter.users[settings_id].stream? then new StreamRequest(this) else new PullRequest(this)
+		@request = if settings.twitter.users[settings_id].stream then new StreamRequest(this) else new PullRequest(this)
 		# Try to validate the keys and get informations about this account.
 		@validate_credentials()
 		

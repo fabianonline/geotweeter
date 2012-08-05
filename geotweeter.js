@@ -168,7 +168,7 @@ Account = (function() {
         left: 5
       });
     }
-    this.request = settings.twitter.users[settings_id].stream != null ? new StreamRequest(this) : new PullRequest(this);
+    this.request = settings.twitter.users[settings_id].stream ? new StreamRequest(this) : new PullRequest(this);
     this.validate_credentials();
   }
 
