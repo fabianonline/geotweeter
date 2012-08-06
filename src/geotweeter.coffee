@@ -182,7 +182,7 @@ class Application
 		place_str = if typeof place=="string" then place else (if place.toString? then place.toString() else "----")
 		string = "#{(new Date()).format("%H:%M:%S")} [#{place_str.pad(25)}][#{category.pad(15)}] #{message}"
 		@logs.push(string)
-		console.log(string) if settings.debug && console? && console.log?
+		console.log(string) if settings? && settings.debug && console? && console.log?
 	
 	@add_to_autocomplete: (term) ->
 		if $.inArray(term, @autocompletes)==-1

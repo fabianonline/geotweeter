@@ -3936,7 +3936,7 @@ Application = (function() {
     place_str = typeof place === "string" ? place : (place.toString != null ? place.toString() : "----");
     string = "" + ((new Date()).format("%H:%M:%S")) + " [" + (place_str.pad(25)) + "][" + (category.pad(15)) + "] " + message;
     this.logs.push(string);
-    if (settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null)) {
+    if ((typeof settings !== "undefined" && settings !== null) && settings.debug && (typeof console !== "undefined" && console !== null) && (console.log != null)) {
       return console.log(string);
     }
   };
