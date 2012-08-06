@@ -167,7 +167,7 @@ Account = (function() {
     if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
       _base.tooltip({
         bodyHandler: function() {
-          return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text + (_this.get_ratelimit_status_text());
+          return $("<div>").html("<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text).append(_this.get_ratelimit_status());
         },
         track: true,
         showURL: false,
@@ -273,11 +273,11 @@ Account = (function() {
     return "content_" + this.id;
   };
 
-  Account.prototype.get_ratelimit_status_text = function() {
+  Account.prototype.get_ratelimit_status = function() {
     if (this.ratelimit_remaining == null) {
-      return "";
+      return $("");
     }
-    return "<br /><strong>Rate-Limit:</strong> " + this.ratelimit_remaining + "/" + this.ratelimit_limit + " (vor " + (Math.round((new Date() - this.ratelimit_time) / 1000)) + " Sekunden)";
+    return $('<div>').html("<br /><strong>Rate-Limit:</strong> " + this.ratelimit_remaining + "/" + this.ratelimit_limit + " (vor " + (Math.round((new Date() - this.ratelimit_time) / 1000)) + " Sekunden)");
   };
 
   Account.prototype.validate_credentials = function() {

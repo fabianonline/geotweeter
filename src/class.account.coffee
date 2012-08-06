@@ -55,7 +55,8 @@ class Account
 		")
 		# Add a tooltip to this account's selector button at the top of the screen.
 		$("#user_#{@id}").tooltip?({
-			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}#{@get_ratelimit_status_text()}"
+			bodyHandler: => 
+				$("<div>").html("<strong>@#{@screen_name}</strong><br />#{@status_text}").append(@get_ratelimit_status())
 			track: true
 			showURL: false
 			left: 5
@@ -157,9 +158,9 @@ class Account
 	
 	get_content_div_id: -> "content_#{@id}"
 	
-	get_ratelimit_status_text: ->
-		return "" unless @ratelimit_remaining?
-		"<br /><strong>Rate-Limit:</strong> #{@ratelimit_remaining}/#{@ratelimit_limit} (vor #{Math.round((new Date()-@ratelimit_time)/1000)} Sekunden)"
+	get_ratelimit_status: ->
+		return $("") unless @ratelimit_remaining?
+		$('<div>').html("<br /><strong>Rate-Limit:</strong> #{@ratelimit_remaining}/#{@ratelimit_limit} (vor #{Math.round((new Date()-@ratelimit_time)/1000)} Sekunden)")
 	
 	# Validates the credentials of the current account and also gets some basic
 	# data about this account (e.g. `screen_name`, `id` and so on).
