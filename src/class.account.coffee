@@ -24,6 +24,9 @@ class Account
 	status_text: ""
 	scroll_top: 0
 	requests: []
+	ratelimit_remaining: null
+	ratelimit_limit: null
+	ratelimit_time: null
 	
 	# The constructor is called by Application. `settings_id` is the id of
 	# this account as it appears in `settings.twitter.user`.
@@ -52,7 +55,7 @@ class Account
 		")
 		# Add a tooltip to this account's selector button at the top of the screen.
 		$("#user_#{@id}").tooltip?({
-			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}"
+			bodyHandler: => "<strong>@#{@screen_name}</strong><br />#{@status_text}#{@get_ratelimit_status_text()}"
 			track: true
 			showURL: false
 			left: 5
@@ -153,6 +156,10 @@ class Account
 	toString: -> "Account #{@user.screen_name}"
 	
 	get_content_div_id: -> "content_#{@id}"
+	
+	get_ratelimit_status_text: ->
+		return "" unless @ratelimit_remaining?
+		"<br /><strong>Rate-Limit:</strong> #{@ratelimit_remaining}/#{@ratelimit_limit} (vor #{Math.round((new Date()-@ratelimit_time)/1000)} Sekunden)"
 	
 	# Validates the credentials of the current account and also gets some basic
 	# data about this account (e.g. `screen_name`, `id` and so on).
@@ -322,7 +329,11 @@ class Account
 			dataType: options.dataType ? "json"
 			async: options.async ? true
 			type: method
-			success: (data, textStatus, req) ->
+			success: (data, textStatus, req) =>
+				if req.getResponseHeader("X-RateLimit-Remaining")
+					@ratelimit_remaining = req.getResponseHeader("X-RateLimit-Remaining")
+					@ratelimit_limit = req.getResponseHeader("X-RateLimit-Limit")
+					@ratelimit_time = new Date()
 				if req.status=="200" || req.status==200
 					$('#success_info').html(options.success_string) if options.success_string?
 					options.success($('#success_info'), data, req, options.additional_info) if options.success?
@@ -333,7 +344,11 @@ class Account
 					else
 						$('#failure_info').html(data.error)
 					$('#failure').fadeIn(500).delay(2000).fadeOut(500, -> $('#form').fadeTo(500, 1)) if verbose
-			error: (req, textStatus, exc) ->
+			error: (req, textStatus, exc) =>
+				if req.getResponseHeader("X-RateLimit-Remaining")
+					@ratelimit_remaining = req.getResponseHeader("X-RateLimit-Remaining")
+					@ratelimit_limit = req.getResponseHeader("X-RateLimit-Limit")
+					@ratelimit_time = new Date()
 				if options.error?
 					options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info)
 				else

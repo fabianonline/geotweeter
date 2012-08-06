@@ -138,6 +138,12 @@ Account = (function() {
 
   Account.prototype.requests = [];
 
+  Account.prototype.ratelimit_remaining = null;
+
+  Account.prototype.ratelimit_limit = null;
+
+  Account.prototype.ratelimit_time = null;
+
   function Account(settings_id) {
     this.fill_list = __bind(this.fill_list, this);
 
@@ -161,7 +167,7 @@ Account = (function() {
     if (typeof (_base = $("#user_" + this.id)).tooltip === "function") {
       _base.tooltip({
         bodyHandler: function() {
-          return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text;
+          return "<strong>@" + _this.screen_name + "</strong><br />" + _this.status_text + (_this.get_ratelimit_status_text());
         },
         track: true,
         showURL: false,
@@ -265,6 +271,13 @@ Account = (function() {
 
   Account.prototype.get_content_div_id = function() {
     return "content_" + this.id;
+  };
+
+  Account.prototype.get_ratelimit_status_text = function() {
+    if (this.ratelimit_remaining == null) {
+      return "";
+    }
+    return "<br /><strong>Rate-Limit:</strong> " + this.ratelimit_remaining + "/" + this.ratelimit_limit + " (vor " + (Math.round((new Date() - this.ratelimit_time) / 1000)) + " Sekunden)";
   };
 
   Account.prototype.validate_credentials = function() {
@@ -464,7 +477,8 @@ Account = (function() {
   };
 
   Account.prototype.twitter_request = function(url, options) {
-    var data, method, result, verbose, _ref, _ref1, _ref2;
+    var data, method, result, verbose, _ref, _ref1, _ref2,
+      _this = this;
     method = (_ref = options.method) != null ? _ref : "POST";
     verbose = !(!!options.silent && true);
     if (verbose) {
@@ -479,6 +493,11 @@ Account = (function() {
       async: (_ref2 = options.async) != null ? _ref2 : true,
       type: method,
       success: function(data, textStatus, req) {
+        if (req.getResponseHeader("X-RateLimit-Remaining")) {
+          _this.ratelimit_remaining = req.getResponseHeader("X-RateLimit-Remaining");
+          _this.ratelimit_limit = req.getResponseHeader("X-RateLimit-Limit");
+          _this.ratelimit_time = new Date();
+        }
         if (req.status === "200" || req.status === 200) {
           if (options.success_string != null) {
             $('#success_info').html(options.success_string);
@@ -505,6 +524,11 @@ Account = (function() {
         }
       },
       error: function(req, textStatus, exc) {
+        if (req.getResponseHeader("X-RateLimit-Remaining")) {
+          _this.ratelimit_remaining = req.getResponseHeader("X-RateLimit-Remaining");
+          _this.ratelimit_limit = req.getResponseHeader("X-RateLimit-Limit");
+          _this.ratelimit_time = new Date();
+        }
         if (options.error != null) {
           options.error($('#failure_info'), null, req, textStatus, exc, options.additional_info);
         } else {
