@@ -205,7 +205,7 @@ class Application
 			Application.infoarea.visible = true
 			Application.infoarea.return_to_settings = return_to_settings
 			$('#infoarea_title').html(title)
-			$('#infoarea_content').html("").append(content)
+			$('#infoarea_content').empty().append(content)
 			$('#infoarea').show()
 			return false
 			
