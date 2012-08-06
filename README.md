@@ -25,9 +25,6 @@ Twitter-Client.
 Installation
 ------------
 
-Der Geotweeter war nie dafür gedacht, von jemand anderem als mir genutzt zu werden. Dementsprechend
-"komfortabel" lässt er sich an andere User anpassen.
-
 ### Ein grober Überblick
 In der `.htaccess` werden ein paar Proxys definiert, um die Same-Origin-Policy
 zu umgehen. Dafür sollte der Geotweeter auf einem Apache-Server laufen, der entsprechend mod_proxy und
@@ -58,6 +55,6 @@ Zudem muss die .htaccess genug Rechte haben. Hier wäre dann also im Ordner-Kont
 
 ## Konfiguration
 
-In der `settings.js` werden Twitter-OAuth-Tokens und -Secrets sowie sonstige Einstellungen hinterlegt.
-`settings.js.example` dient hier als Vorlage.
+Inzwischen gibt es ein hübsches Konfigurationsmenü, über das man den kompletten Geotweeter an seine Wünsche anpassen kann. Die Konfiguration wird dabei komplett lokal im Browser gespeichert, der Server erfährt da nie etwas von.
+Um den Geotweeter auf mehreren Rechnern nicht immer komplett neu einrichten zu müssen, gibt es aber Export- und Import-Funktionen.
 
