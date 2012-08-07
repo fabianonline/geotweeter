@@ -115,9 +115,8 @@ class Tweet extends TwitterMessage
 		"<a href='#{@permalink}' target='_blank'>#{@date.format("%d.%m.%Y %H:%M")}</a> #{@get_reply_to_info_html()} #{@get_source_html()}" + 
 		"</div>"
 
-	get_menu_items: ->
+	get_menu_items: (clicked_element) ->
 		array = []
-		clicked_element = event.target
 		array.push {name: "Send to Instapaper",         icon: "icons/newspaper_add.png",             separator_below: true, action: (elm) => Tweet.hooks.send_link_to_instapaper(elm, clicked_element) } if $(clicked_element).is('a.external') && settings.instapaper_credentials.user.length>0
 		array.push {name: "Reply",                      icon: "icons/comments.png",                  action: (elm) -> Tweet.hooks.reply(elm)}
 		array.push {name: "Retweet",                    icon: "icons/arrow_rotate_clockwise.png",    action: (elm) -> Tweet.hooks.retweet(elm)}
@@ -340,7 +339,7 @@ class Tweet extends TwitterMessage
 		delete:         (elm) -> @get_tweet(elm).delete(); return false
 		report_as_spam: (elm) -> @get_tweet(elm).report_as_spam(); return false
 		show_replies:   (elm) -> @get_tweet(elm).show_replies(); return false
-		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items();
+		get_menu_items: (elm) -> return @get_tweet(elm).get_menu_items(elm);
 		debug:          (elm) -> @get_tweet(elm).debug(); return false
 		
 		avatar_tooltip: (elm) -> @get_tweet(elm).get_avatar_tooltip();

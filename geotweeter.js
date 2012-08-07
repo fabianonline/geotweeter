@@ -1554,11 +1554,10 @@ Tweet = (function(_super) {
     return "<div class='info'>" + ("<a href='" + this.permalink + "' target='_blank'>" + (this.date.format("%d.%m.%Y %H:%M")) + "</a> " + (this.get_reply_to_info_html()) + " " + (this.get_source_html())) + "</div>";
   };
 
-  Tweet.prototype.get_menu_items = function() {
-    var array, clicked_element,
+  Tweet.prototype.get_menu_items = function(clicked_element) {
+    var array,
       _this = this;
     array = [];
-    clicked_element = event.target;
     if ($(clicked_element).is('a.external') && settings.instapaper_credentials.user.length > 0) {
       array.push({
         name: "Send to Instapaper",
@@ -2016,7 +2015,7 @@ Tweet = (function(_super) {
       return false;
     },
     get_menu_items: function(elm) {
-      return this.get_tweet(elm).get_menu_items();
+      return this.get_tweet(elm).get_menu_items(elm);
     },
     debug: function(elm) {
       this.get_tweet(elm).debug();
