@@ -280,19 +280,26 @@ Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikatio
 }))
 
 Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf einen anderen PC zu übertragen.", new SettingsButton({
-	action: -> prompt("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!", JSON.stringify(settings))
+	action: -> 
+		elm = $('<div>').html("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!")
+		elm.append($('<div>').append($('<textarea>').val(JSON.stringify(window.settings, null, "    ")).css({height: "20em"; width: "99%"})))
+		Application.infoarea.show("Export", elm)
 }))
 
 Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
 	action: ->
-		text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.")
-		try
-			window.settings = JSON.parse(text)
-		catch ex
-			alert("Die Settings scheinen kein valides JSON zu sein...")
-			return
-		Settings.save()
-		location.href = "."
+		elm = $('<div>').html("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.")
+		elm.append($('<div>').append($('<textarea>').attr('id', 'import_area').css({height: "20em"; width: "99%"})))
+		elm.append($('<button>').html("Import").click( ->
+			try
+				window.settings = JSON.parse($('#import_area').val())
+			catch ex
+				alert("Die Settings scheinen kein valides JSON zu sein...")
+				return
+			Settings.save()
+			location.href = "."
+		))
+		Application.infoarea.show("Import", elm)
 }))
 
 Settings.add("Sonstiges", "zurücksetzen", "Löscht alle Settings und startet den Geotweeter dann neu.", new SettingsButton({

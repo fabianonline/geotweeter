@@ -3626,22 +3626,35 @@ Settings.add("Experten", "ConsumerSecret", "ConsumerSecret für die Kommunikatio
 
 Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf einen anderen PC zu übertragen.", new SettingsButton({
   action: function() {
-    return prompt("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!", JSON.stringify(settings));
+    var elm;
+    elm = $('<div>').html("Folgender Text enthält die Settings. Bitte irgendwo lokal speichern und *nicht weitergeben*!");
+    elm.append($('<div>').append($('<textarea>').val(JSON.stringify(window.settings, null, "    ")).css({
+      height: "20em",
+      width: "99%"
+    })));
+    return Application.infoarea.show("Export", elm);
   }
 }));
 
 Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
   action: function() {
-    var text;
-    text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.");
-    try {
-      window.settings = JSON.parse(text);
-    } catch (ex) {
-      alert("Die Settings scheinen kein valides JSON zu sein...");
-      return;
-    }
-    Settings.save();
-    return location.href = ".";
+    var elm;
+    elm = $('<div>').html("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.");
+    elm.append($('<div>').append($('<textarea>').attr('id', 'import_area').css({
+      height: "20em",
+      width: "99%"
+    })));
+    elm.append($('<button>').html("Import").click(function() {
+      try {
+        window.settings = JSON.parse($('#import_area').val());
+      } catch (ex) {
+        alert("Die Settings scheinen kein valides JSON zu sein...");
+        return;
+      }
+      Settings.save();
+      return location.href = ".";
+    }));
+    return Application.infoarea.show("Import", elm);
   }
 }));
 
