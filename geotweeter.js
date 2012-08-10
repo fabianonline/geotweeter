@@ -1744,7 +1744,7 @@ Tweet = (function(_super) {
             }
             break;
           case "hashtags":
-            this.replace_entity(entity, "<a href='https://twitter.com/search?q=#" + entity.text + "' target='_blank' class='external'>#" + entity.text + "</a>");
+            this.replace_entity(entity, "<a href='https://twitter.com/#!/search/%23" + entity.text + "' target='_blank' class='external'>#" + entity.text + "</a>");
             Application.add_to_autocomplete("#" + entity.text);
         }
       }

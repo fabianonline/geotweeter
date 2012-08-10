@@ -179,7 +179,7 @@ class Tweet extends TwitterMessage
 						else
 							@replace_entity(entity, "<a href='#{entity.url}' class='external' target='_blank' class='external'>#{entity.url}</a>")
 					when "hashtags"
-						@replace_entity(entity, "<a href='https://twitter.com/search?q=##{entity.text}' target='_blank' class='external'>##{entity.text}</a>")
+						@replace_entity(entity, "<a href='https://twitter.com/#!/search/%23#{entity.text}' target='_blank' class='external'>##{entity.text}</a>")
 						Application.add_to_autocomplete("##{entity.text}")
 		@text = @text.trim().replace(/\n/g, "<br />")
 		@text = @text.replace(/[^\/>](GC[A-Z0-9]+)\b/g, " <a href='http://coords.info/$1' target='_blank' class='external'>$1</a>")
