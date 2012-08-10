@@ -286,7 +286,11 @@ Settings.add("Sonstiges", "Export", "Exportiert die Settings, um sie z.B. auf ei
 Settings.add("Sonstiges", "Import", "Importiert Settings, die vorher exportiert wurden.", new SettingsButton({
 	action: ->
 		text = prompt("Bitte den Text eingeben. Danach wird der Geotweeter automatisch neu gestartet.")
-		settings = JSON.parse(text)
+		try
+			window.settings = JSON.parse(text)
+		catch ex
+			alert("Die Settings scheinen kein valides JSON zu sein...")
+			return
 		Settings.save()
 		location.href = "."
 }))
