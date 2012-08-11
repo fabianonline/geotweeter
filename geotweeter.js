@@ -3210,9 +3210,19 @@ Settings = (function() {
   };
 
   Settings.load = function() {
-    var data, found_settings, i, key, temp_key, _i, _ref;
+    var data, found_settings, i, key, result, temp_key, _i, _ref;
     found_settings = {};
     Application.log("Settings", "load", "Loading...");
+    result = $.ajax({
+      url: "settings.js",
+      dataType: "json",
+      async: false
+    });
+    if (result.status === 200) {
+      Application.log(this, "load", "settings.js auf dem Server gefunden.");
+      window.settings = JSON.parse(result.responseText);
+      return;
+    }
     key = this.local_storage_key = "geotweeter.settings." + window.location.pathname.replace(/\/$/, "");
     Application.log("Settings", "load", "Standard-Key: " + this.local_storage_key);
     if (localStorage.getItem(this.local_storage_key) === null) {
@@ -3314,6 +3324,10 @@ Settings = (function() {
     } catch (_error) {}
     set.logs = Application.logs;
     return set;
+  };
+
+  Settings.toString = function() {
+    return "Settings";
   };
 
   return Settings;

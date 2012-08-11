@@ -50,6 +50,16 @@ class Settings
 	@load: -> 
 		found_settings = {}
 		Application.log("Settings", "load", "Loading...")
+		result = $.ajax({
+			url: "settings.js"
+			dataType: "json"
+			async: false
+		})
+		if result.status==200
+			Application.log(this, "load", "settings.js auf dem Server gefunden.")
+			window.settings = JSON.parse(result.responseText)
+			return
+		
 		key = @local_storage_key = "geotweeter.settings." + window.location.pathname.replace(/\/$/, "")
 		Application.log("Settings", "load", "Standard-Key: #{@local_storage_key}")
 		if localStorage.getItem(@local_storage_key) == null
@@ -114,6 +124,8 @@ class Settings
 		try set.instapaper_credentials.password = set.instapaper_credentials.password.replace(/[a-z0-9]/ig, "x")
 		set.logs = Application.logs
 		return set
+	
+	@toString: -> "Settings"
 
 
 
