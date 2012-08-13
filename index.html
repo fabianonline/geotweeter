@@ -55,7 +55,10 @@
 <!-- <a href="#" onClick="req.abort(); return false;">Abbrechen</a> -->
 <div id="reply_warning">Achtung, dieser Tweet ist kein Reply mehr. <a href="#" onClick="removeReplyWarning();">Er soll auch kein Reply sein.</a></div>
 <div id="form_area">
-	<div id="dropzone">Dateien hier ablegen</div>
+	<div id="dropzone">
+		<input type="file" /> <!-- Diese Box ist per CSS transparent vor dem Text. Läuft der GT als Webapp, ist dieses Element nötig, um eine Datei ablegen zu können. -->
+		Dateien hier ablegen
+	</div>
 <form name="tweet_form" id="form">
     <select name="place" id="place"></select>
     <span id="dm_info">
