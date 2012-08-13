@@ -160,21 +160,15 @@ class Application
 		if @attached_files.length==0
 			area.html("").hide()
 			return
-		reader = new FileReader()
-		reader.onloadend = (event) ->
-			if event.target.readyState == FileReader.DONE
-				area.append(
-					$('<img>').attr('src', event.target.result),
-					$('<a>').click(->
-						Application.attached_files = []
-						Application.update_file_display()
-						return false
-					).attr('href', '#').append(
-						$('<img>').attr('src', 'icons/cross.png').attr('title', 'Bild entfernen')
-					)
-				)
-				area.show()
-		reader.readAsDataURL(@attached_files[0])
+		area.append($('<img>').attr('src', 'icons/image.png'), 
+			$('<a>').click(->
+				Application.attached_files = []
+				Application.update_file_display()
+				return false
+			).attr('href', '#').append(
+				$('<img>').attr('src', 'icons/cross.png').attr('title', 'Bild entfernen')
+			))
+		area.show()
 	
 	@toString: -> "Application"
 	@is_sending_dm: -> @sending_dm_to?
