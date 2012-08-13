@@ -117,7 +117,7 @@ class Tweet extends TwitterMessage
 
 	get_menu_items: (clicked_element) ->
 		array = []
-		array.push {name: "Send to Instapaper",         icon: "icons/newspaper_add.png",             separator_below: true, action: (elm) => Tweet.hooks.send_link_to_instapaper(elm, clicked_element) } if $(clicked_element).is('a.external') && settings.instapaper_credentials.user.length>0
+		array.push {name: "Send to Instapaper",         icon: "icons/newspaper_add.png",             separator_below: true, action: (elm) => Tweet.hooks.send_link_to_instapaper(elm, clicked_element) } if event? && event.target? && $(event.target).is('a.external') && settings.instapaper_credentials.user.length>0
 		array.push {name: "Reply",                      icon: "icons/comments.png",                  action: (elm) -> Tweet.hooks.reply(elm)}
 		array.push {name: "Retweet",                    icon: "icons/arrow_rotate_clockwise.png",    action: (elm) -> Tweet.hooks.retweet(elm)}
 		array.push {name: "Quote",                      icon: "icons/tag.png",                       action: (elm) -> Tweet.hooks.quote(elm)}

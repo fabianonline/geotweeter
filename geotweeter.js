@@ -1558,7 +1558,7 @@ Tweet = (function(_super) {
     var array,
       _this = this;
     array = [];
-    if ($(clicked_element).is('a.external') && settings.instapaper_credentials.user.length > 0) {
+    if ((typeof event !== "undefined" && event !== null) && (event.target != null) && $(event.target).is('a.external') && settings.instapaper_credentials.user.length > 0) {
       array.push({
         name: "Send to Instapaper",
         icon: "icons/newspaper_add.png",
