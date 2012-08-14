@@ -1564,7 +1564,7 @@ Tweet = (function(_super) {
         icon: "icons/newspaper_add.png",
         separator_below: true,
         action: function(elm) {
-          return Tweet.hooks.send_link_to_instapaper(elm, clicked_element);
+          return Tweet.hooks.send_link_to_instapaper(elm, event.target);
         }
       });
     }
