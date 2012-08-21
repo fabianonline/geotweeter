@@ -2100,7 +2100,12 @@ Tweet = (function(_super) {
           return xhr;
         },
         success: function(data) {
-          var html;
+          var html, _base;
+          if (!((data.text != null) && Application.all_tweets[data.id_str])) {
+            if (typeof (_base = Application.current_account.request).set_timeout === "function") {
+              _base.set_timeout(5000);
+            }
+          }
           $('#progress').fadeOut(500);
           if (data.text) {
             html = "							Tweet-ID: " + data.id_str + "<br />							Mein Tweet Nummer: " + data.user.statuses_count + "<br />							Follower: " + data.user.followers_count + "<br />							Friends: " + data.user.friends_count + "<br />";

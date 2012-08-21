@@ -405,6 +405,8 @@ class Tweet extends TwitterMessage
 					)
 					return xhr
 				success: (data) ->
+					# Expect to get the new tweet within 5 seconds. If not, reconnect.
+					Application.current_account.request.set_timeout?(5000) unless data.text? && Application.all_tweets[data.id_str]
 					$('#progress').fadeOut(500)
 					if data.text
 						html = "
