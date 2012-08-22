@@ -60,6 +60,9 @@ class DirectMessage extends Tweet
 				type: "POST"
 				success: (data) ->
 					if data.recipient
+						# Expect to get the new DM within 5 seconds. If not, reconnect.
+						Application.current_account.request.set_timeout?(5000) unless Application.all_dms[data.id_str]
+
 						$('#text').val('')
 						Hooks.update_counter()
 						Application.reply_to(null)

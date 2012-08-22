@@ -2251,7 +2251,13 @@ DirectMessage = (function(_super) {
         dataType: "json",
         type: "POST",
         success: function(data) {
+          var _base;
           if (data.recipient) {
+            if (!Application.all_dms[data.id_str]) {
+              if (typeof (_base = Application.current_account.request).set_timeout === "function") {
+                _base.set_timeout(5000);
+              }
+            }
             $('#text').val('');
             Hooks.update_counter();
             Application.reply_to(null);
