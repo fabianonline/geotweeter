@@ -1959,10 +1959,11 @@ Tweet = (function(_super) {
         tweet = new Tweet(data, _this.account);
         $('#info_spinner').before($(tweet.get_html()).hide().fadeIn());
         if (Application.infoarea.visible && tweet.data.in_reply_to_status_id_str) {
-          return _this.fetch_reply(tweet.data.in_reply_to_status_id_str);
+          _this.fetch_reply(tweet.data.in_reply_to_status_id_str);
         } else {
-          return $('#info_spinner').remove();
+          $('#info_spinner').remove();
         }
+        return tweet.add_to_collections();
       },
       error: function(foo, fata) {
         debugger;

@@ -308,6 +308,7 @@ class Tweet extends TwitterMessage
 					@fetch_reply(tweet.data.in_reply_to_status_id_str)
 				else
 					$('#info_spinner').remove()
+				tweet.add_to_collections()
 			error: (foo, fata) =>
 				debugger;
 		})
