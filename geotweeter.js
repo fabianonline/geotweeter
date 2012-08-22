@@ -3865,7 +3865,10 @@ Application = (function() {
       }
     });
     $('#top *').live('dragover', function(e) {
-      if (_this.sending_dm_to == null) {
+      if (_this.sending_dm_to != null) {
+        return false;
+      }
+      if (e.originalEvent.dataTransfer.types.indexOf("Files") >= 0) {
         return $('#dropzone').show();
       }
     });
