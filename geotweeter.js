@@ -1628,7 +1628,7 @@ Tweet = (function(_super) {
         url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F" + this.sender.screen_name + ".atom%3Fcount%3D250"
       });
     }
-    if (Application.curent_account.user.id === this.sender.id) {
+    if (Application.current_account.user.id === this.sender.id) {
       array.push({
         name: "Tweet löschen",
         icon: "icons/cross.png",
