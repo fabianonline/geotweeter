@@ -320,6 +320,7 @@ class Tweet extends TwitterMessage
 	
 	get_avatar_tooltip: -> "
 		<strong>#{@sender.data.name}</strong><br />
+		<em>#{@sender.data.description}</em><br />
 		<br />
 		Tweets: #{@sender.data.statuses_count}<br />
 		Followers: #{@sender.data.followers_count}<br />

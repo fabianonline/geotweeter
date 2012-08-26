@@ -1978,7 +1978,7 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.get_avatar_tooltip = function() {
-    return "		<strong>" + this.sender.data.name + "</strong><br />		<br />		Tweets: " + this.sender.data.statuses_count + "<br />		Followers: " + this.sender.data.followers_count + "<br />		Friends: " + this.sender.data.friends_count + "<br />		<br />		@" + this.sender.screen_name + " folgt dir" + (this.account.followers_ids.indexOf(this.sender.id) === -1 ? " nicht" : "") + ".	";
+    return "		<strong>" + this.sender.data.name + "</strong><br />		<em>" + this.sender.data.description + "</em><br />		<br />		Tweets: " + this.sender.data.statuses_count + "<br />		Followers: " + this.sender.data.followers_count + "<br />		Friends: " + this.sender.data.friends_count + "<br />		<br />		@" + this.sender.screen_name + " folgt dir" + (this.account.followers_ids.indexOf(this.sender.id) === -1 ? " nicht" : "") + ".	";
   };
 
   Tweet.hooks = {
