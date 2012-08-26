@@ -126,8 +126,8 @@ class Tweet extends TwitterMessage
 		array.push {name: "Permalink",                  icon: "icons/link.png",                      separator_below: true, url: @permalink}
 		array.push {name: "Geotag",                     icon: "icons/world.png",                     url: "http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}"} if @data.coordinates?
 		array.push {name: "Alle Geotags",               icon: "icons/world_add.png",                 separator_below: true, url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250"} if @data.coordinates?
-		array.push {name: "Tweet löschen",              icon: "icons/cross.png",                     action: (elm) -> Tweet.hooks.delete(elm)} if @account.user.id==@sender.id
-		array.push {name: "Als Spammer melden",         icon: "icons/exclamation.png",               action: (elm) -> Tweet.hooks.report_as_spam(elm)} unless @account.user.id==@sender.id
+		array.push {name: "Tweet löschen",              icon: "icons/cross.png",                     action: (elm) -> Tweet.hooks.delete(elm)} if Application.curent_account.user.id==@sender.id
+		array.push {name: "Als Spammer melden",         icon: "icons/exclamation.png",               action: (elm) -> Tweet.hooks.report_as_spam(elm)} unless Application.current_account.user.id==@sender.id
 		array.push {name: "Tweet debuggen",             icon: "icons/bug.png",                       separator_above: true, action: (elm) -> Tweet.hooks.debug(elm)}
 		return array
 	
