@@ -327,10 +327,7 @@ Account = (function() {
         stringify_ids: true
       },
       success: function(element, data) {
-        _this.followers_ids = data.ids;
-        if (_this.friends_ids.length > 0) {
-          return _this.get_friends_and_followers_data();
-        }
+        return _this.followers_ids = data.ids;
       }
     });
   };
@@ -345,17 +342,15 @@ Account = (function() {
       },
       success: function(element, data) {
         _this.friends_ids = data.ids;
-        if (_this.followers_ids.length > 0) {
-          return _this.get_friends_and_followers_data();
-        }
+        return _this.get_friends_data();
       }
     });
   };
 
-  Account.prototype.get_friends_and_followers_data = function() {
+  Account.prototype.get_friends_data = function() {
     var all_contacts, parts, users, _i, _len, _results,
       _this = this;
-    all_contacts = this.friends_ids.concat(this.followers_ids);
+    all_contacts = this.friends_ids;
     parts = (function() {
       var _results;
       _results = [];

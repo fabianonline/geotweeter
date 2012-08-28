@@ -202,7 +202,6 @@ class Account
 		}
 		success: (element, data) => 
 			@followers_ids=data.ids
-			@get_friends_and_followers_data() if @friends_ids.length>0
 	})
 	
 	get_friends: -> @twitter_request('friends/ids.json', {
@@ -213,12 +212,12 @@ class Account
 		}
 		success: (element, data) => 
 			@friends_ids=data.ids
-			@get_friends_and_followers_data() if @followers_ids.length>0
+			@get_friends_data()
 	})
 	
-	get_friends_and_followers_data: ->
-		# merge friends and followers ids and split them into 100er blocks
-		all_contacts = @friends_ids.concat(@followers_ids)
+	get_friends_data: ->
+		# split friends into 100er blocks
+		all_contacts = @friends_ids
 		parts = while all_contacts.length>0
 			all_contacts.splice(0, 100)
 		
