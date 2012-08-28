@@ -660,8 +660,12 @@ class Account
 			id = null
 			mention_id = null
 			dm_id = null
-			# Get the height of the top area as offset.
-			offset = $(document).scrollTop() + $('#top').height()
+			if elm != null
+				# Get offset if an element is given
+				offset = $(elm).offset().top
+			else
+				# Get the height of the top area as offset.
+				offset = $(document).scrollTop() + $('#top').height()
 			# Go through all elements until we find the first tweet which's
 			# top is bigger than the `offset`. This means the tweet begins
 			# under the top area and so is completely visible.
