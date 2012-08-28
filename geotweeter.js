@@ -862,7 +862,11 @@ Account = (function() {
       id = null;
       mention_id = null;
       dm_id = null;
-      offset = $(document).scrollTop() + $('#top').height();
+      if (elm != null) {
+        offset = $(elm).offset().top;
+      } else {
+        offset = $(document).scrollTop() + $('#top').height();
+      }
       for (_i = 0, _len = elements.length; _i < _len; _i++) {
         element = elements[_i];
         if ($(element).offset().top >= offset) {
@@ -1610,8 +1614,15 @@ Tweet = (function(_super) {
     array.push({
       name: "Permalink",
       icon: "icons/link.png",
-      separator_below: true,
       url: this.permalink
+    });
+    array.push({
+      name: "Gelesen markieren",
+      icon: "icons/tick.png",
+      separator_below: true,
+      action: function(elm) {
+        return Account.hooks.mark_as_read(elm);
+      }
     });
     if (this.data.coordinates != null) {
       array.push({

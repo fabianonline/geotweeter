@@ -123,7 +123,8 @@ class Tweet extends TwitterMessage
 		array.push {name: "Quote",                      icon: "icons/tag.png",                       action: (elm) -> Tweet.hooks.quote(elm)}
 		array.push {name: "Favorisieren",               icon: "icons/star_gray.png",                 action: (elm) -> Tweet.hooks.toggle_favorite(elm)} unless @data.favorited
 		array.push {name: "Favorisierung entfernen",    icon: "icons/star.png",                      action: (elm) -> Tweet.hooks.toggle_favorite(elm)} if @data.favorited
-		array.push {name: "Permalink",                  icon: "icons/link.png",                      separator_below: true, url: @permalink}
+		array.push {name: "Permalink",                  icon: "icons/link.png",                      url: @permalink}
+		array.push {name: "Gelesen markieren",          icon: "icons/tick.png",                      separator_below: true, action: (elm) -> Account.hooks.mark_as_read(elm)}
 		array.push {name: "Geotag",                     icon: "icons/world.png",                     url: "http://maps.google.com/?q=#{@data.coordinates.coordinates[1]},#{@data.coordinates.coordinates[0]}"} if @data.coordinates?
 		array.push {name: "Alle Geotags",               icon: "icons/world_add.png",                 separator_below: true, url: "http://maps.google.com/?q=http%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fuser_timeline%2F#{@sender.screen_name}.atom%3Fcount%3D250"} if @data.coordinates?
 		array.push {name: "Tweet löschen",              icon: "icons/cross.png",                     action: (elm) -> Tweet.hooks.delete(elm)} if Application.current_account.user.id==@sender.id
