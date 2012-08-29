@@ -306,7 +306,8 @@ textarea, input, select {
 	margin-right: 5px;
 }
 
-#settings input {
+#settings input,
+#settings select {
 	float: right;
 }
 

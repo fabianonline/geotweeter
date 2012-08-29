@@ -116,3 +116,20 @@ class SettingsButton extends SettingsField
 		elm.append($('<button>').html(@name).click( => @values.action() ))
 		elm.append(@get_help_html())
 		return elm
+
+class SettingsSelect extends SettingsField
+	get_html: ->
+		current_key = @values.getValue()
+		elm = $('<div>').append(@get_head_html())
+		obj = $('<select>')
+			.change((event) =>
+				@_setValue($(event.target).find(':selected').val(), event)
+			)
+		for key, value of @values.options
+			entry = $('<option>')
+				.val(key)
+				.html(value)
+			entry.attr('selected', 'selected') if key==current_key
+			obj.append(entry)
+		elm.append(obj)
+		return elm

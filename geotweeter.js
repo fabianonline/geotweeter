@@ -10,7 +10,7 @@ to this file will be overwritten!
 DO NOT MODIFY THIS FILE
 */
 
-var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsButton, SettingsField, SettingsList, SettingsPassword, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
+var Account, Application, DirectMessage, Event, FavoriteEvent, FilterAccount, FilterRequest, FollowEvent, HiddenEvent, Hooks, ListMemberAddedEvent, ListMemberRemovedEvent, Migrations, PullRequest, Request, Settings, SettingsBoolean, SettingsButton, SettingsField, SettingsList, SettingsPassword, SettingsSelect, SettingsText, StreamRequest, Thumbnail, Tweet, TwitterMessage, UnknownEvent, User,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1784,7 +1784,9 @@ Tweet = (function(_super) {
   };
 
   Tweet.prototype.quote = function() {
-    Application.set_text("RT @" + this.sender.screen_name + ": " + this.original_text);
+    var text;
+    text = settings.quote_style.replace("$user", "@" + this.sender.screen_name).replace("$text", this.original_text);
+    Application.set_text(text);
     return Application.reply_to(this);
   };
 
@@ -2850,6 +2852,15 @@ Migrations = (function() {
     }
   };
 
+  Migrations.migrations[2] = {
+    description: "Feld für Quote-Stil hinzugefügt.",
+    blocking: false,
+    change: function(settings) {
+      settings.quote_style = "RT $user: $text";
+      return settings;
+    }
+  };
+
   Migrations.migrate = function() {
     var blocking, changes, i, migration, start_version, text, _i, _ref;
     changes = [];
@@ -3142,6 +3153,39 @@ SettingsButton = (function(_super) {
 
 })(SettingsField);
 
+SettingsSelect = (function(_super) {
+
+  __extends(SettingsSelect, _super);
+
+  function SettingsSelect() {
+    return SettingsSelect.__super__.constructor.apply(this, arguments);
+  }
+
+  SettingsSelect.prototype.get_html = function() {
+    var current_key, elm, entry, key, obj, value, _ref,
+      _this = this;
+    current_key = this.values.getValue();
+    elm = $('<div>').append(this.get_head_html());
+    obj = $('<select>').change(function(event) {
+      return _this._setValue($(event.target).find(':selected').val(), event);
+    });
+    _ref = this.values.options;
+    for (key in _ref) {
+      value = _ref[key];
+      entry = $('<option>').val(key).html(value);
+      if (key === current_key) {
+        entry.attr('selected', 'selected');
+      }
+      obj.append(entry);
+    }
+    elm.append(obj);
+    return elm;
+  };
+
+  return SettingsSelect;
+
+})(SettingsField);
+
 Settings = (function() {
 
   function Settings() {}
@@ -3418,6 +3462,19 @@ Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu 
   },
   setValue: function(value) {
     return settings.show_images_in_lightbox = value;
+  }
+}));
+
+Settings.add("Allgemeines", "Quote-Stil", "Wie Zitate erzeugt werden", new SettingsSelect({
+  getValue: function() {
+    return settings.quote_style;
+  },
+  setValue: function(value) {
+    return settings.quote_style = value;
+  },
+  options: {
+    "RT $user: $text": "RT $user: $text",
+    '"$user: $text"': '"$user: $text"'
   }
 }));
 

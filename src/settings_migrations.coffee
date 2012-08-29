@@ -40,6 +40,13 @@ class Migrations
 		change: (settings) -> settings.show_images_in_lightbox = true; return settings
 	}
 	
+	@migrations[2] = {
+		description: "Feld für Quote-Stil hinzugefügt."
+		blocking: false
+		change: (settings) -> settings.quote_style = "RT $user: $text"; return settings
+	}
+	
+	
 	@migrate: ->
 		changes = []
 		blocking = false

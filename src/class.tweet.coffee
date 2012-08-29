@@ -204,7 +204,8 @@ class Tweet extends TwitterMessage
 		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
 	quote: ->
-		Application.set_text("RT @#{@sender.screen_name}: #{@original_text}")
+		text = settings.quote_style.replace("$user", "@#{@sender.screen_name}").replace("$text", @original_text)
+		Application.set_text(text)
 		Application.reply_to(this)
 	
 	delete: ->

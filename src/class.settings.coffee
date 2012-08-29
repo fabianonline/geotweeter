@@ -179,6 +179,15 @@ Settings.add("Allgemeines", "Bilder direkt anzeigen", "Sollen die Thumbnails zu 
 	setValue: (value) -> settings.show_images_in_lightbox = value
 }))
 
+Settings.add("Allgemeines", "Quote-Stil", "Wie Zitate erzeugt werden", new SettingsSelect({
+	getValue: -> settings.quote_style
+	setValue: (value) -> settings.quote_style = value
+	options: {
+		"RT $user: $text": "RT $user: $text",
+		'"$user: $text"': '"$user: $text"'
+	}
+}))
+
 Settings.add("Filter", "Begriffe", "Tweets mit diesen Begriffen werden nicht angezeigt", new SettingsList({
 	count: -> settings.muted_strings.length
 	getValue: (i) -> settings.muted_strings[i]
