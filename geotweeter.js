@@ -3928,10 +3928,11 @@ Application = (function() {
       }
     });
     $('#top *').live('dragover', function(e) {
+      var _base, _base1;
       if (_this.sending_dm_to != null) {
         return false;
       }
-      if (e.originalEvent.dataTransfer.types.indexOf("Files") >= 0) {
+      if (((typeof (_base = e.originalEvent.dataTransfer.types).indexOf === "function" ? _base.indexOf("Files") : void 0) >= 0) || (typeof (_base1 = e.originalEvent.dataTransfer.types).contains === "function" ? _base1.contains("Files") : void 0)) {
         return $('#dropzone').show();
       }
     });

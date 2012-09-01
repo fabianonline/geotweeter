@@ -111,7 +111,7 @@ class Application
 		
 		$('#top *').live('dragover', (e) => 
 			return false if @sending_dm_to?
-			$('#dropzone').show() if e.originalEvent.dataTransfer.types.indexOf("Files")>=0
+			$('#dropzone').show() if (e.originalEvent.dataTransfer.types.indexOf?("Files")>=0) || (e.originalEvent.dataTransfer.types.contains?("Files"))
 		)
 		$('body').bind('dragleave', (e) -> 
 			$('#dropzone').hide() if e.pageX==0
