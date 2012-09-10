@@ -183,7 +183,7 @@ class Tweet extends TwitterMessage
 						@replace_entity(entity, "<a href='https://twitter.com/#!/search/%23#{entity.text}' target='_blank' class='external'>##{entity.text}</a>")
 						Application.add_to_autocomplete("##{entity.text}")
 		@text = @text.trim().replace(/\n/g, "<br />")
-		@text = @text.replace(/[^\/>](GC[A-Z0-9]+)\b/g, " <a href='http://coords.info/$1' target='_blank' class='external'>$1</a>")
+		@text = @text.replace(/([^\/>])(GC[A-Z0-9]+)(\b)/g, " <a href='http://coords.info/$2' target='_blank' class='external'>$1$2$3</a>")
 	
 	replace_entity: (entity_object, text) -> @text = @text.slice(0, entity_object.indices[0]) + text + @text.slice(entity_object.indices[1])
 	
@@ -254,7 +254,7 @@ class Tweet extends TwitterMessage
 		return unless @data.entities?
 		if @data.entities.media?
 			for media in @data.entities.media
-				@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url, "#{media.media_url_https}:medium"))
+				@thumbs.push(new Thumbnail("#{media.media_url_https}:thumb", media.expanded_url, "#{media.media_url_https}"))
 		if @data.entities.urls?
 			for entity in @data.entities.urls
 				url = entity.expanded_url ? entity.url

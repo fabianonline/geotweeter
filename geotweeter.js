@@ -1756,7 +1756,7 @@ Tweet = (function(_super) {
       }
     }
     this.text = this.text.trim().replace(/\n/g, "<br />");
-    return this.text = this.text.replace(/[^\/>](GC[A-Z0-9]+)\b/g, " <a href='http://coords.info/$1' target='_blank' class='external'>$1</a>");
+    return this.text = this.text.replace(/([^\/>])(GC[A-Z0-9]+)(\b)/g, " <a href='http://coords.info/$2' target='_blank' class='external'>$1$2$3</a>");
   };
 
   Tweet.prototype.replace_entity = function(entity_object, text) {
@@ -1869,7 +1869,7 @@ Tweet = (function(_super) {
       _ref = this.data.entities.media;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         media = _ref[_i];
-        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url, "" + media.media_url_https + ":medium"));
+        this.thumbs.push(new Thumbnail("" + media.media_url_https + ":thumb", media.expanded_url, "" + media.media_url_https));
       }
     }
     if (this.data.entities.urls != null) {
