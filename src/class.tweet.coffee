@@ -201,7 +201,7 @@ class Tweet extends TwitterMessage
 	
 	retweet: ->
 		return unless confirm("Wirklich retweeten?")
-		@account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
+		Application.current_account.twitter_request("statuses/retweet/#{@id}.json", {success_string: "Retweet erfolgreich"})
 	
 	quote: ->
 		text = settings.quote_style.replace("$user", "@#{@sender.screen_name}").replace("$text", @original_text)
@@ -234,13 +234,13 @@ class Tweet extends TwitterMessage
 	
 	reply: ->
 		Application.set_dm_recipient_name(null)
-		if @sender.screen_name==@account.screen_name && @in_reply_to?
+		if @sender.screen_name==Application.current_account.screen_name && @in_reply_to?
 			Application.reply_to(@in_reply_to)
 		else
 			Application.reply_to(this)
 		mentions = []
-		mentions.push("@#{@sender.screen_name}") unless @sender.screen_name==@account.screen_name
-		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=@account.screen_name
+		mentions.push("@#{@sender.screen_name}") unless @sender.screen_name==Application.current_account.screen_name
+		mentions.push("@#{mention}") for mention in @mentions.reverse() when mention!=@sender.screen_name && mention!=Application.current_account.screen_name
 		sender = mentions.shift()
 		mentions = mentions.join(" ") + (if mentions.length>0 then " " else "")
 		if sender

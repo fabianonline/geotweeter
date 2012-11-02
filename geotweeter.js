@@ -1778,7 +1778,7 @@ Tweet = (function(_super) {
     if (!confirm("Wirklich retweeten?")) {
       return;
     }
-    return this.account.twitter_request("statuses/retweet/" + this.id + ".json", {
+    return Application.current_account.twitter_request("statuses/retweet/" + this.id + ".json", {
       success_string: "Retweet erfolgreich"
     });
   };
@@ -1833,19 +1833,19 @@ Tweet = (function(_super) {
   Tweet.prototype.reply = function() {
     var mention, mentions, sender, _i, _len, _ref;
     Application.set_dm_recipient_name(null);
-    if (this.sender.screen_name === this.account.screen_name && (this.in_reply_to != null)) {
+    if (this.sender.screen_name === Application.current_account.screen_name && (this.in_reply_to != null)) {
       Application.reply_to(this.in_reply_to);
     } else {
       Application.reply_to(this);
     }
     mentions = [];
-    if (this.sender.screen_name !== this.account.screen_name) {
+    if (this.sender.screen_name !== Application.current_account.screen_name) {
       mentions.push("@" + this.sender.screen_name);
     }
     _ref = this.mentions.reverse();
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       mention = _ref[_i];
-      if (mention !== this.sender.screen_name && mention !== this.account.screen_name) {
+      if (mention !== this.sender.screen_name && mention !== Application.current_account.screen_name) {
         mentions.push("@" + mention);
       }
     }
