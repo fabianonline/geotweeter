@@ -3817,7 +3817,7 @@ Application = (function() {
     } else {
       p = $('#place')[0];
       for (i = _i = 0, _ref = p.options.length; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-        p.options.remove();
+        p.options.remove(i);
       }
       p.options[0] = new Option("-- leer --", 0);
       _ref1 = settings.places;

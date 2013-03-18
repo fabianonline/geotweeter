@@ -39,7 +39,7 @@ class Application
 			$('#place').hide()
 		else
 			p = $('#place')[0]
-			p.options.remove() for i in [0..p.options.length]
+			p.options.remove(i) for i in [0..p.options.length]
 			p.options[0] = new Option("-- leer --", 0)
 			p.options[p.options.length] = new Option(place.name, id+1) for place, id in settings.places
 			$("#place option[value='#{$.cookie('last_place')}']").attr('selected', true) if $.cookie('last_place')
