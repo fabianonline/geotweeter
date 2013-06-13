@@ -48,7 +48,7 @@ class DirectMessage extends Tweet
 				wrap_links: true
 				screen_name: Application.get_dm_recipient_name()
 			}
-			data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters)
+			data = Application.current_account.sign_request("https://api.twitter.com/1.1/direct_messages/new.json", "POST", parameters)
 			url = "proxy/api/direct_messages/new.json"
 			$('#form').fadeTo(500, 0)
 

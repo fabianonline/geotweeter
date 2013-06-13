@@ -38,7 +38,7 @@ class StreamRequest extends Request
 		@request.abort() if @request?
 	
 	get_url: ->
-		data = @account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {delimited: "length", include_entities: "1", include_rts: "1"})
+		data = @account.sign_request("https://userstream.twitter.com/1.1/user.json", "GET", {delimited: "length", include_entities: "1", include_rts: "1"})
 		url = "user_proxy?#{data}"
 	
 	start_request: ->

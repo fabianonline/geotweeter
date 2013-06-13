@@ -379,15 +379,15 @@ class Tweet extends TwitterMessage
 			parameters.in_reply_to_status_id = Application.reply_to().id if Application.reply_to()?
 			
 			if Application.attached_files.length > 0
-				data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null)
-				url = "proxy/upload/statuses/update_with_media.json?#{data}"
+				data = Application.current_account.sign_request("https://api.twitter.com/1.1/statuses/update_with_media.json", "POST", null)
+				url = "proxy/api/statuses/update_with_media.json?#{data}"
 				content_type = false
 				data = new FormData()
 				data.append("media[]", Application.attached_files[0])
 				data.append(key, value) for key, value of parameters
 				show_progress = true
 			else
-				data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters)
+				data = Application.current_account.sign_request("https://api.twitter.com/1.1/statuses/update.json", "POST", parameters)
 				url = "proxy/api/statuses/update.json"
 				content_type = "application/x-www-form-urlencoded"
 			$('#form').fadeTo(500, 0)

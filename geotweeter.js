@@ -199,8 +199,8 @@ Account = (function() {
     this.max_read_mention_id = mention_id;
     this.max_read_dm_id = dm_id;
     header = {
-      "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
-      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {
+      "X-Auth-Service-Provider": "https://api.twitter.com/1.1/account/verify_credentials.json",
+      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1.1/account/verify_credentials.json", "GET", {}, {
         return_type: "header"
       })
     };
@@ -239,8 +239,8 @@ Account = (function() {
       _this = this;
     $("#user_" + this.id + " .count").html('(?)');
     header = {
-      "X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json",
-      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {
+      "X-Auth-Service-Provider": "https://api.twitter.com/1.1/account/verify_credentials.json",
+      "X-Verify-Credentials-Authorization": this.sign_request("https://api.twitter.com/1.1/account/verify_credentials.json", "GET", {}, {
         return_type: "header"
       })
     };
@@ -479,7 +479,7 @@ Account = (function() {
     if (verbose) {
       $('#form').fadeTo(500, 0).delay(500);
     }
-    data = this.sign_request("https://api.twitter.com/1/" + url, method, options.parameters);
+    data = this.sign_request("https://api.twitter.com/1.1/" + url, method, options.parameters);
     url = "proxy/api/" + url;
     result = $.ajax({
       url: url,
@@ -601,7 +601,7 @@ Account = (function() {
         name: "home_timeline",
         main_data: true
       }, {
-        url: "statuses/mentions.json",
+        url: "statuses/mentions_timeline.json",
         name: "mentions"
       }, {
         url: "direct_messages.json",
@@ -2068,8 +2068,8 @@ Tweet = (function(_super) {
         parameters.in_reply_to_status_id = Application.reply_to().id;
       }
       if (Application.attached_files.length > 0) {
-        data = Application.current_account.sign_request("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", null);
-        url = "proxy/upload/statuses/update_with_media.json?" + data;
+        data = Application.current_account.sign_request("https://api.twitter.com/1.1/statuses/update_with_media.json", "POST", null);
+        url = "proxy/api/statuses/update_with_media.json?" + data;
         content_type = false;
         data = new FormData();
         data.append("media[]", Application.attached_files[0]);
@@ -2079,7 +2079,7 @@ Tweet = (function(_super) {
         }
         show_progress = true;
       } else {
-        data = Application.current_account.sign_request("https://api.twitter.com/1/statuses/update.json", "POST", parameters);
+        data = Application.current_account.sign_request("https://api.twitter.com/1.1/statuses/update.json", "POST", parameters);
         url = "proxy/api/statuses/update.json";
         content_type = "application/x-www-form-urlencoded";
       }
@@ -2250,7 +2250,7 @@ DirectMessage = (function(_super) {
         wrap_links: true,
         screen_name: Application.get_dm_recipient_name()
       };
-      data = Application.current_account.sign_request("https://api.twitter.com/1/direct_messages/new.json", "POST", parameters);
+      data = Application.current_account.sign_request("https://api.twitter.com/1.1/direct_messages/new.json", "POST", parameters);
       url = "proxy/api/direct_messages/new.json";
       $('#form').fadeTo(500, 0);
       $.ajax({
@@ -2465,7 +2465,7 @@ StreamRequest = (function(_super) {
 
   StreamRequest.prototype.get_url = function() {
     var data, url;
-    data = this.account.sign_request("https://userstream.twitter.com/2/user.json", "GET", {
+    data = this.account.sign_request("https://userstream.twitter.com/1.1/user.json", "GET", {
       delimited: "length",
       include_entities: "1",
       include_rts: "1"

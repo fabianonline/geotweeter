@@ -88,8 +88,8 @@ class Account
 		# This method is safe: The generated credentials can only be used once
 		# and only for verify_credentials.
 		header = {
-			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
-			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
+			"X-Auth-Service-Provider": "https://api.twitter.com/1.1/account/verify_credentials.json"
+			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1.1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
 		
 		# We are lazy and send the same id for timeline and mentions collection.
@@ -130,8 +130,8 @@ class Account
 		# Again OAuth echo stuff. For a better explanation please refer to
 		# `set_max_read_id`.
 		header = {
-			"X-Auth-Service-Provider": "https://api.twitter.com/1/account/verify_credentials.json"
-			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
+			"X-Auth-Service-Provider": "https://api.twitter.com/1.1/account/verify_credentials.json"
+			"X-Verify-Credentials-Authorization": @sign_request("https://api.twitter.com/1.1/account/verify_credentials.json", "GET", {}, {return_type: "header"})
 		}
 		
 		# Ignore the mentions collection and just query 
@@ -320,7 +320,7 @@ class Account
 		method = options.method ? "POST"
 		verbose = !(!!options.silent && true)
 		$('#form').fadeTo(500, 0).delay(500) if verbose
-		data = @sign_request("https://api.twitter.com/1/#{url}", method, options.parameters)
+		data = @sign_request("https://api.twitter.com/1.1/#{url}", method, options.parameters)
 		url = "proxy/api/#{url}"
 		
 		result = $.ajax({
@@ -434,7 +434,7 @@ class Account
 				main_data: true
 			}
 			{
-				url: "statuses/mentions.json"
+				url: "statuses/mentions_timeline.json"
 				name: "mentions"
 			}
 			{
